@@ -3,6 +3,7 @@ package mediatailor
 import (
 	"context"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -123,12 +124,14 @@ func dataSourceConfigurationRead(ctx context.Context, d *schema.ResourceData, m 
 
 	name := d.Get("name").(string)
 	output, err := client.GetPlaybackConfiguration(&mediatailor.GetPlaybackConfigurationInput{Name: &name})
+
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("configuration", flatten(output)); err != nil {
 		return diag.FromErr(err)
 	}
+	d.SetId(uuid.New().String())
 	return diags
 }
 
