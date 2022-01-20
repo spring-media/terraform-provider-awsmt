@@ -13,194 +13,99 @@ func dataSourceConfiguration() *schema.Resource {
 		// schema based on https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#GetPlaybackConfigurationOutput
 		// with types found on https://sourcegraph.com/github.com/aws/aws-sdk-go/-/docs/service/mediatailor
 		Schema: map[string]*schema.Schema{
-			"Configuration": &schema.Schema{
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"configuration": &schema.Schema{
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"AdDecisionServerUrl": &schema.Schema{
+						"ad_decision_server_url": &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"AvailSuppression": &schema.Schema{
+						"cdn_configuration": &schema.Schema{
 							Type:     schema.TypeList,
-							MaxItems: 1,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"Mode": &schema.Schema{
+									"ad_segment_url_prefix": &schema.Schema{
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"Value": &schema.Schema{
+									"content_segment_url_prefix": &schema.Schema{
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
 						},
-						"Bumper": &schema.Schema{
+						"dash_configuration": &schema.Schema{
 							Type:     schema.TypeList,
-							MaxItems: 1,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"EndUrl": &schema.Schema{
+									"manifest_endpoint_prefix": &schema.Schema{
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"StartUrl": &schema.Schema{
+									"mpd_location": &schema.Schema{
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"origin_manifest_type": &schema.Schema{
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
 						},
-						"CdnConfiguration": &schema.Schema{
+						"hls_configuration": &schema.Schema{
 							Type:     schema.TypeList,
-							MaxItems: 1,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"AdSegmentUrlPrefix": &schema.Schema{
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"ContentSegmentUrlPrefix": &schema.Schema{
+									"manifest_endpoint_prefix": &schema.Schema{
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
 						},
-						"ConfigurationAliases": &schema.Schema{
-							Type: schema.TypeMap,
+						"name": &schema.Schema{
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"playback_configuration_arn": &schema.Schema{
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"playback_endpoint_prefix": &schema.Schema{
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"session_initialization_endpoint_prefix": &schema.Schema{
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"slate_ad_url": &schema.Schema{
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"tags": &schema.Schema{
+							Type:     schema.TypeMap,
+							Computed: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
-						"DashConfiguration": &schema.Schema{
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ManifestEndpointPrefix": &schema.Schema{
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"MpdLocation": &schema.Schema{
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"OriginManifestType": &schema.Schema{
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"HlsConfiguration": &schema.Schema{
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ManifestEndpointPrefix": &schema.Schema{
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"LivePreRollConfiguration": &schema.Schema{
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"AdDecisionServerUrl": &schema.Schema{
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"MaxDurationSeconds": &schema.Schema{
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"LogConfiguration": &schema.Schema{
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"PercentEnabled": &schema.Schema{
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"ManifestProcessingRules": &schema.Schema{
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"AdMarkerPassthrough": &schema.Schema{
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"Enabled": &schema.Schema{
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"Name": &schema.Schema{
+						"transcode_profile_name": &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"PersonalizationThresholdSeconds": &schema.Schema{
-							Type:     schema.TypeInt,
-							Computed: true,
-							Default:  1,
-						},
-						"PlaybackConfigurationString": &schema.Schema{
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"PlaybackEndpointPrefix": &schema.Schema{
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"SessionInitializationEndpointPrefix": &schema.Schema{
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"SlateAdUrl": &schema.Schema{
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"Tags": &schema.Schema{
-							Type: schema.TypeMap,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"TranscodeProfileName": &schema.Schema{
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"VideoContentSourceUrl": &schema.Schema{
+						"video_content_source_url": &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -210,6 +115,7 @@ func dataSourceConfiguration() *schema.Resource {
 		},
 	}
 }
+
 func dataSourceConfigurationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*mediatailor.MediaTailor)
 
@@ -220,8 +126,40 @@ func dataSourceConfigurationRead(ctx context.Context, d *schema.ResourceData, m 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("configuration", output); err != nil {
+	if err := d.Set("configuration", flatten(output)); err != nil {
 		return diag.FromErr(err)
 	}
 	return diags
+}
+
+func flatten(configuration *mediatailor.GetPlaybackConfigurationOutput) []interface{} {
+	if configuration != nil {
+		res := make([]interface{}, 1, 1)
+		output := make(map[string]interface{})
+
+		output["ad_decision_server_url"] = configuration.AdDecisionServerUrl
+		output["cdn_configuration"] = map[string]interface{}{
+			"ad_segment_url_prefix":      configuration.CdnConfiguration.AdSegmentUrlPrefix,
+			"content_segment_url_prefix": configuration.CdnConfiguration.ContentSegmentUrlPrefix,
+		}
+		output["dash_configuration"] = map[string]interface{}{
+			"manifest_endpoint_prefix": configuration.DashConfiguration.ManifestEndpointPrefix,
+			"mpd_location":             configuration.DashConfiguration.MpdLocation,
+			"origin_manifest_type":     configuration.DashConfiguration.OriginManifestType,
+		}
+		output["hls_configuration"] = map[string]interface{}{
+			"manifest_endpoint_prefix": configuration.HlsConfiguration.ManifestEndpointPrefix,
+		}
+		output["name"] = configuration.Name
+		output["playback_configuration_arn"] = configuration.PlaybackConfigurationArn
+		output["playback_endpoint_prefix"] = configuration.PlaybackEndpointPrefix
+		output["session_initialization_endpoint_prefix"] = configuration.SessionInitializationEndpointPrefix
+		output["slate_ad_url"] = configuration.SlateAdUrl
+		output["tags"] = configuration.Tags
+		output["transcode_profile_name"] = configuration.TranscodeProfileName
+		output["video_content_source_url"] = configuration.VideoContentSourceUrl
+		res[0] = output
+		return res
+	}
+	return make([]interface{}, 1, 1)
 }
