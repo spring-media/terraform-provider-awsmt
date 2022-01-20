@@ -138,18 +138,18 @@ func flatten(configuration *mediatailor.GetPlaybackConfigurationOutput) []interf
 		output := make(map[string]interface{})
 
 		output["ad_decision_server_url"] = configuration.AdDecisionServerUrl
-		output["cdn_configuration"] = map[string]interface{}{
+		output["cdn_configuration"] = []interface{}{map[string]interface{}{
 			"ad_segment_url_prefix":      configuration.CdnConfiguration.AdSegmentUrlPrefix,
 			"content_segment_url_prefix": configuration.CdnConfiguration.ContentSegmentUrlPrefix,
-		}
-		output["dash_configuration"] = map[string]interface{}{
+		}}
+		output["dash_configuration"] = []interface{}{map[string]interface{}{
 			"manifest_endpoint_prefix": configuration.DashConfiguration.ManifestEndpointPrefix,
 			"mpd_location":             configuration.DashConfiguration.MpdLocation,
 			"origin_manifest_type":     configuration.DashConfiguration.OriginManifestType,
-		}
-		output["hls_configuration"] = map[string]interface{}{
+		}}
+		output["hls_configuration"] = []interface{}{map[string]interface{}{
 			"manifest_endpoint_prefix": configuration.HlsConfiguration.ManifestEndpointPrefix,
-		}
+		}}
 		output["name"] = configuration.Name
 		output["playback_configuration_arn"] = configuration.PlaybackConfigurationArn
 		output["playback_endpoint_prefix"] = configuration.PlaybackEndpointPrefix
