@@ -2,7 +2,10 @@ module terraform-provider-mediatailor
 
 go 1.17
 
-require github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
+require (
+	github.com/aws/aws-sdk-go v1.25.3
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
+)
 
 require (
 	github.com/agext/levenshtein v1.2.2 // indirect
@@ -24,6 +27,7 @@ require (
 	github.com/hashicorp/terraform-registry-address v0.0.0-20210412075316-9b2996cce896 // indirect
 	github.com/hashicorp/terraform-svchost v0.0.0-20200729002733-f050f53b9734 // indirect
 	github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d // indirect
+	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/mattn/go-isatty v0.0.10 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
