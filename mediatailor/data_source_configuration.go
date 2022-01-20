@@ -137,7 +137,6 @@ func dataSourceConfigurationRead(ctx context.Context, d *schema.ResourceData, m 
 
 func flatten(configuration *mediatailor.GetPlaybackConfigurationOutput) []interface{} {
 	if configuration != nil {
-		res := make([]interface{}, 1, 1)
 		output := make(map[string]interface{})
 
 		output["ad_decision_server_url"] = configuration.AdDecisionServerUrl
@@ -161,8 +160,7 @@ func flatten(configuration *mediatailor.GetPlaybackConfigurationOutput) []interf
 		output["tags"] = configuration.Tags
 		output["transcode_profile_name"] = configuration.TranscodeProfileName
 		output["video_content_source_url"] = configuration.VideoContentSourceUrl
-		res[0] = output
-		return res
+		return []interface{}{output}
 	}
 	return make([]interface{}, 1, 1)
 }
