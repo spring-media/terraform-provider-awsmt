@@ -12,6 +12,12 @@ import (
 
 func Provider() *schema.Provider {
 	return &schema.Provider{
+		Schema: map[string]*schema.Schema{
+			"region": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+		},
 		ResourcesMap:         map[string]*schema.Resource{},
 		DataSourcesMap:       map[string]*schema.Resource{"mediatailor_configuration": dataSourceConfiguration()},
 		ConfigureContextFunc: providerConfigure,
@@ -20,7 +26,11 @@ func Provider() *schema.Provider {
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	sess, err := session.NewSession(&aws.Config{Region: aws.String("eu-central-1")})
+	region, ok := d.GetOk("username")
+	if !ok {
+		region = "eu-central-1"
+	}
+	sess, err := session.NewSession(&aws.Config{Region: aws.String(region.(string))})
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
