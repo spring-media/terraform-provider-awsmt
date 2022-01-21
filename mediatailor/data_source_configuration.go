@@ -16,7 +16,7 @@ func dataSourceConfiguration() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"configuration": &schema.Schema{
 				Type:     schema.TypeList,
@@ -123,19 +123,50 @@ func dataSourceConfigurationRead(ctx context.Context, d *schema.ResourceData, m 
 	var diags diag.Diagnostics
 
 	name := d.Get("name").(string)
-	output, err := client.GetPlaybackConfiguration(&mediatailor.GetPlaybackConfigurationInput{Name: &name})
-
-	if err != nil {
-		return diag.FromErr(err)
+	if name != "" {
+		output, err := getSinglePlaybackConfiguration(client, name)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		flatOutput := flatten(output)
+		if err := d.Set("configuration", []interface{}{flatOutput}); err != nil {
+			return diag.FromErr(err)
+		}
+		d.SetId(uuid.New().String())
+	} else {
+		output, err := listPlaybackConfigurations(client)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		var flatOutputList []interface{}
+		for _, c := range output {
+			flatOutputList = append(flatOutputList, flatten(c))
+		}
+		if err := d.Set("configuration", flatOutputList); err != nil {
+			return diag.FromErr(err)
+		}
+		d.SetId(uuid.New().String())
 	}
-	if err := d.Set("configuration", flatten(output)); err != nil {
-		return diag.FromErr(err)
-	}
-	d.SetId(uuid.New().String())
 	return diags
 }
 
-func flatten(configuration *mediatailor.GetPlaybackConfigurationOutput) []interface{} {
+func getSinglePlaybackConfiguration(c *mediatailor.MediaTailor, name string) (*mediatailor.PlaybackConfiguration, error) {
+	output, err := c.GetPlaybackConfiguration(&mediatailor.GetPlaybackConfigurationInput{Name: &name})
+	if err != nil {
+		return nil, err
+	}
+	return (*mediatailor.PlaybackConfiguration)(output), nil
+}
+
+func listPlaybackConfigurations(c *mediatailor.MediaTailor) ([]*mediatailor.PlaybackConfiguration, error) {
+	output, err := c.ListPlaybackConfigurations(&mediatailor.ListPlaybackConfigurationsInput{})
+	if err != nil {
+		return nil, err
+	}
+	return output.Items, nil
+}
+
+func flatten(configuration *mediatailor.PlaybackConfiguration) map[string]interface{} {
 	if configuration != nil {
 		output := make(map[string]interface{})
 
@@ -160,7 +191,7 @@ func flatten(configuration *mediatailor.GetPlaybackConfigurationOutput) []interf
 		output["tags"] = configuration.Tags
 		output["transcode_profile_name"] = configuration.TranscodeProfileName
 		output["video_content_source_url"] = configuration.VideoContentSourceUrl
-		return []interface{}{output}
+		return output
 	}
-	return make([]interface{}, 1, 1)
+	return map[string]interface{}{}
 }

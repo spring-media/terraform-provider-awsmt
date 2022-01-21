@@ -8,7 +8,7 @@ terraform {
 }
 
 data "mediatailor_configuration" "c1" {
-  name = "staging-live-stream"
+  //name = "staging-live-stream"
 }
 
 output "out" {
