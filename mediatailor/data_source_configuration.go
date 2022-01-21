@@ -13,6 +13,7 @@ func dataSourceConfiguration() *schema.Resource {
 		ReadContext: dataSourceConfigurationRead,
 		// schema based on https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#GetPlaybackConfigurationOutput
 		// with types found on https://sourcegraph.com/github.com/aws/aws-sdk-go/-/docs/service/mediatailor
+		//TODO, add params from PlaybackConfigurationInput to schema https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#ListPlaybackConfigurationsInput
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
@@ -119,34 +120,24 @@ func dataSourceConfiguration() *schema.Resource {
 
 func dataSourceConfigurationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*mediatailor.MediaTailor)
-
 	var diags diag.Diagnostics
+	var output []interface{}
 
 	name := d.Get("name").(string)
 	if name != "" {
-		output, err := getSinglePlaybackConfiguration(client, name)
+		res, err := getSinglePlaybackConfiguration(client, name)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		flatOutput := flatten(output)
-		if err := d.Set("configuration", []interface{}{flatOutput}); err != nil {
-			return diag.FromErr(err)
-		}
-		d.SetId(uuid.New().String())
+		output = []interface{}{flatten(res)}
 	} else {
-		output, err := listPlaybackConfigurations(client)
+		res, err := listPlaybackConfigurations(client)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		var flatOutputList []interface{}
-		for _, c := range output {
-			flatOutputList = append(flatOutputList, flatten(c))
-		}
-		if err := d.Set("configuration", flatOutputList); err != nil {
-			return diag.FromErr(err)
-		}
-		d.SetId(uuid.New().String())
+		output = flattenList(res)
 	}
+	returnValues(d, output, diags)
 	return diags
 }
 
@@ -164,6 +155,14 @@ func listPlaybackConfigurations(c *mediatailor.MediaTailor) ([]*mediatailor.Play
 		return nil, err
 	}
 	return output.Items, nil
+}
+
+func returnValues(d *schema.ResourceData, values []interface{}, diags diag.Diagnostics) diag.Diagnostics {
+	if err := d.Set("configuration", values); err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(uuid.New().String())
+	return diags
 }
 
 func flatten(configuration *mediatailor.PlaybackConfiguration) map[string]interface{} {
@@ -194,4 +193,12 @@ func flatten(configuration *mediatailor.PlaybackConfiguration) map[string]interf
 		return output
 	}
 	return map[string]interface{}{}
+}
+
+func flattenList(configurations []*mediatailor.PlaybackConfiguration) []interface{} {
+	var output []interface{}
+	for _, c := range configurations {
+		output = append(output, flatten(c))
+	}
+	return output
 }
