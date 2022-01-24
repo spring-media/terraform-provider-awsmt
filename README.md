@@ -1,5 +1,7 @@
 # ott-tfprovider-awsmt
 A Terraform provider for AWS MediaTailor
+
+
 [![GitHub Actions](https://github.com/spring-media/ott-tfprovider-awsmt/workflows/CI/badge.svg?branch=main)](https://github.com/spring-media/ott-tfprovider-awsmt/actions?workflow=CI)
 
 ## Building the Provider
