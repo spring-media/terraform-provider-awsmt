@@ -1,6 +1,7 @@
 .DS_Store
 terraform-provider-hashicups
 bin
+build/
 .idea/
 
 # Created by https://www.toptal.com/developers/gitignore/api/go,terraform
@@ -60,10 +61,11 @@ override.tf.json
 # End of https://www.toptal.com/developers/gitignore/api/go,terraform
 
 # Ignore CLI configuration files
-.terraformrc
+.terraform*
 terraform.rc
 terraform
 
 */.terraformrc
+*/.terraform*
 */terraform.rc
 */terraform
