@@ -1,7 +1,6 @@
 package mediatailor
 
 import (
-	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"os"
 	"testing"
@@ -34,8 +33,7 @@ func testAccPreCheck(t *testing.T) {
 }
 
 func testAccConfigurationDataSource_basic() string {
-	return fmt.Sprintf(`
-
+	return `
 data "mediatailor_configuration" "c1" {
   name = "staging-live-stream"
 }
@@ -43,5 +41,5 @@ data "mediatailor_configuration" "c1" {
 output "out" {
   value = data.mediatailor_configuration.c1
 }
-`)
+`
 }
