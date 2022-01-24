@@ -202,3 +202,4 @@ func flattenList(configurations []*mediatailor.PlaybackConfiguration) []interfac
 	}
 	return output
 }
+
