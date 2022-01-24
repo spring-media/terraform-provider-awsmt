@@ -26,7 +26,7 @@ func Provider() *schema.Provider {
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	region, ok := d.GetOk("username")
+	region, ok := d.GetOk("region")
 	if !ok {
 		region = "eu-central-1"
 	}
