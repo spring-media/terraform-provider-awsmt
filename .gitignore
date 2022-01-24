@@ -1,5 +1,6 @@
 .DS_Store
 terraform-provider-hashicups
+bin
 build/
 .idea/
 
