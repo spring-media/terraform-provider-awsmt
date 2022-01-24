@@ -16,8 +16,8 @@ func TestAccConfigurationDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationDataSource_basic(),
-				Check:  resource.ComposeTestCheckFunc(
-				//tests go here
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.mediatailor_configuration.c1", "name", "staging-live-stream"),
 				),
 			},
 		},
@@ -35,17 +35,9 @@ func testAccPreCheck(t *testing.T) {
 
 func testAccConfigurationDataSource_basic() string {
 	return fmt.Sprintf(`
-terraform {
-  required_providers {
-    mediatailor = {
-      version = "0.1"
-      source  = "test/ott/mediatailor"
-    }
-  }
-}
 
 data "mediatailor_configuration" "c1" {
-  //name = "staging-live-stream"
+  name = "staging-live-stream"
 }
 
 output "out" {
