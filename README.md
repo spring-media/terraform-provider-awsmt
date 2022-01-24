@@ -3,8 +3,7 @@ A Terraform provider for AWS MediaTailor
 
 ## Building the Provider
 
-1. Open `Makefile` and make sure that the value of `OS_ARCH` matches your system's architecture;
-2. Run `make`.
+Run `make`.
 
 ## Provider Setup
 
