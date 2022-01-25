@@ -36,8 +36,8 @@ jobs:
     name: Scan
     runs-on: ubuntu-latest
     steps:
-      - name: branch
-        run: "git rev-parse --abbrev-ref HEAD"
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
