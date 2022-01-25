@@ -32,3 +32,13 @@ jobs:
       - name: Unit & Acceptance Test
         run: make testacc
 
+  scan:
+    name: Scan
+    runs-on: ubuntu-latest
+    steps:
+        - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
