@@ -36,8 +36,8 @@ jobs:
     name: Scan
     runs-on: ubuntu-latest
     steps:
-      - name: pwd
-        run: "pwd"
+      - name: branch
+        run: "git rev-parse --abbrev-ref HEAD"
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
