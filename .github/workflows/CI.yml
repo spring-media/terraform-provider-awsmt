@@ -29,8 +29,6 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: ${{ env.GO_VERSION }}
-      - name: Unit Test
-        run: cd mediatailor/ && go test
-      - name: Acceptance Test
+      - name: Unit & Acceptance Test
         run: make testacc
 
