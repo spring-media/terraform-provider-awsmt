@@ -28,5 +28,5 @@ jobs:
       - name: Unit Test
         run: cd mediatailor/ && go test
       - name: Acceptance Test
-        run: make acctest
+        run: make testacc
 
