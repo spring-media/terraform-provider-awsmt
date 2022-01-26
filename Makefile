@@ -5,14 +5,15 @@ NAME=mediatailor
 BINARY=terraform-provider-${NAME}
 VERSION=0.0.1
 OS_ARCH=OS_ARCH=$(shell go env GOOS)_$(shell go env GOHOSTARCH)
+BUILD_DIR=build
 
 default: install
 
 clean:
-	rm -rf ./build/
+	rm -rf ./${BUILD_DIR}/
 
-build:
-	go build -o ./build/${BINARY}
+build-app:
+	go build -o ./${BUILD_DIR}/${BINARY}
 
 release:
 	GOOS=darwin GOARCH=amd64 go build -o ./build/${BINARY}_${VERSION}_darwin_amd64
@@ -28,13 +29,21 @@ release:
 	GOOS=windows GOARCH=386 go build -o ./build/${BINARY}_${VERSION}_windows_386
 	GOOS=windows GOARCH=amd64 go build -o ./build/${BINARY}_${VERSION}_windows_amd64
 
-install: build
+install: build-app
 	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 	mv ./build/${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 
-test:
-	go test -i $(TEST) || exit 1
-	echo $(TEST) | xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
+$(BUILD_DIR):
+	mkdir $(BUILD_DIR)
 
-testacc:
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
+%/coverage.profile: $(BUILD_DIR)
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -coverprofile $@
+
+%/coverage_func.txt: %/coverage.profile
+	go tool cover -func=$< -o $@
+
+%/coverage.html: %/coverage.profile
+	go tool cover -html=$< -o $@
+
+test: $(BUILD_DIR)/coverage.html $(BUILD_DIR)/coverage_func.txt $(BUILD_DIR)/coverage.profile
+	@echo "finished test"
