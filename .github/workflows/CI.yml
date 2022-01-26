@@ -38,7 +38,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   release:
-    name: test
+    name: Release
     needs: test
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
