@@ -39,7 +39,7 @@ jobs:
 
   release:
     name: test
-    needs: acceptance
+    needs: test
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
