@@ -4,7 +4,7 @@ NAMESPACE=ott
 NAME=mediatailor
 BINARY=terraform-provider-${NAME}
 VERSION=0.0.1
-OS_ARCH=OS_ARCH=$(shell go env GOOS)_$(shell go env GOHOSTARCH)
+OS_ARCH=$(shell go env GOOS)_$(shell go env GOHOSTARCH)
 BUILD_DIR=build
 
 default: install
