@@ -14,7 +14,7 @@ func TestAccConfigurationDataSource_basic(t *testing.T) {
 		ProviderFactories: ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationDataSource_basic(),
+				Config: testAccConfigurationDataSourceBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.mediatailor_configuration.c1", "name", "staging-live-stream"),
 				),
@@ -32,7 +32,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccConfigurationDataSource_basic() string {
+func testAccConfigurationDataSourceBasic() string {
 	return `
 data "mediatailor_configuration" "c1" {
   name = "staging-live-stream"
