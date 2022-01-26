@@ -13,9 +13,16 @@ func dataSourceConfiguration() *schema.Resource {
 		ReadContext: dataSourceConfigurationRead,
 		// schema based on https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#GetPlaybackConfigurationOutput
 		// with types found on https://sourcegraph.com/github.com/aws/aws-sdk-go/-/docs/service/mediatailor
-		//TODO, add params from PlaybackConfigurationInput to schema https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#ListPlaybackConfigurationsInput
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"max_results": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"next_token": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -124,6 +131,9 @@ func dataSourceConfigurationRead(ctx context.Context, d *schema.ResourceData, m 
 	var output []interface{}
 
 	name := d.Get("name").(string)
+	maxResults := d.Get("max_results").(int)
+	nextToken := d.Get("next_token").(string)
+
 	if name != "" {
 		res, err := getSinglePlaybackConfiguration(client, name)
 		if err != nil {
@@ -131,7 +141,7 @@ func dataSourceConfigurationRead(ctx context.Context, d *schema.ResourceData, m 
 		}
 		output = []interface{}{flatten(res)}
 	} else {
-		res, err := listPlaybackConfigurations(client)
+		res, err := listPlaybackConfigurations(client, int64(maxResults), nextToken)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -149,8 +159,15 @@ func getSinglePlaybackConfiguration(c *mediatailor.MediaTailor, name string) (*m
 	return (*mediatailor.PlaybackConfiguration)(output), nil
 }
 
-func listPlaybackConfigurations(c *mediatailor.MediaTailor) ([]*mediatailor.PlaybackConfiguration, error) {
-	output, err := c.ListPlaybackConfigurations(&mediatailor.ListPlaybackConfigurationsInput{})
+func listPlaybackConfigurations(c *mediatailor.MediaTailor, maxResults int64, nextToken string) ([]*mediatailor.PlaybackConfiguration, error) {
+	var params = mediatailor.ListPlaybackConfigurationsInput{}
+	if nextToken != "" {
+		params.NextToken = &nextToken
+	}
+	if maxResults > 0 {
+		params.MaxResults = &maxResults
+	}
+	output, err := c.ListPlaybackConfigurations(&params)
 	if err != nil {
 		return nil, err
 	}
@@ -202,4 +219,3 @@ func flattenList(configurations []*mediatailor.PlaybackConfiguration) []interfac
 	}
 	return output
 }
-

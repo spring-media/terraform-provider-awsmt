@@ -8,6 +8,7 @@ terraform {
 }
 
 data "mediatailor_configuration" "c1" {
+  max_results = 1
   //name = "staging-live-stream"
 }
 
