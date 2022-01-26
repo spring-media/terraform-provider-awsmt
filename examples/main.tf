@@ -2,7 +2,7 @@ terraform {
   required_providers {
     mediatailor = {
       version = "0.0.1"
-      source  = "test/ott/mediatailor"
+      source  = "github.com/spring-media/ott-tfprovider-awsmt"
     }
   }
 }
