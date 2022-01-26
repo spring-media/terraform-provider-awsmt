@@ -29,9 +29,4 @@ Run `terraform init` and then `terraform apply` inside the `./examples` director
 
 ## Testing
 
-### Acceptance Testing
-Run `make testacc` to execute the acceptance tests.
-
-### Unit Testing
-1. Navigate to `./mediatailor`;
-2. Run `go test`.
+Run `make test` to execute both acceptance and unit tests
