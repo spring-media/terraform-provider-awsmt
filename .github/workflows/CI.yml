@@ -30,7 +30,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Unit & Acceptance Test
-        run: make testacc
+        run: make test
 
   scan:
     name: Scan
