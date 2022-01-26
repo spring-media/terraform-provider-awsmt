@@ -1,7 +1,7 @@
 TEST?=$$(go list ./... | grep -v 'vendor')
-HOSTNAME=test
-NAMESPACE=ott
-NAME=mediatailor
+HOSTNAME=github.com
+NAMESPACE=spring-media
+NAME=ott-tfprovider-awsmt
 BINARY=terraform-provider-${NAME}
 VERSION=0.0.1
 OS_ARCH=$(shell go env GOOS)_$(shell go env GOHOSTARCH)
