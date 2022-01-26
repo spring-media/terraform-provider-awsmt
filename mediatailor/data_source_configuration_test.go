@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestAccConfigurationDataSource_basic(t *testing.T) {
+func TestAccConfigurationDataSourceBasic(t *testing.T) {
 	//dataSourceName := "data.mediatailor_configuration.c1"
 
 	resource.Test(t, resource.TestCase{
@@ -24,11 +24,8 @@ func TestAccConfigurationDataSource_basic(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
-	if v := os.Getenv("AWS_ACCESS_KEY_ID"); v == "" {
-		t.Fatal("AWS_ACCESS_KEY_ID must be set for acceptance tests")
-	}
-	if v := os.Getenv("AWS_SECRET_ACCESS_KEY"); v == "" {
-		t.Fatal("AWS_SECRET_ACCESS_KEY must be set for acceptance tests")
+	if a, b := os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"); a == "" || b == "" {
+		t.Fatal("AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must both be set for acceptance tests")
 	}
 }
 
