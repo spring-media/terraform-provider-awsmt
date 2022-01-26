@@ -38,8 +38,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Setup Go
-        uses: actions/setup-go@v2
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
