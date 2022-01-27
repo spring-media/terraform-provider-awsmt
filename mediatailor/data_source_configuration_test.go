@@ -16,7 +16,7 @@ func TestAccConfigurationDataSourceBasic(t *testing.T) {
 			{
 				Config: testAccConfigurationDataSourceBasic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.mediatailor_configuration.c1", "name", "staging-live-stream"),
+					resource.TestCheckResourceAttr("data.mediatailor_configuration.c1", "name", "broadcast-prod-live-stream"),
 					resource.TestCheckResourceAttr("data.mediatailor_configuration.c2", "max_results", "2"),
 				),
 			},
@@ -33,7 +33,7 @@ func testAccPreCheck(t *testing.T) {
 func testAccConfigurationDataSourceBasic() string {
 	return `
 data "mediatailor_configuration" "c1" {
-  name = "staging-live-stream"
+  name = "broadcast-prod-live-stream"
 }
 
 data "mediatailor_configuration" "c2" {
