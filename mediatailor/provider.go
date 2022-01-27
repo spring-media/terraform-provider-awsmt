@@ -34,7 +34,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
-			Summary:  "Unable to initialize session",
+			Summary:  fmt.Sprintf("Unable to initialize session in region '%s'", region),
 			Detail:   fmt.Sprintf("Unable to create a new session for the specified region: %s", err),
 		})
 		return nil, diags
