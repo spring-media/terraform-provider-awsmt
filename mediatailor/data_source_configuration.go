@@ -14,107 +14,107 @@ func dataSourceConfiguration() *schema.Resource {
 		// schema based on https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#GetPlaybackConfigurationOutput
 		// with types found on https://sourcegraph.com/github.com/aws/aws-sdk-go/-/docs/service/mediatailor
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"max_results": &schema.Schema{
+			"max_results": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"next_token": &schema.Schema{
+			"next_token": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"configuration": &schema.Schema{
+			"configuration": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ad_decision_server_url": &schema.Schema{
+						"ad_decision_server_url": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"cdn_configuration": &schema.Schema{
+						"cdn_configuration": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ad_segment_url_prefix": &schema.Schema{
+									"ad_segment_url_prefix": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"content_segment_url_prefix": &schema.Schema{
+									"content_segment_url_prefix": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
 						},
-						"dash_configuration": &schema.Schema{
+						"dash_configuration": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"manifest_endpoint_prefix": &schema.Schema{
+									"manifest_endpoint_prefix": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"mpd_location": &schema.Schema{
+									"mpd_location": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"origin_manifest_type": &schema.Schema{
+									"origin_manifest_type": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
 						},
-						"hls_configuration": &schema.Schema{
+						"hls_configuration": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"manifest_endpoint_prefix": &schema.Schema{
+									"manifest_endpoint_prefix": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
 						},
-						"name": &schema.Schema{
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"playback_configuration_arn": &schema.Schema{
+						"playback_configuration_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"playback_endpoint_prefix": &schema.Schema{
+						"playback_endpoint_prefix": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"session_initialization_endpoint_prefix": &schema.Schema{
+						"session_initialization_endpoint_prefix": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"slate_ad_url": &schema.Schema{
+						"slate_ad_url": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"tags": &schema.Schema{
+						"tags": {
 							Type:     schema.TypeMap,
 							Computed: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
-						"transcode_profile_name": &schema.Schema{
+						"transcode_profile_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"video_content_source_url": &schema.Schema{
+						"video_content_source_url": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
