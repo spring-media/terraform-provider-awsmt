@@ -125,7 +125,7 @@ func dataSourceConfiguration() *schema.Resource {
 	}
 }
 
-func dataSourceConfigurationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceConfigurationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*mediatailor.MediaTailor)
 	var diags diag.Diagnostics
 	var output []interface{}
