@@ -22,11 +22,20 @@ provider "mediatailor" {
 
 ## Querying Configurations
 
-An example of how to query configurations from aws can be found in `./examples/main.tf`. Make sure that `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are exported as environmental variables.
-You can query a single configuration by specifying the `name` of the configuration, or all the configurations if you do not specify anything.
+An example of how to query configurations from aws can be found in `./examples/main.tf`. 
+Make sure that `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are exported as environmental variables.
+
+You can query a single configuration by specifying the `name` of the configuration, or all the 
+configurations if you do not specify anything. Here are all the available parameters
+
+Name | Type | Notes
+---|---|---|
+`name` | string | N/A
+`max-items` | int | Ignored if `name` is specified
+`next-token` | string | Ignored if `name` is specified
 
 Run `terraform init` and then `terraform apply` inside the `./examples` directory to get a result.
 
 ## Testing
 
-Run `make test` to execute both acceptance and unit tests
+Run `make test` to execute both acceptance and unit tests.
