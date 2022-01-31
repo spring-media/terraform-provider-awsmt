@@ -31,8 +31,8 @@ configurations if you do not specify anything. Here are all the available parame
 Name | Type | Notes
 ---|---|---|
 `name` | string | N/A
-`max-items` | int | Ignored if `name` is specified
-`next-token` | string | Ignored if `name` is specified
+`max_results` | int | Ignored if `name` is specified
+`next_token` | string | Ignored if `name` is specified
 
 Run `terraform init` and then `terraform apply` inside the `./examples` directory to get a result.
 
