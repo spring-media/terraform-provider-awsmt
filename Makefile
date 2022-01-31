@@ -1,8 +1,8 @@
 TEST?=$$(go list ./... | grep -v 'vendor')
 HOSTNAME=github.com
 NAMESPACE=spring-media
-NAME=ott-tfprovider-awsmt
-BINARY=terraform-provider-${NAME}
+NAME=terraform-provider-awsmt
+BINARY=${NAME}
 VERSION=0.0.1
 OS_ARCH=$(shell go env GOOS)_$(shell go env GOHOSTARCH)
 BUILD_DIR=build
