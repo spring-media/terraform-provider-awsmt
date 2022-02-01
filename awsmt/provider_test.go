@@ -1,4 +1,4 @@
-package mediatailor
+package awsmt
 
 import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -10,9 +10,9 @@ var ProviderFactories map[string]func() (*schema.Provider, error)
 func init() {
 	//testAccProvider = Provider()
 	//testAccProviders = map[string]*schema.Provider{
-	//	"mediatailor": testAccProvider,
+	//	"awsmt": testAccProvider,
 	//}
 	ProviderFactories = map[string]func() (*schema.Provider, error){
-		"mediatailor": func() (*schema.Provider, error) { return Provider(), nil }, //nolint:unparam
+		"awsmt": func() (*schema.Provider, error) { return Provider(), nil }, //nolint:unparam
 	}
 }

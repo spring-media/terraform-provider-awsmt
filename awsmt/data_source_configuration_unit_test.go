@@ -1,4 +1,4 @@
-package mediatailor
+package awsmt
 
 import (
 	"github.com/aws/aws-sdk-go/service/mediatailor"

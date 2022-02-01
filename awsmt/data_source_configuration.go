@@ -1,4 +1,4 @@
-package mediatailor
+package awsmt
 
 import (
 	"context"
