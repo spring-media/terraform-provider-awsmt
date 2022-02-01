@@ -6,18 +6,17 @@ import (
 	"testing"
 )
 
-func TestAccConfigurationDataSourceBasic(t *testing.T) {
-	//dataSourceName := "data.mediatailor_configuration.c1"
+func TestAccPlaybackConfigurationDataSourceBasic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationDataSourceBasic(),
+				Config: testAccPlaybackConfigurationDataSourceBasic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.mediatailor_configuration.c1", "name", "broadcast-prod-live-stream"),
-					resource.TestCheckResourceAttr("data.mediatailor_configuration.c2", "max_results", "2"),
+					resource.TestCheckResourceAttr("data.aws_playback_configuration.c1", "name", "broadcast-prod-live-stream"),
+					resource.TestCheckResourceAttr("data.aws_playback_configuration.c2", "max_results", "2"),
 				),
 			},
 		},
@@ -30,22 +29,22 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccConfigurationDataSourceBasic() string {
+func testAccPlaybackConfigurationDataSourceBasic() string {
 	return `
-data "mediatailor_configuration" "c1" {
+data "aws_playback_configuration" "c1" {
   name = "broadcast-prod-live-stream"
 }
 
-data "mediatailor_configuration" "c2" {
+data "aws_playback_configuration" "c2" {
   max_results = 2
 }
 
 output "out1" {
-  value = data.mediatailor_configuration.c1
+  value = data.aws_playback_configuration.c1
 }
 
 output "out2" {
-  value = data.mediatailor_configuration.c2
+  value = data.aws_playback_configuration.c2
 }
 `
 }
