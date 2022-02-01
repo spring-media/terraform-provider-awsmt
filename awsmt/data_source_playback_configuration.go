@@ -1,4 +1,4 @@
-package mediatailor
+package awsmt
 
 import (
 	"context"
@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceConfiguration() *schema.Resource {
+func dataSourcePlaybackConfiguration() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceConfigurationRead,
+		ReadContext: dataSourcePlaybackConfigurationRead,
 		// schema based on https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#GetPlaybackConfigurationOutput
 		// with types found on https://sourcegraph.com/github.com/aws/aws-sdk-go/-/docs/service/mediatailor
 		Schema: map[string]*schema.Schema{
@@ -125,7 +125,7 @@ func dataSourceConfiguration() *schema.Resource {
 	}
 }
 
-func dataSourceConfigurationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourcePlaybackConfigurationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*mediatailor.MediaTailor)
 	var diags diag.Diagnostics
 	var output []interface{}

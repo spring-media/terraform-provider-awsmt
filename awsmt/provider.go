@@ -1,4 +1,4 @@
-package mediatailor
+package awsmt
 
 import (
 	"context"
@@ -19,7 +19,7 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap:         map[string]*schema.Resource{},
-		DataSourcesMap:       map[string]*schema.Resource{"mediatailor_configuration": dataSourceConfiguration()},
+		DataSourcesMap:       map[string]*schema.Resource{"awsmt_playback_configuration": dataSourcePlaybackConfiguration()},
 		ConfigureContextFunc: providerConfigure,
 	}
 }

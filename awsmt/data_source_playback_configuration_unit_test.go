@@ -1,4 +1,4 @@
-package mediatailor
+package awsmt
 
 import (
 	"github.com/aws/aws-sdk-go/service/mediatailor"
@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestFlattenConfiguration(t *testing.T) {
+func TestFlattenPlaybackConfiguration(t *testing.T) {
 	// arrange
 	testString := "testString"
 	var input = mediatailor.PlaybackConfiguration{
