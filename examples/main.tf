@@ -1,6 +1,6 @@
 terraform {
   required_providers {
-    mediatailor = {
+    awsmt = {
       version = "1.0.6"
       source  = "spring-media/awsmt"
       // to use a local version of the provider,
@@ -10,10 +10,10 @@ terraform {
   }
 }
 
-data "mediatailor_configuration" "c1" {
+data "awsmt_playback_configuration" "c1" {
   max_results = 5
 }
 
 output "out" {
-  value = data.mediatailor_configuration.c1
+  value = data.awsmt_playback_configuration.c1
 }
