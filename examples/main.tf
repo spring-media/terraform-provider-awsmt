@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     awsmt = {
-      version = "1.0.6"
+      version = "1.0.9"
       source  = "spring-media/awsmt"
       // to use a local version of the provider,
       // run `make` and set the source to:
@@ -11,7 +11,7 @@ terraform {
 }
 
 data "awsmt_playback_configuration" "c1" {
-  max_results = 5
+  name="broadcast-staging-live-stream"
 }
 
 output "out" {
