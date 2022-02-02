@@ -16,15 +16,7 @@ func dataSourcePlaybackConfiguration() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"max_results": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"next_token": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"configuration": {
 				Type:     schema.TypeList,
@@ -131,8 +123,6 @@ func dataSourcePlaybackConfigurationRead(_ context.Context, d *schema.ResourceDa
 	var output []interface{}
 
 	name := d.Get("name").(string)
-	maxResults := d.Get("max_results").(int)
-	nextToken := d.Get("next_token").(string)
 
 	if name != "" {
 		res, err := getSinglePlaybackConfiguration(client, name)
@@ -140,14 +130,14 @@ func dataSourcePlaybackConfigurationRead(_ context.Context, d *schema.ResourceDa
 			return diag.FromErr(err)
 		}
 		output = []interface{}{flatten(res)}
+		returnValues(d, output, diags)
 	} else {
-		res, err := listPlaybackConfigurations(client, int64(maxResults), nextToken)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		output = flattenList(res)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "`name` parameter required",
+			Detail:   "You need to specify a `name` parameter in your configuration",
+		})
 	}
-	returnValues(d, output, diags)
 	return diags
 }
 
@@ -157,21 +147,6 @@ func getSinglePlaybackConfiguration(c *mediatailor.MediaTailor, name string) (*m
 		return nil, err
 	}
 	return (*mediatailor.PlaybackConfiguration)(output), nil
-}
-
-func listPlaybackConfigurations(c *mediatailor.MediaTailor, maxResults int64, nextToken string) ([]*mediatailor.PlaybackConfiguration, error) {
-	var params = mediatailor.ListPlaybackConfigurationsInput{}
-	if nextToken != "" {
-		params.NextToken = &nextToken
-	}
-	if maxResults > 0 {
-		params.MaxResults = &maxResults
-	}
-	output, err := c.ListPlaybackConfigurations(&params)
-	if err != nil {
-		return nil, err
-	}
-	return output.Items, nil
 }
 
 func returnValues(d *schema.ResourceData, values []interface{}, diags diag.Diagnostics) diag.Diagnostics {
@@ -210,12 +185,4 @@ func flatten(configuration *mediatailor.PlaybackConfiguration) map[string]interf
 		return output
 	}
 	return map[string]interface{}{}
-}
-
-func flattenList(configurations []*mediatailor.PlaybackConfiguration) []interface{} {
-	var output []interface{}
-	for _, c := range configurations {
-		output = append(output, flatten(c))
-	}
-	return output
 }
