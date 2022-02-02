@@ -53,3 +53,11 @@ func TestFlattenPlaybackConfiguration(t *testing.T) {
 		t.Fatalf("Not matching. Expected:\n%#v\nGot\n%#v", expected, output)
 	}
 }
+
+func TestFlattenPlaybackConfigurationNil(t *testing.T) {
+	expected := map[string]interface{}{}
+	output := flatten(nil)
+	if !reflect.DeepEqual(expected, output) {
+		t.Fatalf("Not matching. Expected:\n%#v\nGot\n%#v", expected, output)
+	}
+}
