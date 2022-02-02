@@ -16,7 +16,6 @@ func TestAccPlaybackConfigurationDataSourceBasic(t *testing.T) {
 				Config: testAccPlaybackConfigurationDataSourceBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.c1", "name", "broadcast-prod-live-stream"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.c2", "max_results", "2"),
 				),
 			},
 		},
@@ -35,16 +34,8 @@ data "awsmt_playback_configuration" "c1" {
   name = "broadcast-prod-live-stream"
 }
 
-data "awsmt_playback_configuration" "c2" {
-  max_results = 2
-}
-
 output "out1" {
   value = data.awsmt_playback_configuration.c1
-}
-
-output "out2" {
-  value = data.awsmt_playback_configuration.c2
 }
 `
 }
