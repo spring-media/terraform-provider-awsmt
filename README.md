@@ -25,14 +25,7 @@ provider "mediatailor" {
 An example of how to query configurations from aws can be found in `./examples/main.tf`. 
 Make sure that `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are exported as environmental variables.
 
-You can query a single configuration by specifying the `name` of the configuration, or all the 
-configurations if you do not specify anything. Here are all the available parameters
-
-Name | Type | Notes
----|---|---|
-`name` | string | N/A
-`max_results` | int | Ignored if `name` is specified
-`next_token` | string | Ignored if `name` is specified
+You can query a single configuration by specifying the `name` of the configuration. 
 
 Run `terraform init` and then `terraform apply` inside the `./examples` directory to get a result.
 
