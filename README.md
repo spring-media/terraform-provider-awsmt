@@ -1,4 +1,4 @@
-# ott-tfprovider-awsmt
+# terraform-provider-awsmt
 A Terraform provider for AWS MediaTailor
 
 
