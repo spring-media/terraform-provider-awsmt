@@ -15,7 +15,7 @@ data "awsmt_playback_configuration" "conf" {
 
 * `name` - (required, type string). <br/>The name of the playback configuration
 you want to read.
-* `configuration` (generated, type list of object)<br/> (see [below for nested schema](#nestedatt--configuration))
+* `configuration` - (generated, type list of object)<br/> (see [below for nested schema](#nestedatt--configuration))
 
 <a id="nestedatt--configuration"></a>
 ### Nested Schema for `configuration`
@@ -70,7 +70,7 @@ as its CDN for ad segments. To set up an alternate CDN, create a rule in
 your CDN for the origin ads.mediatailor.`region`.amazonaws.com. Then specify
 the rule's name in this AdSegmentUrlPrefix. When AWS Elemental MediaTailor
 serves a manifest, it reports your CDN as the source for ad segments.
-* `content_segment_url_prefix` (type string) <br/>
+* `content_segment_url_prefix` - (type string) <br/>
 A content delivery network (CDN) to cache content segments, so that content
 requests don’t always have to go to the origin server. First, create a
 rule in your CDN for the content segment origin server. Then specify the
