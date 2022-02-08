@@ -26,5 +26,5 @@ provider "awsmt" {
 
 The AWSMT Provider supports the following argument:
 
-* `region` - (optional, type string). AWS region code, defaults to `eu-central-1`. 
+* `region` - (optional, type string).<br/> AWS region code, defaults to `eu-central-1`. 
 You can learn more about aws regions and the available codes [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html).
