@@ -87,14 +87,11 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 
 	input := getPlaybackConfigurationInput(d)
 
-	output, err := client.PutPlaybackConfiguration(&input)
+	_, err := client.PutPlaybackConfiguration(&input)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("name", output.Name)
-	if err != nil {
-		return diag.FromErr(err)
-	}
+
 	return diags
 }
 
