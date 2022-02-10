@@ -24,7 +24,7 @@ resource "awsmt_playback_configuration" "conf" {
 ```
 
 ## Schema
-All the descriptions for the fields are from the [official AWS documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#MediaTailor.PutPlaybackConfiguration) or theis [SourceGraph Page](https://sourcegraph.com/github.com/aws/aws-sdk-go/-/docs/service/mediatailor#PutPlaybackConfigurationInput) .
+All the descriptions for the fields are from the [official AWS documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#MediaTailor.PutPlaybackConfiguration) or this [SourceGraph Page](https://sourcegraph.com/github.com/aws/aws-sdk-go/-/docs/service/mediatailor#PutPlaybackConfigurationInput) .
 
 * `ad_decision_server_url` - (optional, type string). <br/>
   The URL for the ad decision server (ADS). This includes the specification

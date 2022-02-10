@@ -56,7 +56,7 @@ All the descriptions for the fields are from the [official AWS documentation](ht
   transcode profile. This overrides the dynamic transcoding defaults of MediaTailor.
   Use this only if you have already set up custom profiles with the help of
   AWS Support.
-- `video_content_source_url` - (tyep string)<br/>
+- `video_content_source_url` - (type string)<br/>
   The URL prefix for the parent manifest for the stream, minus the asset ID.
   The maximum length is 512 characters.
 
