@@ -16,41 +16,6 @@ func resourcePlaybackConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"avail_suppression": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"mode": {
-							// enum: OFF | BEHIND_LIVE_EDGE
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"value": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"bumper": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"end_url": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"start_url": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
 			"cdn_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -65,17 +30,6 @@ func resourcePlaybackConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-					},
-				},
-			},
-			"configuration_aliases": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:     schema.TypeMap,
-					Optional: true,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
 					},
 				},
 			},
@@ -96,51 +50,8 @@ func resourcePlaybackConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"live_pre_roll_configuration": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ad_decision_server_url": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"max_duration_seconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"manifest_processing_rules": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ad_marker_passthrough": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"enabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			"name": {
 				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"personalization_threshold_seconds": {
-				Type:     schema.TypeInt,
 				Optional: true,
 			},
 			"slate_ad_url": {
