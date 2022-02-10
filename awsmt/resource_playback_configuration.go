@@ -48,6 +48,7 @@ func resourcePlaybackConfiguration() *schema.Resource {
 							Optional: true,
 						},
 						"origin_manifest_type": {
+							//SINGLE_PERIOD | MULTI_PERIOD
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -117,12 +118,30 @@ func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlayba
 		input.AdDecisionServerUrl = &val
 	}
 	if v, ok := d.GetOk("cdn_configuration"); ok {
-		val := v.(mediatailor.CdnConfiguration)
-		input.CdnConfiguration = &val
+		val := v.([]interface{})[0].(map[string]interface{})
+		output := mediatailor.CdnConfiguration{}
+		if str, ok := val["ad_segment_url_prefix"]; ok {
+			converted := str.(string)
+			output.AdSegmentUrlPrefix = &converted
+		}
+		if str, ok := val["content_segment_url_prefix"]; ok {
+			converted := str.(string)
+			output.ContentSegmentUrlPrefix = &converted
+		}
+		input.CdnConfiguration = &output
 	}
 	if v, ok := d.GetOk("dash_configuration"); ok {
-		val := v.(mediatailor.DashConfigurationForPut)
-		input.DashConfiguration = &val
+		val := v.([]interface{})[0].(map[string]interface{})
+		output := mediatailor.DashConfigurationForPut{}
+		if str, ok := val["mpd_location"]; ok {
+			converted := str.(string)
+			output.MpdLocation = &converted
+		}
+		if str, ok := val["origin_manifest_type"]; ok {
+			converted := str.(string)
+			output.OriginManifestType = &converted
+		}
+		input.DashConfiguration = &output
 	}
 	if v, ok := d.GetOk("name"); ok {
 		val := v.(string)
