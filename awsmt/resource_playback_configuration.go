@@ -194,9 +194,8 @@ func flatterResourcePlaybackConfiguration(configuration *mediatailor.GetPlayback
 			"content_segment_url_prefix": configuration.CdnConfiguration.ContentSegmentUrlPrefix,
 		}}
 		output["dash_configuration"] = []interface{}{map[string]interface{}{
-			"manifest_endpoint_prefix": configuration.DashConfiguration.ManifestEndpointPrefix,
-			"mpd_location":             configuration.DashConfiguration.MpdLocation,
-			"origin_manifest_type":     configuration.DashConfiguration.OriginManifestType,
+			"mpd_location":         configuration.DashConfiguration.MpdLocation,
+			"origin_manifest_type": configuration.DashConfiguration.OriginManifestType,
 		}}
 		output["name"] = configuration.Name
 		output["slate_ad_url"] = configuration.SlateAdUrl
