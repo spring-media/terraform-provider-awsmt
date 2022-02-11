@@ -209,7 +209,7 @@ func flatterResourcePlaybackConfiguration(configuration *mediatailor.GetPlayback
 }
 
 func returnPlaybackConfigurationResource(d *schema.ResourceData, values map[string]interface{}, diags diag.Diagnostics) diag.Diagnostics {
-	for k, _ := range values {
+	for k := range values {
 		setSingleValue(d, values, diags, k)
 	}
 	return diags
