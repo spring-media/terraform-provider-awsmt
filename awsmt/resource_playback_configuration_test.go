@@ -5,6 +5,7 @@ import (
 	"testing"
 )
 
+//TODO destroy resource after creating it
 func TestAccPlaybackConfigurationResourceBasic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -13,8 +14,7 @@ func TestAccPlaybackConfigurationResourceBasic(t *testing.T) {
 			{
 				Config: testAccPlaybackConfigurationResource(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("resource.awsmt_playback_configuration.c1", "name", "test-playback-configuration-awsmt"),
-					//resource.TestCheckResourceAttr("resource.awsmt_playback_configuration.c1", "name", "broadcast-prod-live-stream"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "name", "test-playback-configuration-awsmt"),
 				),
 			},
 		},
@@ -39,8 +39,5 @@ resource "awsmt_playback_configuration" "r1" {
   video_content_source_url = "https://exampleurl.com/"
 }
 
-output "out" {
-  value = resource.awsmt_playback_configuration.r1
-}
 `
 }
