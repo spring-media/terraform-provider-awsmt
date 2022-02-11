@@ -92,21 +92,32 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
+	resourcePlaybackConfigurationRead(ctx, d, m)
 	return diags
 }
 
-func resourcePlaybackConfigurationUpdate(ctx context.Context, data *schema.ResourceData, i interface{}) diag.Diagnostics {
+func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+
 	return diags
 }
 
-func resourcePlaybackConfigurationRead(ctx context.Context, data *schema.ResourceData, i interface{}) diag.Diagnostics {
+func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	client := m.(*mediatailor.MediaTailor)
 	var diags diag.Diagnostics
+
+	name := d.Get("name").(string)
+	res, err := client.GetPlaybackConfiguration(&mediatailor.GetPlaybackConfigurationInput{Name: &name})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	output := flatterResourcePlaybackConfiguration(res)
+	returnPlaybackConfigurationResource(d, output, diags)
 	return diags
 }
 
-func resourcePlaybackConfigurationDelete(ctx context.Context, data *schema.ResourceData, i interface{}) diag.Diagnostics {
+func resourcePlaybackConfigurationDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	return diags
 }
@@ -169,4 +180,51 @@ func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlayba
 		input.VideoContentSourceUrl = &val
 	}
 	return input
+}
+
+func flatterResourcePlaybackConfiguration(configuration *mediatailor.GetPlaybackConfigurationOutput) map[string]interface{} {
+	if configuration != nil {
+		output := make(map[string]interface{})
+
+		output["ad_decision_server_url"] = configuration.AdDecisionServerUrl
+		output["cdn_configuration"] = []interface{}{map[string]interface{}{
+			"ad_segment_url_prefix":      configuration.CdnConfiguration.AdSegmentUrlPrefix,
+			"content_segment_url_prefix": configuration.CdnConfiguration.ContentSegmentUrlPrefix,
+		}}
+		output["dash_configuration"] = []interface{}{map[string]interface{}{
+			"manifest_endpoint_prefix": configuration.DashConfiguration.ManifestEndpointPrefix,
+			"mpd_location":             configuration.DashConfiguration.MpdLocation,
+			"origin_manifest_type":     configuration.DashConfiguration.OriginManifestType,
+		}}
+		output["name"] = configuration.Name
+		output["slate_ad_url"] = configuration.SlateAdUrl
+		output["tags"] = configuration.Tags
+		output["transcode_profile_name"] = configuration.TranscodeProfileName
+		output["video_content_source_url"] = configuration.VideoContentSourceUrl
+		return output
+	}
+	return map[string]interface{}{}
+}
+
+func returnPlaybackConfigurationResource(d *schema.ResourceData, values map[string]interface{}, diags diag.Diagnostics) diag.Diagnostics {
+	for k, _ := range values {
+		setSingleValue(d, values, diags, k)
+	}
+	//setSingleValue(d, values, diags, "ad_decision_server_url")
+	//setSingleValue(d, values, diags, "cdn_configuration")
+	//setSingleValue(d, values, diags, "dash_configuration")
+	//setSingleValue(d, values, diags, "name")
+	//setSingleValue(d, values, diags, "slate_ad_url")
+	//setSingleValue(d, values, diags, "tags")
+	//setSingleValue(d, values, diags, "transcode_profile_name")
+	//setSingleValue(d, values, diags, "video_content_source_url")
+	return diags
+}
+
+func setSingleValue(d *schema.ResourceData, values map[string]interface{}, diags diag.Diagnostics, name string) diag.Diagnostics {
+	err := d.Set(name, values[name])
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	return diags
 }
