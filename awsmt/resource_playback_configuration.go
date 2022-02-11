@@ -3,6 +3,7 @@ package awsmt
 import (
 	"context"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -93,6 +94,7 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 	resourcePlaybackConfigurationRead(ctx, d, m)
+	d.SetId(uuid.New().String())
 	return diags
 }
 
@@ -210,14 +212,6 @@ func returnPlaybackConfigurationResource(d *schema.ResourceData, values map[stri
 	for k, _ := range values {
 		setSingleValue(d, values, diags, k)
 	}
-	//setSingleValue(d, values, diags, "ad_decision_server_url")
-	//setSingleValue(d, values, diags, "cdn_configuration")
-	//setSingleValue(d, values, diags, "dash_configuration")
-	//setSingleValue(d, values, diags, "name")
-	//setSingleValue(d, values, diags, "slate_ad_url")
-	//setSingleValue(d, values, diags, "tags")
-	//setSingleValue(d, values, diags, "transcode_profile_name")
-	//setSingleValue(d, values, diags, "video_content_source_url")
 	return diags
 }
 
