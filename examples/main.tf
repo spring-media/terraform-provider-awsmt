@@ -21,13 +21,12 @@ resource "awsmt_playback_configuration" "r1" {
     content_segment_url_prefix = "test"
   }
   dash_configuration {
-    mpd_location = "test"
+    mpd_location = "EMT_DEFAULT"
     origin_manifest_type = "MULTI_PERIOD"
   }
   name = "test-playback-configuration-awsmt"
   slate_ad_url = "https://exampleurl.com/"
-  tags = {}
-  transcode_profile_name = "test"
+  tags = {"Environment": "dev"}
   video_content_source_url = "https://exampleurl.com/"
 }
 
