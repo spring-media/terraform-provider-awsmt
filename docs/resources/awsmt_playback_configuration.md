@@ -12,13 +12,13 @@ resource "awsmt_playback_configuration" "conf" {
     content_segment_url_prefix = "test"
   }
   dash_configuration {
-    mpd_location = "test"
+    mpd_location = "EMT_DEFAULT"
     origin_manifest_type = "MULTI_PERIOD"
   }
   name = "test-playback-configuration-awsmt"
   slate_ad_url = "https://exampleurl.com/"
   tags = {}
-  transcode_profile_name = "test"
+  transcode_profile_name = "profile_configured_in_your_account"
   video_content_source_url = "https://exampleurl.com/"
 }
 ```
@@ -78,7 +78,7 @@ All the descriptions for the fields are from the [official AWS documentation](ht
 <a id="dash_conf"></a>
 ### Nested Schema for `dash_configuration`
 
-* `mpd_location` - (optional, type string) <br/>
+* `mpd_location` - (optional, type string, enum `EMT_DEFAULT` | `DISABLED`) <br/>
   The setting that controls whether MediaTailor includes the Location tag in
   DASH manifests. MediaTailor populates the Location tag with the URL for manifest
   update requests, to be used by players that don't support sticky redirects.
