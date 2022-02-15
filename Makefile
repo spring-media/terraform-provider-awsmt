@@ -6,6 +6,8 @@ BINARY=${NAME}
 VERSION=0.0.1
 OS_ARCH=$(shell go env GOOS)_$(shell go env GOHOSTARCH)
 BUILD_DIR=build
+SWEEP_DIR?=./awsmt
+SWEEP?=eu-central-1
 
 default: install
 
@@ -47,3 +49,7 @@ $(BUILD_DIR):
 
 test: $(BUILD_DIR)/coverage.html $(BUILD_DIR)/coverage_func.txt $(BUILD_DIR)/coverage.profile
 	@echo "finished test"
+
+sweep:
+	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
+	go test $(SWEEP_DIR) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m

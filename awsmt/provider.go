@@ -18,7 +18,7 @@ func Provider() *schema.Provider {
 				Optional: true,
 			},
 		},
-		ResourcesMap:         map[string]*schema.Resource{},
+		ResourcesMap:         map[string]*schema.Resource{"awsmt_playback_configuration": resourcePlaybackConfiguration()},
 		DataSourcesMap:       map[string]*schema.Resource{"awsmt_playback_configuration": dataSourcePlaybackConfiguration()},
 		ConfigureContextFunc: providerConfigure,
 	}
