@@ -32,10 +32,10 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
       - name: Unit & Acceptance Test
         run: make test
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
       - name: sweep
         run: make sweep
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
