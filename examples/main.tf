@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     awsmt = {
-      version = "1.1.0"
+      version = "1.1.2"
       source  = "spring-media/awsmt"
       // to use a local version of the provider,
       // run `make` and set the source to:
