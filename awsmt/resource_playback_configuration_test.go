@@ -1,11 +1,31 @@
 package awsmt
 
 import (
+	"fmt"
+	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"testing"
 )
 
-//TODO destroy resource after creating it
+func init() {
+	resource.AddTestSweepers("test_playback_configuration", &resource.Sweeper{
+		Name: "test_playback_configuration",
+		F: func(region string) error {
+			client, err := sharedClientForRegion(region)
+			if err != nil {
+				return fmt.Errorf("Error getting client: %s", err)
+			}
+			conn := client.(*mediatailor.MediaTailor)
+			name := "test-playback-configuration-awsmt"
+			_, err = conn.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: &name})
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+	})
+}
+
 func TestAccPlaybackConfigurationResourceBasic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
