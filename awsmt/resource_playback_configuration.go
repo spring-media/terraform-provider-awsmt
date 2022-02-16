@@ -104,7 +104,7 @@ func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourcePlaybackConfigurationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*mediatailor.MediaTailor)
 	var diags diag.Diagnostics
 
@@ -119,8 +119,15 @@ func resourcePlaybackConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourcePlaybackConfigurationDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourcePlaybackConfigurationDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	client := m.(*mediatailor.MediaTailor)
 	var diags diag.Diagnostics
+	name := d.Get("name").(string)
+	_, err := client.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: &name})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId("")
 	return diags
 }
 
