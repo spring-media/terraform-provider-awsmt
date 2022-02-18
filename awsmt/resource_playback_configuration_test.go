@@ -14,7 +14,7 @@ func init() {
 		F: func(region string) error {
 			client, err := sharedClientForRegion(region)
 			if err != nil {
-				return fmt.Errorf("Error getting client: %s", err)
+				return fmt.Errorf("error getting client: %s", err)
 			}
 			conn := client.(*mediatailor.MediaTailor)
 			name := "test-playback-configuration-awsmt"
@@ -37,6 +37,13 @@ func TestAccPlaybackConfigurationResourceBasic(t *testing.T) {
 				Config: testAccPlaybackConfigurationResource(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "name", "test-playback-configuration-awsmt"),
+				),
+			},
+			{
+				Config: testAccPlaybackConfigurationUpdateResource(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "name", "test-playback-configuration-awsmt"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "slate_ad_url", "https://exampleurl.com/updated"),
 				),
 			},
 		},
@@ -69,6 +76,26 @@ resource "awsmt_playback_configuration" "r1" {
   slate_ad_url = "https://exampleurl.com/"
   tags = {"Environment": "dev"}
   video_content_source_url = "https://exampleurl.com/"
+}
+
+`
+}
+func testAccPlaybackConfigurationUpdateResource() string {
+	return `
+resource "awsmt_playback_configuration" "r1" {
+  ad_decision_server_url = "https://exampleurl.com/"
+  cdn_configuration {
+    ad_segment_url_prefix = "test-updated"
+    content_segment_url_prefix = "test-updated"
+  }
+  dash_configuration {
+    mpd_location = "EMT_DEFAULT"
+    origin_manifest_type = "MULTI_PERIOD"
+  }
+  name = "test-playback-configuration-awsmt"
+  slate_ad_url = "https://exampleurl.com/updated"
+  tags = {"Environment": "dev"}
+  video_content_source_url = "https://exampleurl.com/updated"
 }
 
 `

@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"time"
 )
 
 func resourcePlaybackConfiguration() *schema.Resource {
@@ -79,6 +80,11 @@ func resourcePlaybackConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"last_updated": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -100,6 +106,18 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 
 func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	if d.HasChanges("ad_decision_server_url", "cdn_configuration", "dash_configuration", "slate_ad_url", "tags", "transcode_profile_name", "video_content_source_url") {
+		client := m.(*mediatailor.MediaTailor)
+		input := getPlaybackConfigurationInput(d)
+		_, err := client.PutPlaybackConfiguration(&input)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if err = d.Set("last_updated", time.Now().Format(time.RFC850)); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	resourcePlaybackConfigurationRead(ctx, d, m)
 
 	return diags
 }
