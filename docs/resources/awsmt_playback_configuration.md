@@ -36,7 +36,26 @@ All the descriptions for the fields are from the [official AWS documentation](ht
   The configuration for using a content delivery network (CDN), like Amazon
   CloudFront, for content and ad segment management.
 * `dash_configuration` - (optional, type list of object) (see [below for nested schema](#dash_conf))<br/>
-
+  The configuration for DASH content.
+* `name` - (required, type string) </br>
+  The identifier for the playback configuration.
+* `slate_ad_url` - (optional, type string)<br/>
+  The URL for a high-quality video asset to transcode and use to fill in time
+  that's not used by ads. AWS Elemental MediaTailor shows the slate to fill
+  in gaps in media content. Configuring the slate is optional for non-VPAID
+  playback configurations. For VPAID, the slate is required because MediaTailor
+  provides it in the slots designated for dynamic ad content. The slate must
+  be a high-quality asset that contains both audio and video.
+* `tags` - (optional, type map of string)<br/>
+  The tags assigned to the playback configuration.
+* `transcode_profile_name` - (optional, type string)<br/>
+  The name that is used to associate this playback configuration with a custom
+  transcode profile. This overrides the dynamic transcoding defaults of MediaTailor.
+  Use this only if you have already set up custom profiles with the help of
+  AWS Support.
+* `video_content_source_url` - (optional, type string)<br/>
+  The URL prefix for the parent manifest for the stream, minus the asset ID.
+  The maximum length is 512 characters.
 
 <a id="cdn_conf"></a>
 ### Nested Schema for `cdn_configuration`
@@ -54,26 +73,6 @@ All the descriptions for the fields are from the [official AWS documentation](ht
   rule in your CDN for the content segment origin server. Then specify the
   rule's name in this ContentSegmentUrlPrefix. When AWS Elemental MediaTailor
   serves a manifest, it reports your CDN as the source for content segments.
-* `name` - (required, type string) </br>
-  The identifier for the playback configuration.
-* `slate_ad_url` - (optional, type string)<br/>
-  The URL for a high-quality video asset to transcode and use to fill in time
-  that's not used by ads. AWS Elemental MediaTailor shows the slate to fill
-  in gaps in media content. Configuring the slate is optional for non-VPAID
-  playback configurations. For VPAID, the slate is required because MediaTailor
-  provides it in the slots designated for dynamic ad content. The slate must
-  be a high-quality asset that contains both audio and video.
-* - `tags` - (optional, type map of string)<br/>
-  The tags assigned to the playback configuration.
-*`transcode_profile_name` - (optional, type string)<br/>
-  The name that is used to associate this playback configuration with a custom
-  transcode profile. This overrides the dynamic transcoding defaults of MediaTailor.
-  Use this only if you have already set up custom profiles with the help of
-  AWS Support.
-*`video_content_source_url` - (optional, type string)<br/>
-  The URL prefix for the parent manifest for the stream, minus the asset ID.
-  The maximum length is 512 characters.
-
 
 <a id="dash_conf"></a>
 ### Nested Schema for `dash_configuration`
