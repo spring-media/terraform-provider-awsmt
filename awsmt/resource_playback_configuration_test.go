@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 )
 
@@ -30,6 +31,7 @@ func TestAccPlaybackConfigurationResourceBasic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: ProviderFactories,
+		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlaybackConfigurationResource(),
@@ -39,6 +41,16 @@ func TestAccPlaybackConfigurationResourceBasic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckPlaybackConfigurationDestroy(_ *terraform.State) error {
+	c := testAccProvider.Meta().(*mediatailor.MediaTailor)
+	name := "test-playback-configuration-awsmt"
+	_, err := c.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: &name})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func testAccPlaybackConfigurationResource() string {
