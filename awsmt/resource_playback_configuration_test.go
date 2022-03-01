@@ -3,6 +3,7 @@ package awsmt
 import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
@@ -48,6 +49,57 @@ func TestAccPlaybackConfigurationResourceBasic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccPlaybackConfigurationResourceImport(t *testing.T) {
+	resourceName := "awsmt_playback_configuration.r2"
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { importPreCheck(t, "eu-central-1") },
+		ProviderFactories: ProviderFactories,
+		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlaybackConfigurationImportResource(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func importPreCheck(t *testing.T, region string) {
+	testAccPreCheck(t)
+
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		t.Fatalf("error getting client: %s", err)
+	}
+	conn := client.(*mediatailor.MediaTailor)
+
+	exampleUrl := "https://exampleurl.com/"
+	mpdLocation := "DISABLED"
+	manifestType := "SINGLE_PERIOD"
+	name := "test-playback-configuration-awsmt"
+	env := "dev"
+	input := mediatailor.PutPlaybackConfigurationInput{
+		AdDecisionServerUrl:   &exampleUrl,
+		CdnConfiguration:      &mediatailor.CdnConfiguration{AdSegmentUrlPrefix: &exampleUrl},
+		DashConfiguration:     &mediatailor.DashConfigurationForPut{MpdLocation: &mpdLocation, OriginManifestType: &manifestType},
+		Name:                  &name,
+		VideoContentSourceUrl: &exampleUrl,
+		Tags:                  map[string]*string{"Environment": &env},
+	}
+
+	_, err = conn.PutPlaybackConfiguration(&input)
+	if err != nil {
+		t.Fatal(diag.FromErr(err))
+	}
 }
 
 func testAccCheckPlaybackConfigurationDestroy(_ *terraform.State) error {
@@ -98,5 +150,22 @@ resource "awsmt_playback_configuration" "r1" {
   video_content_source_url = "https://exampleurl.com/updated"
 }
 
+`
+}
+func testAccPlaybackConfigurationImportResource() string {
+	return `
+resource "awsmt_playback_configuration" "r2" {
+  ad_decision_server_url = "https://exampleurl.com/"
+  cdn_configuration {
+    ad_segment_url_prefix = "https://exampleurl.com/"
+  }
+  dash_configuration {
+    mpd_location = "DISABLED"
+	origin_manifest_type = "SINGLE_PERIOD"
+  }
+  name = "test-playback-configuration-awsmt"
+  tags = {"Environment": "dev"}
+  video_content_source_url = "https://exampleurl.com/"
+}
 `
 }
