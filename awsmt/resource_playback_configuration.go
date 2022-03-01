@@ -3,7 +3,6 @@ package awsmt
 import (
 	"context"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"time"
@@ -103,7 +102,7 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 	resourcePlaybackConfigurationRead(ctx, d, m)
-	d.SetId(uuid.New().String())
+	d.SetId(*input.Name)
 	return diags
 }
 
