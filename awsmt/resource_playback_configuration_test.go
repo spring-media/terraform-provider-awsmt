@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"regexp"
 	"testing"
 )
 
@@ -29,6 +30,7 @@ func init() {
 }
 
 func TestAccPlaybackConfigurationResourceBasic(t *testing.T) {
+	resourceName := "awsmt_playback_configuration.r1"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: ProviderFactories,
@@ -37,14 +39,15 @@ func TestAccPlaybackConfigurationResourceBasic(t *testing.T) {
 			{
 				Config: testAccPlaybackConfigurationResource(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "name", "test-playback-configuration-awsmt"),
+					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
+					resource.TestMatchResourceAttr(resourceName, "playback_configuration_arn", regexp.MustCompile(`arn:aws:mediatailor`)),
 				),
 			},
 			{
 				Config: testAccPlaybackConfigurationUpdateResource(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "name", "test-playback-configuration-awsmt"),
-					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "slate_ad_url", "https://exampleurl.com/updated"),
+					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
+					resource.TestCheckResourceAttr(resourceName, "slate_ad_url", "https://exampleurl.com/updated"),
 				),
 			},
 		},
@@ -62,6 +65,7 @@ func TestAccPlaybackConfigurationResourceImport(t *testing.T) {
 				Config: testAccPlaybackConfigurationImportResource(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
+					resource.TestMatchResourceAttr(resourceName, "playback_configuration_arn", regexp.MustCompile(`arn:aws:mediatailor`)),
 				),
 			},
 			{
