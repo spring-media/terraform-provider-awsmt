@@ -47,7 +47,7 @@ func TestFlattenPlaybackConfiguration(t *testing.T) {
 		"video_content_source_url":               &testString,
 	}
 	// act
-	output := flatten(&input)
+	output := flattenPlaybackConfiguration(&input)
 	// assert
 	if !reflect.DeepEqual(expected, output) {
 		t.Fatalf("Not matching. Expected:\n%#v\nGot\n%#v", expected, output)
@@ -56,7 +56,7 @@ func TestFlattenPlaybackConfiguration(t *testing.T) {
 
 func TestFlattenPlaybackConfigurationNil(t *testing.T) {
 	expected := map[string]interface{}{}
-	output := flatten(nil)
+	output := flattenPlaybackConfiguration(nil)
 	if !reflect.DeepEqual(expected, output) {
 		t.Fatalf("Not matching. Expected:\n%#v\nGot\n%#v", expected, output)
 	}

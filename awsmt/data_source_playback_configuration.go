@@ -84,7 +84,7 @@ func dataSourcePlaybackConfigurationRead(_ context.Context, d *schema.ResourceDa
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		output = []interface{}{flatten(res)}
+		output = []interface{}{flattenPlaybackConfiguration(res)}
 		returnValues(d, output, diags)
 	} else {
 		diags = append(diags, diag.Diagnostic{
@@ -112,7 +112,7 @@ func returnValues(d *schema.ResourceData, values []interface{}, diags diag.Diagn
 	return diags
 }
 
-func flatten(configuration *mediatailor.PlaybackConfiguration) map[string]interface{} {
+func flattenPlaybackConfiguration(configuration *mediatailor.PlaybackConfiguration) map[string]interface{} {
 	if configuration != nil {
 		output := make(map[string]interface{})
 

@@ -123,7 +123,7 @@ func resourcePlaybackConfigurationRead(_ context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 
-	output := flatterResourcePlaybackConfiguration(res)
+	output := flattenPlaybackConfiguration((*mediatailor.PlaybackConfiguration)(res))
 	returnPlaybackConfigurationResource(d, output, diags)
 	return diags
 }
@@ -198,36 +198,6 @@ func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlayba
 		input.VideoContentSourceUrl = &val
 	}
 	return input
-}
-
-func flatterResourcePlaybackConfiguration(configuration *mediatailor.GetPlaybackConfigurationOutput) map[string]interface{} {
-	if configuration != nil {
-		output := make(map[string]interface{})
-
-		output["ad_decision_server_url"] = configuration.AdDecisionServerUrl
-		output["cdn_configuration"] = []interface{}{map[string]interface{}{
-			"ad_segment_url_prefix":      configuration.CdnConfiguration.AdSegmentUrlPrefix,
-			"content_segment_url_prefix": configuration.CdnConfiguration.ContentSegmentUrlPrefix,
-		}}
-		output["dash_configuration"] = []interface{}{map[string]interface{}{
-			"manifest_endpoint_prefix": configuration.DashConfiguration.ManifestEndpointPrefix,
-			"mpd_location":             configuration.DashConfiguration.MpdLocation,
-			"origin_manifest_type":     configuration.DashConfiguration.OriginManifestType,
-		}}
-		output["hls_configuration"] = []interface{}{map[string]interface{}{
-			"manifest_endpoint_prefix": configuration.HlsConfiguration.ManifestEndpointPrefix,
-		}}
-		output["name"] = configuration.Name
-		output["playback_configuration_arn"] = configuration.PlaybackConfigurationArn
-		output["playback_endpoint_prefix"] = configuration.PlaybackEndpointPrefix
-		output["session_initialization_endpoint_prefix"] = configuration.SessionInitializationEndpointPrefix
-		output["slate_ad_url"] = configuration.SlateAdUrl
-		output["tags"] = configuration.Tags
-		output["transcode_profile_name"] = configuration.TranscodeProfileName
-		output["video_content_source_url"] = configuration.VideoContentSourceUrl
-		return output
-	}
-	return map[string]interface{}{}
 }
 
 func returnPlaybackConfigurationResource(d *schema.ResourceData, values map[string]interface{}, diags diag.Diagnostics) diag.Diagnostics {
