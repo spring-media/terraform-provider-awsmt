@@ -17,24 +17,15 @@ func resourcePlaybackConfiguration() *schema.Resource {
 		// schema based on: https://docs.aws.amazon.com/mediatailor/latest/apireference/playbackconfiguration.html#playbackconfiguration-prop-putplaybackconfigurationrequest-personalizationthresholdseconds
 		// and https://sourcegraph.com/github.com/aws/aws-sdk-go/-/docs/service/mediatailor#PutPlaybackConfigurationInput
 		Schema: map[string]*schema.Schema{
-			"ad_decision_server_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+			"ad_decision_server_url": &optionalString,
 			"cdn_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ad_segment_url_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"content_segment_url_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
+						"ad_segment_url_prefix":      &optionalString,
+						"content_segment_url_prefix": &optionalString,
 					},
 				},
 			},
@@ -44,19 +35,10 @@ func resourcePlaybackConfiguration() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"manifest_endpoint_prefix": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"mpd_location": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"origin_manifest_type": {
-							//SINGLE_PERIOD | MULTI_PERIOD
-							Type:     schema.TypeString,
-							Optional: true,
-						},
+						"manifest_endpoint_prefix": &computedString,
+						"mpd_location":             &optionalString,
+						//SINGLE_PERIOD | MULTI_PERIOD
+						"origin_manifest_type": &optionalString,
 					},
 				},
 			},
@@ -65,33 +47,15 @@ func resourcePlaybackConfiguration() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"manifest_endpoint_prefix": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
+						"manifest_endpoint_prefix": &computedString,
 					},
 				},
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"playback_configuration_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"playback_endpoint_prefix": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"session_initialization_endpoint_prefix": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"slate_ad_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+			"name":                                   &requiredString,
+			"playback_configuration_arn":             &computedString,
+			"playback_endpoint_prefix":               &computedString,
+			"session_initialization_endpoint_prefix": &computedString,
+			"slate_ad_url":                           &optionalString,
 			"tags": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -99,14 +63,8 @@ func resourcePlaybackConfiguration() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"transcode_profile_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"video_content_source_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+			"transcode_profile_name":   &optionalString,
+			"video_content_source_url": &optionalString,
 			"last_updated": {
 				Type:     schema.TypeString,
 				Optional: true,
