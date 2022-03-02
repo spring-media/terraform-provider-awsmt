@@ -14,32 +14,20 @@ func dataSourcePlaybackConfiguration() *schema.Resource {
 		// schema based on https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#GetPlaybackConfigurationOutput
 		// with types found on https://sourcegraph.com/github.com/aws/aws-sdk-go/-/docs/service/mediatailor
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+			"name": &requiredString,
 			"configuration": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ad_decision_server_url": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
+						"ad_decision_server_url": &computedString,
 						"cdn_configuration": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ad_segment_url_prefix": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"content_segment_url_prefix": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
+									"ad_segment_url_prefix":      &computedString,
+									"content_segment_url_prefix": &computedString,
 								},
 							},
 						},
@@ -48,18 +36,9 @@ func dataSourcePlaybackConfiguration() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"manifest_endpoint_prefix": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"mpd_location": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"origin_manifest_type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
+									"manifest_endpoint_prefix": &computedString,
+									"mpd_location":             &computedString,
+									"origin_manifest_type":     &computedString,
 								},
 							},
 						},
@@ -68,33 +47,15 @@ func dataSourcePlaybackConfiguration() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"manifest_endpoint_prefix": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
+									"manifest_endpoint_prefix": &computedString,
 								},
 							},
 						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"playback_configuration_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"playback_endpoint_prefix": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"session_initialization_endpoint_prefix": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"slate_ad_url": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
+						"name":                                   &computedString,
+						"playback_configuration_arn":             &computedString,
+						"playback_endpoint_prefix":               &computedString,
+						"session_initialization_endpoint_prefix": &computedString,
+						"slate_ad_url":                           &computedString,
 						"tags": {
 							Type:     schema.TypeMap,
 							Computed: true,
@@ -102,14 +63,8 @@ func dataSourcePlaybackConfiguration() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"transcode_profile_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"video_content_source_url": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
+						"transcode_profile_name":   &computedString,
+						"video_content_source_url": &computedString,
 					},
 				},
 			},
