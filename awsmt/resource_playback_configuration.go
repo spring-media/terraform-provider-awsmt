@@ -44,6 +44,10 @@ func resourcePlaybackConfiguration() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"manifest_endpoint_prefix": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"mpd_location": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -56,9 +60,33 @@ func resourcePlaybackConfiguration() *schema.Resource {
 					},
 				},
 			},
+			"hls_configuration": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"manifest_endpoint_prefix": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"playback_configuration_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"playback_endpoint_prefix": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"session_initialization_endpoint_prefix": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"slate_ad_url": {
 				Type:     schema.TypeString,
@@ -224,10 +252,17 @@ func flatterResourcePlaybackConfiguration(configuration *mediatailor.GetPlayback
 			"content_segment_url_prefix": configuration.CdnConfiguration.ContentSegmentUrlPrefix,
 		}}
 		output["dash_configuration"] = []interface{}{map[string]interface{}{
-			"mpd_location":         configuration.DashConfiguration.MpdLocation,
-			"origin_manifest_type": configuration.DashConfiguration.OriginManifestType,
+			"manifest_endpoint_prefix": configuration.DashConfiguration.ManifestEndpointPrefix,
+			"mpd_location":             configuration.DashConfiguration.MpdLocation,
+			"origin_manifest_type":     configuration.DashConfiguration.OriginManifestType,
+		}}
+		output["hls_configuration"] = []interface{}{map[string]interface{}{
+			"manifest_endpoint_prefix": configuration.HlsConfiguration.ManifestEndpointPrefix,
 		}}
 		output["name"] = configuration.Name
+		output["playback_configuration_arn"] = configuration.PlaybackConfigurationArn
+		output["playback_endpoint_prefix"] = configuration.PlaybackEndpointPrefix
+		output["session_initialization_endpoint_prefix"] = configuration.SessionInitializationEndpointPrefix
 		output["slate_ad_url"] = configuration.SlateAdUrl
 		output["tags"] = configuration.Tags
 		output["transcode_profile_name"] = configuration.TranscodeProfileName
