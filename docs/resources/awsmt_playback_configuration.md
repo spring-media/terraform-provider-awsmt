@@ -3,7 +3,7 @@
 Use this resource to create a playback configuration.
 
 ## Usage
-
+You can specify the arguments inside a resource block like this:
 ```
 resource "awsmt_playback_configuration" "conf" {
   ad_decision_server_url = "https://exampleurl.com/"
@@ -24,7 +24,8 @@ resource "awsmt_playback_configuration" "conf" {
 ```
 
 ## Schema
-All the descriptions for the fields are from the [official AWS documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#MediaTailor.PutPlaybackConfiguration) or this [SourceGraph Page](https://sourcegraph.com/github.com/aws/aws-sdk-go/-/docs/service/mediatailor#PutPlaybackConfigurationInput) .
+All the descriptions for the fields are from the [official AWS documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#MediaTailor.PutPlaybackConfiguration) or this [SourceGraph Page](https://sourcegraph.com/github.com/aws/aws-sdk-go/-/docs/service/mediatailor#PutPlaybackConfigurationInput).
+Some entries of the schema are marked as attributes, which means they are read-only properties whose value is only known after apply.
 
 * `ad_decision_server_url` - (optional, type string). <br/>
   The URL for the ad decision server (ADS). This includes the specification
@@ -37,8 +38,18 @@ All the descriptions for the fields are from the [official AWS documentation](ht
   CloudFront, for content and ad segment management.
 * `dash_configuration` - (optional, type list of object) (see [below for nested schema](#dash_conf))<br/>
   The configuration for DASH content.
+*`hls_configuration` - (attribute, type list of object) (see [below for nested schema](#attribute_hls_conf))<br/>
+  The configuration for HLS content.
 * `name` - (required, type string) </br>
   The identifier for the playback configuration.
+*`playback_configuration_arn` - (attribute, type string)<br/>
+  The Amazon Resource Name (ARN) for the playback configuration.
+*`playback_endpoint_prefix` - (attribute, type string)<br/>
+  The URL that the player accesses to get a manifest from AWS Elemental MediaTailor.
+  This session will use server-side reporting.
+* `session_initialization_endpoint_prefix` - (attribute, type string)<br/>
+  The URL that the player uses to initialize a session that uses client-side
+  reporting.
 * `slate_ad_url` - (optional, type string)<br/>
   The URL for a high-quality video asset to transcode and use to fill in time
   that's not used by ads. AWS Elemental MediaTailor shows the slate to fill
@@ -92,3 +103,10 @@ All the descriptions for the fields are from the [official AWS documentation](ht
   origin server produces single-period manifests, set this to SINGLE_PERIOD.
   The default setting is MULTI_PERIOD. For multi-period manifests, omit this
   setting or set it to MULTI_PERIOD.
+
+<a id="attribute_hls_conf"></a>
+### Nested Schema for `hls_configuration`
+
+* `manifest_endpoint_prefix` - (attribute, type string)<br/>
+  The URL that is used to initiate a playback session for devices that support
+  Apple HLS. The session uses server-side reporting.

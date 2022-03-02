@@ -6,17 +6,19 @@ A Terraform provider for AWS MediaTailor
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=spring-media_ott-tfprovider-awsmt&metric=alert_status&token=06d658832169745b96bb3266679443282e48ace4)](https://sonarcloud.io/summary/new_code?id=spring-media_ott-tfprovider-awsmt)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=spring-media_ott-tfprovider-awsmt&metric=coverage&token=06d658832169745b96bb3266679443282e48ace4)](https://sonarcloud.io/summary/new_code?id=spring-media_ott-tfprovider-awsmt)
 
+## Documentation
+
+You can find the documentation about the provider, its data sources, and its resources [here](https://github.com/spring-media/terraform-provider-awsmt/tree/main/docs).
+
 ## Building the Provider
 
-Run `make`.
-
-## Provider Setup
-
-By default, the provider sends requests to the `eu-central-1` aws region. You can override this default value by setting a region variable in the Terraform provider configuration.
-For example, in `main.tf`:
+to use a local version of the provider, run `make` and create a ~/.terraformrc file with the following content:
 ```
-provider "mediatailor" {
-    region = "us-west-1"
+provider_installation {
+    dev_overrides {
+      "spring-media/awsmt" = "/Users/<USERNAME>/.terraform.d/plugins/github.com/spring-media/terraform-provider-awsmt/0.0.1/<SYSTEM_ARCHITECTURE>"
+    }
+    direct {}
 }
 ```
 
