@@ -50,6 +50,13 @@ func TestAccPlaybackConfigurationResourceBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "slate_ad_url", "https://exampleurl.com/updated"),
 				),
 			},
+			{
+				Config: testAccPlaybackConfigurationUpdateResourceName(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt-changed"),
+					resource.TestCheckResourceAttr(resourceName, "slate_ad_url", "https://exampleurl.com/updated"),
+				),
+			},
 		},
 	})
 }
@@ -136,6 +143,7 @@ resource "awsmt_playback_configuration" "r1" {
 
 `
 }
+
 func testAccPlaybackConfigurationUpdateResource() string {
 	return `
 resource "awsmt_playback_configuration" "r1" {
@@ -149,6 +157,26 @@ resource "awsmt_playback_configuration" "r1" {
     origin_manifest_type = "MULTI_PERIOD"
   }
   name = "test-playback-configuration-awsmt"
+  slate_ad_url = "https://exampleurl.com/updated"
+  tags = {"Environment": "dev"}
+  video_content_source_url = "https://exampleurl.com/updated"
+}
+
+`
+}
+func testAccPlaybackConfigurationUpdateResourceName() string {
+	return `
+resource "awsmt_playback_configuration" "r1" {
+  ad_decision_server_url = "https://exampleurl.com/"
+  cdn_configuration {
+    ad_segment_url_prefix = "test-updated"
+    content_segment_url_prefix = "test-updated"
+  }
+  dash_configuration {
+    mpd_location = "EMT_DEFAULT"
+    origin_manifest_type = "MULTI_PERIOD"
+  }
+  name = "test-playback-configuration-awsmt-changed"
   slate_ad_url = "https://exampleurl.com/updated"
   tags = {"Environment": "dev"}
   video_content_source_url = "https://exampleurl.com/updated"

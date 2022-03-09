@@ -94,8 +94,18 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 
 func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if d.HasChanges("ad_decision_server_url", "cdn_configuration", "dash_configuration", "slate_ad_url", "tags", "transcode_profile_name", "video_content_source_url") {
+	if d.HasChanges("ad_decision_server_url", "cdn_configuration", "dash_configuration", "name", "slate_ad_url", "tags", "transcode_profile_name", "video_content_source_url") {
 		client := m.(*mediatailor.MediaTailor)
+
+		if d.HasChange("name") {
+			oldValue, newValue := d.GetChange("name")
+			oldName := oldValue.(string)
+			_, err := client.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: &oldName})
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			d.SetId(newValue.(string))
+		}
 		input := getPlaybackConfigurationInput(d)
 		_, err := client.PutPlaybackConfiguration(&input)
 		if err != nil {
