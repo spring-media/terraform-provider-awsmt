@@ -154,7 +154,10 @@ func dataSourcePlaybackConfigurationRead(_ context.Context, d *schema.ResourceDa
 			return diag.FromErr(err)
 		}
 		output = []interface{}{flattenPlaybackConfiguration(res)}
-		returnValues(d, output, diags)
+		if err := d.Set("configuration", output); err != nil {
+			return diag.FromErr(err)
+		}
+		d.SetId(uuid.New().String())
 	} else {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -173,23 +176,24 @@ func getSinglePlaybackConfiguration(c *mediatailor.MediaTailor, name string) (*m
 	return (*mediatailor.PlaybackConfiguration)(output), nil
 }
 
-func returnValues(d *schema.ResourceData, values []interface{}, diags diag.Diagnostics) diag.Diagnostics {
-	if err := d.Set("configuration", values); err != nil {
-		return diag.FromErr(err)
-	}
-	d.SetId(uuid.New().String())
-	return diags
-}
-
 func flattenPlaybackConfiguration(configuration *mediatailor.PlaybackConfiguration) map[string]interface{} {
 	if configuration != nil {
 		output := make(map[string]interface{})
 
 		output["ad_decision_server_url"] = configuration.AdDecisionServerUrl
+		output["avail_suppression"] = []interface{}{map[string]interface{}{
+			"mode":  configuration.AvailSuppression.Mode,
+			"value": configuration.AvailSuppression.Value,
+		}}
+		output["bumper"] = []interface{}{map[string]interface{}{
+			"end_url":   configuration.Bumper.EndUrl,
+			"start_url": configuration.Bumper.StartUrl,
+		}}
 		output["cdn_configuration"] = []interface{}{map[string]interface{}{
 			"ad_segment_url_prefix":      configuration.CdnConfiguration.AdSegmentUrlPrefix,
 			"content_segment_url_prefix": configuration.CdnConfiguration.ContentSegmentUrlPrefix,
 		}}
+		output["configuration_aliases"] = configuration.ConfigurationAliases
 		output["dash_configuration"] = []interface{}{map[string]interface{}{
 			"manifest_endpoint_prefix": configuration.DashConfiguration.ManifestEndpointPrefix,
 			"mpd_location":             configuration.DashConfiguration.MpdLocation,
@@ -198,7 +202,26 @@ func flattenPlaybackConfiguration(configuration *mediatailor.PlaybackConfigurati
 		output["hls_configuration"] = []interface{}{map[string]interface{}{
 			"manifest_endpoint_prefix": configuration.HlsConfiguration.ManifestEndpointPrefix,
 		}}
+		output["live_pre_roll_configuration"] = []interface{}{map[string]interface{}{
+			"ad_decision_server_url": configuration.LivePreRollConfiguration.AdDecisionServerUrl,
+			"max_duration_seconds":   configuration.LivePreRollConfiguration.MaxDurationSeconds,
+		}}
+		if configuration.LogConfiguration != nil {
+			output["log_configuration"] = []interface{}{map[string]interface{}{
+				"percent_enabled": configuration.LogConfiguration.PercentEnabled,
+			}}
+		} else {
+			output["log_configuration"] = []interface{}{map[string]interface{}{
+				"percent_enabled": 0,
+			}}
+		}
+		output["manifest_processing_rules"] = []interface{}{map[string]interface{}{
+			"ad_marker_passthrough": []interface{}{map[string]interface{}{
+				"enabled": configuration.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
+			}},
+		}}
 		output["name"] = configuration.Name
+		output["personalization_threshold_seconds"] = configuration.PersonalizationThresholdSeconds
 		output["playback_configuration_arn"] = configuration.PlaybackConfigurationArn
 		output["playback_endpoint_prefix"] = configuration.PlaybackEndpointPrefix
 		output["session_initialization_endpoint_prefix"] = configuration.SessionInitializationEndpointPrefix
