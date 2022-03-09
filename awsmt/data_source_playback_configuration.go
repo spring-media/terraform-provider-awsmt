@@ -21,6 +21,27 @@ func dataSourcePlaybackConfiguration() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ad_decision_server_url": &computedString,
+						"avail_suppression": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									//OFF | BEHIND_LIVE_EDGE
+									"mode":  &computedString,
+									"value": &computedString,
+								},
+							},
+						},
+						"bumper": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"end_url":   &computedString,
+									"start_url": &computedString,
+								},
+							},
+						},
 						"cdn_configuration": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -28,6 +49,17 @@ func dataSourcePlaybackConfiguration() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"ad_segment_url_prefix":      &computedString,
 									"content_segment_url_prefix": &computedString,
+								},
+							},
+						},
+						"configuration_aliases": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type:     schema.TypeMap,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
 								},
 							},
 						},
@@ -51,7 +83,44 @@ func dataSourcePlaybackConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"live_pre_roll_configuration": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ad_decision_server_url": &computedString,
+									"max_duration_seconds":   &computedInt,
+								},
+							},
+						},
+						"log_configuration": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"percent_enabled": &computedInt,
+								},
+							},
+						},
+						"manifest_processing_rules": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ad_marker_passthrough": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled": &computedBool,
+											},
+										},
+									},
+								},
+							},
+						},
 						"name":                                   &computedString,
+						"personalization_threshold_seconds":      &computedInt,
 						"playback_configuration_arn":             &computedString,
 						"playback_endpoint_prefix":               &computedString,
 						"session_initialization_endpoint_prefix": &computedString,

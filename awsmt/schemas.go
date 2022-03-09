@@ -16,3 +16,13 @@ var requiredString = schema.Schema{
 	Type:     schema.TypeString,
 	Required: true,
 }
+
+var computedInt = schema.Schema{
+	Type:     schema.TypeInt,
+	Computed: true,
+}
+
+var computedBool = schema.Schema{
+	Type:     schema.TypeBool,
+	Computed: true,
+}
