@@ -1,9 +1,9 @@
-# awsmt_playback_configuration (Data Source)
+# Data Source: awsmt_playback_configuration
 
-Use this data source to get the playback configuration of a single
-playback configuration by its name. 
+This data source allows you to find a playback configuration by its name.
+## Example Usage
 
-## Usage
+The following example shows how to get a playback configuration by its name:
 
 ```
 data "awsmt_playback_configuration" "conf" {
@@ -11,15 +11,15 @@ data "awsmt_playback_configuration" "conf" {
 }
 ```
 
-## Schema
+## Argument Reference
 
-* `name` - (required, type string). <br/>The name of the playback configuration
-you want to read.
-* `configuration` - (generated, type list of object)<br/> (see [below for nested schema](#nestedatt--configuration))
+* `name` - (Required, type string). <br/>The name of the playback configuration
+  you want to read.
 
-<a id="nestedatt--configuration"></a>
-### Nested Schema for `configuration`
-All the descriptions for the fields are from the [official AWS documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#GetPlaybackConfigurationOutput).
+## Attributes Reference
+
+This data source returns as attributes the name you previously specified and a `configuration` property, 
+which is a list of objects with the following properties:
 
 - `ad_decision_server_url` - (type string) <br/> The URL for the ad decision server (ADS). This includes the specification
    of static parameters and placeholders for dynamic parameters. AWS Elemental
