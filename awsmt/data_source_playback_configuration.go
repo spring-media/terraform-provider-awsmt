@@ -219,7 +219,8 @@ func flattenPlaybackConfiguration(configuration *mediatailor.PlaybackConfigurati
 				"percent_enabled": 0,
 			}}
 		}
-		if configuration.ManifestProcessingRules.AdMarkerPassthrough.Enabled != nil && *configuration.ManifestProcessingRules.AdMarkerPassthrough.Enabled != false {
+
+		if configuration.ManifestProcessingRules.AdMarkerPassthrough.Enabled != nil && (*configuration.ManifestProcessingRules.AdMarkerPassthrough.Enabled) {
 			output["manifest_processing_rules"] = []interface{}{map[string]interface{}{
 				"ad_marker_passthrough": []interface{}{map[string]interface{}{
 					"enabled": configuration.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
