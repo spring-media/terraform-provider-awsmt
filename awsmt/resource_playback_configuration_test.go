@@ -135,7 +135,16 @@ resource "awsmt_playback_configuration" "r1" {
     mpd_location = "EMT_DEFAULT"
     origin_manifest_type = "MULTI_PERIOD"
   }
+  live_pre_roll_configuration {
+	max_duration_seconds = 1
+  }
+  manifest_processing_rules {
+	ad_marker_passthrough {
+	  enabled = false
+	}
+  }
   name = "test-playback-configuration-awsmt"
+  personalization_threshold_seconds = 2
   slate_ad_url = "https://exampleurl.com/"
   tags = {"Environment": "dev"}
   video_content_source_url = "https://exampleurl.com/"
@@ -156,7 +165,16 @@ resource "awsmt_playback_configuration" "r1" {
     mpd_location = "EMT_DEFAULT"
     origin_manifest_type = "MULTI_PERIOD"
   }
+  live_pre_roll_configuration {
+	max_duration_seconds = 1
+  }
+  manifest_processing_rules {
+	ad_marker_passthrough {
+	  enabled = false
+	}
+  }
   name = "test-playback-configuration-awsmt"
+  personalization_threshold_seconds = 2
   slate_ad_url = "https://exampleurl.com/updated"
   tags = {"Environment": "dev"}
   video_content_source_url = "https://exampleurl.com/updated"
@@ -176,7 +194,16 @@ resource "awsmt_playback_configuration" "r1" {
     mpd_location = "EMT_DEFAULT"
     origin_manifest_type = "MULTI_PERIOD"
   }
+  live_pre_roll_configuration {
+	max_duration_seconds = 1
+  }
+  manifest_processing_rules {
+	ad_marker_passthrough {
+	  enabled = false
+	}
+  }
   name = "test-playback-configuration-awsmt-changed"
+  personalization_threshold_seconds = 2
   slate_ad_url = "https://exampleurl.com/updated"
   tags = {"Environment": "dev"}
   video_content_source_url = "https://exampleurl.com/updated"
@@ -195,7 +222,16 @@ resource "awsmt_playback_configuration" "r2" {
     mpd_location = "DISABLED"
 	origin_manifest_type = "SINGLE_PERIOD"
   }
+  live_pre_roll_configuration {
+	max_duration_seconds = 1
+  }
+  manifest_processing_rules {
+	ad_marker_passthrough {
+	  enabled = false
+	}
+  }
   name = "test-playback-configuration-awsmt"
+  personalization_threshold_seconds = 2
   tags = {"Environment": "dev"}
   video_content_source_url = "https://exampleurl.com/"
 }
