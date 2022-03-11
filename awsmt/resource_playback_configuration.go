@@ -18,6 +18,27 @@ func resourcePlaybackConfiguration() *schema.Resource {
 		// and https://sourcegraph.com/github.com/aws/aws-sdk-go/-/docs/service/mediatailor#PutPlaybackConfigurationInput
 		Schema: map[string]*schema.Schema{
 			"ad_decision_server_url": &optionalString,
+			"avail_suppression": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						//OFF | BEHIND_LIVE_EDGE
+						"mode":  &optionalString,
+						"value": &optionalString,
+					},
+				},
+			},
+			"bumper": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"end_url":   &optionalString,
+						"start_url": &optionalString,
+					},
+				},
+			},
 			"cdn_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -26,6 +47,17 @@ func resourcePlaybackConfiguration() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"ad_segment_url_prefix":      &optionalString,
 						"content_segment_url_prefix": &optionalString,
+					},
+				},
+			},
+			"configuration_aliases": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
 					},
 				},
 			},
@@ -51,7 +83,44 @@ func resourcePlaybackConfiguration() *schema.Resource {
 					},
 				},
 			},
+			"live_pre_roll_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ad_decision_server_url": &optionalString,
+						"max_duration_seconds":   &optionalInt,
+					},
+				},
+			},
+			"log_configuration": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"percent_enabled": &computedInt,
+					},
+				},
+			},
+			"manifest_processing_rules": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ad_marker_passthrough": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": &optionalBool,
+								},
+							},
+						},
+					},
+				},
+			},
 			"name":                                   &requiredString,
+			"personalization_threshold_seconds":      &optionalInt,
 			"playback_configuration_arn":             &computedString,
 			"playback_endpoint_prefix":               &computedString,
 			"session_initialization_endpoint_prefix": &computedString,
@@ -156,6 +225,36 @@ func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlayba
 		val := v.(string)
 		input.AdDecisionServerUrl = &val
 	}
+	if v, ok := d.GetOk("avail_suppression"); ok {
+		val := v.([]interface{})[0].(map[string]interface{})
+		output := mediatailor.AvailSuppression{}
+		if str, ok := val["mode"]; ok {
+			converted := str.(string)
+			output.Mode = &converted
+		}
+		if str, ok := val["value"]; ok {
+			converted := str.(string)
+			output.Value = &converted
+		}
+		input.AvailSuppression = &output
+	}
+	if v, ok := d.GetOk("bumper"); ok {
+		val := v.([]interface{})[0].(map[string]interface{})
+		output := mediatailor.Bumper{}
+		if str, ok := val["end_url"]; ok {
+			converted := str.(string)
+			output.EndUrl = &converted
+		}
+		if str, ok := val["start_url"]; ok {
+			converted := str.(string)
+			output.StartUrl = &converted
+		}
+		input.Bumper = &output
+	}
+	if v, ok := d.GetOk("configuration_aliases"); ok {
+		val := v.(map[string]map[string]*string)
+		input.ConfigurationAliases = val
+	}
 	if v, ok := d.GetOk("cdn_configuration"); ok {
 		val := v.([]interface{})[0].(map[string]interface{})
 		output := mediatailor.CdnConfiguration{}
@@ -182,9 +281,42 @@ func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlayba
 		}
 		input.DashConfiguration = &output
 	}
+	if v, ok := d.GetOk("live_pre_roll_configuration"); ok {
+		val := v.([]interface{})[0].(map[string]interface{})
+		output := mediatailor.LivePreRollConfiguration{}
+		if str, ok := val["ad_decision_server_url"]; ok {
+			converted := str.(string)
+			output.AdDecisionServerUrl = &converted
+		}
+		if integer, ok := val["max_duration_seconds"]; ok {
+			converted := int64(integer.(int))
+			output.MaxDurationSeconds = &converted
+		}
+		input.LivePreRollConfiguration = &output
+	}
+	if v, ok := d.GetOk("manifest_processing_rules"); ok {
+		val := v.([]interface{})[0].(map[string]interface{})
+		output := mediatailor.ManifestProcessingRules{}
+		if v2, ok := val["ad_marker_passthrough"]; ok {
+			output2 := mediatailor.AdMarkerPassthrough{}
+			val2 := v2.([]interface{})[0].(map[string]interface{})
+			if boolean, ok := val2["enabled"]; ok {
+				converted := boolean.(bool)
+				output2.Enabled = &converted
+			}
+			output.AdMarkerPassthrough = &output2
+		}
+
+		input.ManifestProcessingRules = &output
+	}
+
 	if v, ok := d.GetOk("name"); ok {
 		val := v.(string)
 		input.Name = &val
+	}
+	if v, ok := d.GetOk("personalization_threshold_seconds"); ok {
+		val := int64(v.(int))
+		input.PersonalizationThresholdSeconds = &val
 	}
 	if v, ok := d.GetOk("slate_ad_url"); ok {
 		val := v.(string)
