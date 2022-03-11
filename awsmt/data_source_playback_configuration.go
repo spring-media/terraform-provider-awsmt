@@ -193,7 +193,9 @@ func flattenPlaybackConfiguration(configuration *mediatailor.PlaybackConfigurati
 			"ad_segment_url_prefix":      configuration.CdnConfiguration.AdSegmentUrlPrefix,
 			"content_segment_url_prefix": configuration.CdnConfiguration.ContentSegmentUrlPrefix,
 		}}
-		output["configuration_aliases"] = configuration.ConfigurationAliases
+		if configuration.ConfigurationAliases != nil {
+			output["configuration_aliases"] = configuration.ConfigurationAliases
+		}
 		output["dash_configuration"] = []interface{}{map[string]interface{}{
 			"manifest_endpoint_prefix": configuration.DashConfiguration.ManifestEndpointPrefix,
 			"mpd_location":             configuration.DashConfiguration.MpdLocation,
@@ -202,10 +204,12 @@ func flattenPlaybackConfiguration(configuration *mediatailor.PlaybackConfigurati
 		output["hls_configuration"] = []interface{}{map[string]interface{}{
 			"manifest_endpoint_prefix": configuration.HlsConfiguration.ManifestEndpointPrefix,
 		}}
-		output["live_pre_roll_configuration"] = []interface{}{map[string]interface{}{
-			"ad_decision_server_url": configuration.LivePreRollConfiguration.AdDecisionServerUrl,
-			"max_duration_seconds":   configuration.LivePreRollConfiguration.MaxDurationSeconds,
-		}}
+		if configuration.LivePreRollConfiguration.MaxDurationSeconds != nil && *configuration.LivePreRollConfiguration.MaxDurationSeconds > 0 {
+			output["live_pre_roll_configuration"] = []interface{}{map[string]interface{}{
+				"ad_decision_server_url": configuration.LivePreRollConfiguration.AdDecisionServerUrl,
+				"max_duration_seconds":   configuration.LivePreRollConfiguration.MaxDurationSeconds,
+			}}
+		}
 		if configuration.LogConfiguration != nil {
 			output["log_configuration"] = []interface{}{map[string]interface{}{
 				"percent_enabled": configuration.LogConfiguration.PercentEnabled,
@@ -215,11 +219,13 @@ func flattenPlaybackConfiguration(configuration *mediatailor.PlaybackConfigurati
 				"percent_enabled": 0,
 			}}
 		}
-		output["manifest_processing_rules"] = []interface{}{map[string]interface{}{
-			"ad_marker_passthrough": []interface{}{map[string]interface{}{
-				"enabled": configuration.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
-			}},
-		}}
+		if configuration.ManifestProcessingRules.AdMarkerPassthrough.Enabled != nil && *configuration.ManifestProcessingRules.AdMarkerPassthrough.Enabled != false {
+			output["manifest_processing_rules"] = []interface{}{map[string]interface{}{
+				"ad_marker_passthrough": []interface{}{map[string]interface{}{
+					"enabled": configuration.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
+				}},
+			}}
+		}
 		output["name"] = configuration.Name
 		output["personalization_threshold_seconds"] = configuration.PersonalizationThresholdSeconds
 		output["playback_configuration_arn"] = configuration.PlaybackConfigurationArn
