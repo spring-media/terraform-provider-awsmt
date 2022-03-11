@@ -22,7 +22,17 @@ var computedInt = schema.Schema{
 	Computed: true,
 }
 
+var optionalInt = schema.Schema{
+	Type:     schema.TypeInt,
+	Optional: true,
+}
+
 var computedBool = schema.Schema{
 	Type:     schema.TypeBool,
 	Computed: true,
+}
+
+var optionalBool = schema.Schema{
+	Type:     schema.TypeBool,
+	Optional: true,
 }
