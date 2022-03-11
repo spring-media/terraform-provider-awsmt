@@ -8,11 +8,13 @@ A Terraform provider for AWS MediaTailor
 
 ## Documentation
 
-You can find the documentation about the provider, its data sources, and its resources [here](https://github.com/spring-media/terraform-provider-awsmt/tree/main/docs).
+You can find the documentation about the provider, its data sources, and its resources [here](https://registry.terraform.io/providers/spring-media/awsmt/latest/docs).
 
 ## Building the Provider
 
-to use a local version of the provider, run `make` and create a ~/.terraformrc file with the following content:
+Run `make`.
+
+To use a local version of the provider, create a ~/.terraformrc file with the following content:
 ```
 provider_installation {
     dev_overrides {
@@ -22,14 +24,9 @@ provider_installation {
 }
 ```
 
-## Querying Configurations
+## Prerequisites
 
-An example of how to query configurations from aws can be found in `./examples/main.tf`. 
 Make sure that `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are exported as environmental variables.
-
-You can query a single configuration by specifying the `name` of the configuration. 
-
-Run `terraform init` and then `terraform apply` inside the `./examples` directory to get a result.
 
 ## Testing
 
