@@ -140,7 +140,7 @@ resource "awsmt_playback_configuration" "r1" {
   }
   manifest_processing_rules {
 	ad_marker_passthrough {
-	  enabled = false
+	  enabled = true
 	}
   }
   name = "test-playback-configuration-awsmt"
@@ -170,7 +170,7 @@ resource "awsmt_playback_configuration" "r1" {
   }
   manifest_processing_rules {
 	ad_marker_passthrough {
-	  enabled = false
+	  enabled = true
 	}
   }
   name = "test-playback-configuration-awsmt"
@@ -199,7 +199,7 @@ resource "awsmt_playback_configuration" "r1" {
   }
   manifest_processing_rules {
 	ad_marker_passthrough {
-	  enabled = false
+	  enabled = true
 	}
   }
   name = "test-playback-configuration-awsmt-changed"
@@ -227,7 +227,7 @@ resource "awsmt_playback_configuration" "r2" {
   }
   manifest_processing_rules {
 	ad_marker_passthrough {
-	  enabled = false
+	  enabled = true
 	}
   }
   name = "test-playback-configuration-awsmt"
