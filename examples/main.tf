@@ -20,14 +20,6 @@ resource "awsmt_playback_configuration" "r1" {
     mpd_location = "DISABLED"
     origin_manifest_type = "SINGLE_PERIOD"
   }
-  live_pre_roll_configuration {
-    max_duration_seconds = 1
-  }
-  manifest_processing_rules {
-    ad_marker_passthrough {
-      enabled = false
-    }
-  }
   name = "test-playback-configuration-awsmt"
   personalization_threshold_seconds = 2
   tags = {"Environment": "dev"}
