@@ -11,14 +11,14 @@ data "awsmt_playback_configuration" "conf" {
 }
 ```
 
-## Argument Reference
+## Arguments Reference
 
 * `name` - (Required, string). <br/>The name of the desired playback configuration.
 
 ## Attributes Reference
 
 This data source returns as attributes the name you previously specified and a `configuration` property, 
-which is a list of objects with the following properties:
+which is a structure with the following properties:
 
 - `ad_decision_server_url` - (string) <br/> The URL for the ad decision server (ADS). This includes the specification
    of static parameters and placeholders for dynamic parameters. AWS Elemental
@@ -26,7 +26,7 @@ which is a list of objects with the following properties:
    needed when calling the ADS. Alternately, for testing, you can provide a static VAST URL. The maximum length is 25,000 characters.
 - `avail_suppression` - (structure) (see [below for nested schema](#avail_suppression))<br/>
   The configuration for avail suppression, also known as ad suppression.
-- `bumper` - (list of object) (see [below for nested schema](#bumper))<br/>
+- `bumper` - (structure) (see [below for nested schema](#bumper))<br/>
   The configuration for bumpers. Bumpers are short audio or video clips that play at the start or before the end of an ad break.
 - `cdn_configuration` - (structure) (see [below for nested schema](#cdn_configuration))<br/>
   The configuration for using a content delivery network (CDN), like Amazon
