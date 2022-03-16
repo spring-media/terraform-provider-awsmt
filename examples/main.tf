@@ -13,6 +13,10 @@ terraform {
 
 resource "awsmt_playback_configuration" "r1" {
   ad_decision_server_url = "https://exampleurl.com/"
+  avail_suppression {
+   mode = "OFF"
+  }
+  bumper {}
   cdn_configuration {
     ad_segment_url_prefix = "https://exampleurl.com/"
   }
@@ -20,7 +24,13 @@ resource "awsmt_playback_configuration" "r1" {
     mpd_location = "DISABLED"
     origin_manifest_type = "SINGLE_PERIOD"
   }
-  name = "test-playback-configuration-awsmt"
+  live_pre_roll_configuration {}
+  manifest_processing_rules {
+    ad_marker_passthrough{
+      enabled = "false"
+    }
+  }
+  name = "example-playback-configuration-awsmt"
   personalization_threshold_seconds = 2
   tags = {"Environment": "dev"}
   video_content_source_url = "https://exampleurl.com/"
