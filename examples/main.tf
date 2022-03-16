@@ -7,10 +7,6 @@ terraform {
   }
 }
 
-#data "awsmt_playback_configuration" "c1" {
-#  name = "replay-live-stream"
-#}
-
 resource "awsmt_playback_configuration" "r1" {
   ad_decision_server_url = "https://exampleurl.com/"
   avail_suppression {
@@ -38,5 +34,4 @@ resource "awsmt_playback_configuration" "r1" {
 
 output "out" {
   value = resource.awsmt_playback_configuration.r1
-  # value = data.awsmt_playback_configuration.c1
 }
