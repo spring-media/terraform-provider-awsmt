@@ -204,12 +204,10 @@ func flattenPlaybackConfiguration(configuration *mediatailor.PlaybackConfigurati
 		output["hls_configuration"] = []interface{}{map[string]interface{}{
 			"manifest_endpoint_prefix": configuration.HlsConfiguration.ManifestEndpointPrefix,
 		}}
-		if configuration.LivePreRollConfiguration.MaxDurationSeconds != nil && *configuration.LivePreRollConfiguration.MaxDurationSeconds > 0 {
-			output["live_pre_roll_configuration"] = []interface{}{map[string]interface{}{
-				"ad_decision_server_url": configuration.LivePreRollConfiguration.AdDecisionServerUrl,
-				"max_duration_seconds":   configuration.LivePreRollConfiguration.MaxDurationSeconds,
-			}}
-		}
+		output["live_pre_roll_configuration"] = []interface{}{map[string]interface{}{
+			"ad_decision_server_url": configuration.LivePreRollConfiguration.AdDecisionServerUrl,
+			"max_duration_seconds":   configuration.LivePreRollConfiguration.MaxDurationSeconds,
+		}}
 		if configuration.LogConfiguration != nil {
 			output["log_configuration"] = []interface{}{map[string]interface{}{
 				"percent_enabled": configuration.LogConfiguration.PercentEnabled,
@@ -219,14 +217,11 @@ func flattenPlaybackConfiguration(configuration *mediatailor.PlaybackConfigurati
 				"percent_enabled": 0,
 			}}
 		}
-
-		if configuration.ManifestProcessingRules.AdMarkerPassthrough.Enabled != nil && (*configuration.ManifestProcessingRules.AdMarkerPassthrough.Enabled) {
-			output["manifest_processing_rules"] = []interface{}{map[string]interface{}{
-				"ad_marker_passthrough": []interface{}{map[string]interface{}{
-					"enabled": configuration.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
-				}},
-			}}
-		}
+		output["manifest_processing_rules"] = []interface{}{map[string]interface{}{
+			"ad_marker_passthrough": []interface{}{map[string]interface{}{
+				"enabled": configuration.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
+			}},
+		}}
 		output["name"] = configuration.Name
 		output["personalization_threshold_seconds"] = configuration.PersonalizationThresholdSeconds
 		output["playback_configuration_arn"] = configuration.PlaybackConfigurationArn
