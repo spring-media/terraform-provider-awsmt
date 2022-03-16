@@ -7,6 +7,10 @@ You can specify the arguments inside a resource block like this:
 ```
 resource "awsmt_playback_configuration" "conf" {
   ad_decision_server_url = "https://exampleurl.com/"
+  avail_suppression {
+   mode = "OFF"
+  }
+  bumper {}
   cdn_configuration {
     ad_segment_url_prefix = "test"
     content_segment_url_prefix = "test"
@@ -16,6 +20,12 @@ resource "awsmt_playback_configuration" "conf" {
     origin_manifest_type = "MULTI_PERIOD"
   }
   name = "test-playback-configuration-awsmt"
+  live_pre_roll_configuration {}
+  manifest_processing_rules {
+    ad_marker_passthrough{
+      enabled = "false"
+    }
+  }
   slate_ad_url = "https://exampleurl.com/"
   tags = {}
   transcode_profile_name = "profile_configured_in_your_account"
@@ -24,14 +34,29 @@ resource "awsmt_playback_configuration" "conf" {
 ```
 
 ## Arguments Reference
-All the descriptions for the fields are from the [official AWS documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#MediaTailor.PutPlaybackConfiguration) or
+All the descriptions for the fields are from the [official AWS documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#MediaTailor.PutPlaybackConfiguration).
 
 The following arguments are required:
 
 * `name` - (required, string) </br>
   The identifier for the playback configuration.
+* `avail_suppression` - (required, structure) (see [below for nested schema](#avail_suppression))<br/>
+  The configuration for avail suppression, also known as ad suppression.
+* `bumper` - (required, structure) (see [below for nested schema](#bumper))<br/>
+  The configuration for bumpers. Bumpers are short audio or video clips that play at the start or before the end of an ad break.
+* `cdn_configuration` - (required, structureò) (see [below for nested schema](#cdn_conf))<br/>
+  The configuration for using a content delivery network (CDN), like Amazon
+  CloudFront, for content and ad segment management.
+* `dash_configuration` - (required, structure) (see [below for nested schema](#dash_conf))<br/>
+  The configuration for DASH content.
+* `live_pre_roll_configuration` - (required, structure) (see [below for nested schema](#live_pre_roll_configuration))<br/>
+  The configuration for pre-roll ad insertion.
+* `manifest_processing_rules` - (required, structure) (see [below for nested schema](#manifest_processing_rules))<br/>
+  The configuration for manifest processing rules. Manifest processing rules
+  enable customization of the personalized manifests created by MediaTailor.
 
-The following arguments are optional
+
+  The following arguments are optional
 
 * `ad_decision_server_url` - (optional, type string). <br/>
   The URL for the ad decision server (ADS). This includes the specification
@@ -39,22 +64,8 @@ The following arguments are optional
   MediaTailor substitutes player-specific and session-specific parameters as
   needed when calling the ADS. Alternately, for testing you can provide a static
   VAST URL. The maximum length is 25,000 characters.
-* `avail_suppression` - (optional, structure) (see [below for nested schema](#avail_suppression))<br/>
-  The configuration for avail suppression, also known as ad suppression.
-* `bumper` - (optional, structure) (see [below for nested schema](#bumper))<br/>
-  The configuration for bumpers. Bumpers are short audio or video clips that play at the start or before the end of an ad break.
-* `cdn_configuration` - (optional, type list of object) (see [below for nested schema](#cdn_conf))<br/>
-  The configuration for using a content delivery network (CDN), like Amazon
-  CloudFront, for content and ad segment management.
 * `configuration_aliases` - (map)<br/>
   The player parameters and aliases used as dynamic variables during session initialization.
-* `dash_configuration` - (optional, type list of object) (see [below for nested schema](#dash_conf))<br/>
-  The configuration for DASH content.
-* `live_pre_roll_configuration` - (optional, structure) (see [below for nested schema](#live_pre_roll_configuration))<br/>
-  The configuration for pre-roll ad insertion.
-* `manifest_processing_rules` - (optional, structure) (see [below for nested schema](#manifest_processing_rules))<br/>
-  The configuration for manifest processing rules. Manifest processing rules
-  enable customization of the personalized manifests created by MediaTailor.
 * `personalization_threshold_seconds` - (optional, integer)<br/>
   Defines the maximum duration of underfilled ad time (in seconds) allowed
   in an ad break. If the duration of underfilled ad time exceeds the personalization
@@ -100,7 +111,7 @@ The following arguments are optional
 <a id="avail_suppression"></a>
 ### `avail_suppression`
 
-* `mode` - (optional, string)<br/>
+* `mode` - (required, string)<br/>
   Sets the ad suppression mode. By default, ad suppression is off and all ad
   breaks are filled with ads or slate. When Mode is set to BEHIND_LIVE_EDGE,
   ad suppression is active and MediaTailor won't fill ad breaks on or behind
@@ -166,7 +177,7 @@ The following arguments are optional
   The URL that is used to initiate a playback session for devices that support
   Apple HLS. The session uses server-side reporting.
 
-<a id="live_preroll_configuration"></a>
+<a id="live_pre_roll_configuration"></a>
 ### `live_preroll_configuration`
 
 * `ad_decision_server_url` - (optional, string)<br/>
@@ -194,7 +205,7 @@ The following arguments are optional
 <a id="manifest_processing_rules"></a>
 ### `manifest_processing_rules`
 
-* `ad_marker_passthrough` - (optional, structure) (see [below for nested schema](#ad_marker_passthrough))<br/>
+* `ad_marker_passthrough` - (required, structure) (see [below for nested schema](#ad_marker_passthrough))<br/>
   For HLS, when set to true, MediaTailor passes through EXT-X-CUE-IN, EXT-X-CUE-OUT,
   and EXT-X-SPLICEPOINT-SCTE35 ad markers from the origin manifest to the MediaTailor
   personalized manifest.
