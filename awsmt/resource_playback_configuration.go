@@ -20,18 +20,20 @@ func resourcePlaybackConfiguration() *schema.Resource {
 			"ad_decision_server_url": &optionalString,
 			"avail_suppression": {
 				Type:     schema.TypeList,
-				Computed: true,
+				Required: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						//OFF | BEHIND_LIVE_EDGE
-						"mode":  &optionalString,
+						"mode":  &requiredString,
 						"value": &optionalString,
 					},
 				},
 			},
 			"bumper": {
 				Type:     schema.TypeList,
-				Computed: true,
+				Required: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"end_url":   &optionalString,
@@ -41,7 +43,7 @@ func resourcePlaybackConfiguration() *schema.Resource {
 			},
 			"cdn_configuration": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -64,7 +66,7 @@ func resourcePlaybackConfiguration() *schema.Resource {
 			"dash_configuration": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
-				Optional: true,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"manifest_endpoint_prefix": &computedString,
@@ -85,7 +87,7 @@ func resourcePlaybackConfiguration() *schema.Resource {
 			},
 			"live_pre_roll_configuration": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ad_decision_server_url": &optionalString,
@@ -104,15 +106,15 @@ func resourcePlaybackConfiguration() *schema.Resource {
 			},
 			"manifest_processing_rules": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ad_marker_passthrough": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": &optionalBool,
+									"enabled": &requiredBool,
 								},
 							},
 						},
@@ -225,7 +227,7 @@ func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlayba
 		val := v.(string)
 		input.AdDecisionServerUrl = &val
 	}
-	if v, ok := d.GetOk("avail_suppression"); ok {
+	if v, ok := d.GetOk("avail_suppression"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
 		output := mediatailor.AvailSuppression{}
 		if str, ok := val["mode"]; ok {
@@ -238,7 +240,7 @@ func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlayba
 		}
 		input.AvailSuppression = &output
 	}
-	if v, ok := d.GetOk("bumper"); ok {
+	if v, ok := d.GetOk("bumper"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
 		output := mediatailor.Bumper{}
 		if str, ok := val["end_url"]; ok {
@@ -255,7 +257,7 @@ func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlayba
 		val := v.(map[string]map[string]*string)
 		input.ConfigurationAliases = val
 	}
-	if v, ok := d.GetOk("cdn_configuration"); ok {
+	if v, ok := d.GetOk("cdn_configuration"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
 		output := mediatailor.CdnConfiguration{}
 		if str, ok := val["ad_segment_url_prefix"]; ok {
@@ -268,7 +270,7 @@ func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlayba
 		}
 		input.CdnConfiguration = &output
 	}
-	if v, ok := d.GetOk("dash_configuration"); ok {
+	if v, ok := d.GetOk("dash_configuration"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
 		output := mediatailor.DashConfigurationForPut{}
 		if str, ok := val["mpd_location"]; ok {
@@ -281,7 +283,7 @@ func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlayba
 		}
 		input.DashConfiguration = &output
 	}
-	if v, ok := d.GetOk("live_pre_roll_configuration"); ok {
+	if v, ok := d.GetOk("live_pre_roll_configuration"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
 		output := mediatailor.LivePreRollConfiguration{}
 		if str, ok := val["ad_decision_server_url"]; ok {
@@ -294,7 +296,7 @@ func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlayba
 		}
 		input.LivePreRollConfiguration = &output
 	}
-	if v, ok := d.GetOk("manifest_processing_rules"); ok {
+	if v, ok := d.GetOk("manifest_processing_rules"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
 		output := mediatailor.ManifestProcessingRules{}
 		if v2, ok := val["ad_marker_passthrough"]; ok {
