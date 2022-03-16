@@ -84,6 +84,60 @@ func TestAccPlaybackConfigurationResourceImport(t *testing.T) {
 	})
 }
 
+func TestAccPlaybackConfigurationResourceTaint(t *testing.T) {
+	resourceName := "awsmt_playback_configuration.r2"
+	firstARN := ""
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: ProviderFactories,
+		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlaybackConfigurationImportResource(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
+					resource.TestMatchResourceAttr(resourceName, "playback_configuration_arn", regexp.MustCompile(`arn:aws:mediatailor`)),
+					testAccAssignARN(resourceName, &firstARN),
+				),
+			},
+			{
+				Config: testAccPlaybackConfigurationImportResource(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
+					resource.TestMatchResourceAttr(resourceName, "playback_configuration_arn", regexp.MustCompile(`arn:aws:mediatailor`)),
+					testAccCheckARN(resourceName, &firstARN),
+				),
+				Taint: []string{resourceName},
+			},
+		},
+	})
+}
+
+func testAccAssignARN(resourceName string, ARNvariable *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceName)
+		}
+		rs.Primary.Attributes["playback_configuration_arn"] = "taintedARN"
+		*ARNvariable = rs.Primary.Attributes["playback_configuration_arn"]
+		return nil
+	}
+}
+
+func testAccCheckARN(resourceName string, ARNvariable *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("not found: %s", resourceName)
+		}
+		if *ARNvariable == rs.Primary.Attributes["playback_configuration_arn"] {
+			return fmt.Errorf("same ARN (%s), resource not recreated", *ARNvariable)
+		}
+		return nil
+	}
+}
+
 func importPreCheck(t *testing.T, region string) {
 	testAccPreCheck(t)
 
