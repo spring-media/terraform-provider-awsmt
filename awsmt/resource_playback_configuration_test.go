@@ -181,6 +181,10 @@ func testAccPlaybackConfigurationResource() string {
 	return `
 resource "awsmt_playback_configuration" "r1" {
   ad_decision_server_url = "https://exampleurl.com/"
+  avail_suppression {
+   mode = "OFF"
+  }
+  bumper {}
   cdn_configuration {
     ad_segment_url_prefix = "test"
     content_segment_url_prefix = "test"
@@ -211,6 +215,10 @@ func testAccPlaybackConfigurationUpdateResource() string {
 	return `
 resource "awsmt_playback_configuration" "r1" {
   ad_decision_server_url = "https://exampleurl.com/"
+  avail_suppression {
+   mode = "OFF"
+  }
+  bumper {}
   cdn_configuration {
     ad_segment_url_prefix = "test-updated"
     content_segment_url_prefix = "test-updated"
@@ -240,6 +248,10 @@ func testAccPlaybackConfigurationUpdateResourceName() string {
 	return `
 resource "awsmt_playback_configuration" "r1" {
   ad_decision_server_url = "https://exampleurl.com/"
+  avail_suppression {
+   mode = "OFF"
+  }
+  bumper {}
   cdn_configuration {
     ad_segment_url_prefix = "test-updated"
     content_segment_url_prefix = "test-updated"
@@ -269,6 +281,10 @@ func testAccPlaybackConfigurationImportResource() string {
 	return `
 resource "awsmt_playback_configuration" "r2" {
   ad_decision_server_url = "https://exampleurl.com/"
+  avail_suppression {
+   mode = "OFF"
+  }
+  bumper {}
   cdn_configuration {
     ad_segment_url_prefix = "https://exampleurl.com/"
   }
