@@ -127,7 +127,7 @@ func testAccPlaybackConfigurationResource() string {
 	return `
 resource "awsmt_playback_configuration" "r1" {
   ad_decision_server_url = "https://exampleurl.com/"
-avail_suppression {
+  avail_suppression {
    mode = "OFF"
   }
   bumper {}
