@@ -32,7 +32,7 @@ var computedBool = schema.Schema{
 	Computed: true,
 }
 
-var requiredBool = schema.Schema{
+var optionalBool = schema.Schema{
 	Type:     schema.TypeBool,
-	Required: true,
+	Optional: true,
 }

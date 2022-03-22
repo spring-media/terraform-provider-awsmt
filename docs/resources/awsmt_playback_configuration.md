@@ -40,20 +40,11 @@ The following arguments are required:
 
 * `name` - (required, string) </br>
   The identifier for the playback configuration.
-* `avail_suppression` - (required, structure) (see [below for nested schema](#avail_suppression))<br/>
-  The configuration for avail suppression, also known as ad suppression.
-* `bumper` - (required, structure) (see [below for nested schema](#bumper))<br/>
-  The configuration for bumpers. Bumpers are short audio or video clips that play at the start or before the end of an ad break.
-* `cdn_configuration` - (required, structureò) (see [below for nested schema](#cdn_conf))<br/>
-  The configuration for using a content delivery network (CDN), like Amazon
-  CloudFront, for content and ad segment management.
 * `dash_configuration` - (required, structure) (see [below for nested schema](#dash_conf))<br/>
   The configuration for DASH content.
-* `live_pre_roll_configuration` - (required, structure) (see [below for nested schema](#live_pre_roll_configuration))<br/>
-  The configuration for pre-roll ad insertion.
-* `manifest_processing_rules` - (required, structure) (see [below for nested schema](#manifest_processing_rules))<br/>
-  The configuration for manifest processing rules. Manifest processing rules
-  enable customization of the personalized manifests created by MediaTailor.
+* `video_content_source_url` - (required, type string)<br/>
+  The URL prefix for the parent manifest for the stream, minus the asset ID.
+  The maximum length is 512 characters.
 
 
   The following arguments are optional
@@ -64,8 +55,20 @@ The following arguments are required:
   MediaTailor substitutes player-specific and session-specific parameters as
   needed when calling the ADS. Alternately, for testing you can provide a static
   VAST URL. The maximum length is 25,000 characters.
+* `avail_suppression` - (optional, structure) (see [below for nested schema](#avail_suppression))<br/>
+  The configuration for avail suppression, also known as ad suppression.
+* `bumper` - (required, structure) (see [below for nested schema](#bumper))<br/>
+  The configuration for bumpers. Bumpers are short audio or video clips that play at the start or before the end of an ad break.
+* `cdn_configuration` - (optional, structureò) (see [below for nested schema](#cdn_conf))<br/>
+  The configuration for using a content delivery network (CDN), like Amazon
+  CloudFront, for content and ad segment management.
 * `configuration_aliases` - (map)<br/>
   The player parameters and aliases used as dynamic variables during session initialization.
+* `live_pre_roll_configuration` - (optional, structure) (see [below for nested schema](#live_pre_roll_configuration))<br/>
+  The configuration for pre-roll ad insertion.
+* `manifest_processing_rules` - (optional, structure) (see [below for nested schema](#manifest_processing_rules))<br/>
+  The configuration for manifest processing rules. Manifest processing rules
+  enable customization of the personalized manifests created by MediaTailor.
 * `personalization_threshold_seconds` - (optional, integer)<br/>
   Defines the maximum duration of underfilled ad time (in seconds) allowed
   in an ad break. If the duration of underfilled ad time exceeds the personalization
@@ -87,9 +90,6 @@ The following arguments are required:
   transcode profile. This overrides the dynamic transcoding defaults of MediaTailor.
   Use this only if you have already set up custom profiles with the help of
   AWS Support.
-* `video_content_source_url` - (optional, type string)<br/>
-  The URL prefix for the parent manifest for the stream, minus the asset ID.
-  The maximum length is 512 characters.
 
 ## Attributes Reference
 
