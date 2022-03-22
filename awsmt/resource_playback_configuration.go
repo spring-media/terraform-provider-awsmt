@@ -323,13 +323,15 @@ func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlayba
 		val := v.(string)
 		input.SlateAdUrl = &val
 	}
+	outputMap := make(map[string]*string)
 	if v, ok := d.GetOk("tags"); ok {
-		outputMap := make(map[string]*string)
 		val := v.(map[string]interface{})
 		for k, value := range val {
 			temp := value.(string)
 			outputMap[k] = &temp
 		}
+		input.Tags = outputMap
+	} else {
 		input.Tags = outputMap
 	}
 	if v, ok := d.GetOk("transcode_profile_name"); ok {
