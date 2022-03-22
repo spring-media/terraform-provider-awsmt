@@ -20,19 +20,19 @@ func resourcePlaybackConfiguration() *schema.Resource {
 			"ad_decision_server_url": &optionalString,
 			"avail_suppression": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						//OFF | BEHIND_LIVE_EDGE
-						"mode":  &requiredString,
+						"mode":  &optionalString,
 						"value": &optionalString,
 					},
 				},
 			},
 			"bumper": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -43,7 +43,7 @@ func resourcePlaybackConfiguration() *schema.Resource {
 			},
 			"cdn_configuration": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -87,7 +87,7 @@ func resourcePlaybackConfiguration() *schema.Resource {
 			},
 			"live_pre_roll_configuration": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ad_decision_server_url": &optionalString,
@@ -106,15 +106,15 @@ func resourcePlaybackConfiguration() *schema.Resource {
 			},
 			"manifest_processing_rules": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ad_marker_passthrough": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": &requiredBool,
+									"enabled": &optionalBool,
 								},
 							},
 						},
@@ -135,7 +135,7 @@ func resourcePlaybackConfiguration() *schema.Resource {
 				},
 			},
 			"transcode_profile_name":   &optionalString,
-			"video_content_source_url": &optionalString,
+			"video_content_source_url": &requiredString,
 			"last_updated": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -187,7 +187,6 @@ func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.Resource
 		}
 	}
 	resourcePlaybackConfigurationRead(ctx, d, m)
-
 	return diags
 }
 

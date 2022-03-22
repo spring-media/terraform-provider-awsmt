@@ -162,7 +162,7 @@ func dataSourcePlaybackConfigurationRead(_ context.Context, d *schema.ResourceDa
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "`name` parameter required",
-			Detail:   "You need to specify a `name` parameter in your configuration",
+			Detail:   "You need to specify a `name` parameter in your c",
 		})
 	}
 	return diags
@@ -176,61 +176,73 @@ func getSinglePlaybackConfiguration(c *mediatailor.MediaTailor, name string) (*m
 	return (*mediatailor.PlaybackConfiguration)(output), nil
 }
 
-func flattenPlaybackConfiguration(configuration *mediatailor.PlaybackConfiguration) map[string]interface{} {
-	if configuration != nil {
+func flattenPlaybackConfiguration(c *mediatailor.PlaybackConfiguration) map[string]interface{} {
+	if c != nil {
 		output := make(map[string]interface{})
 
-		output["ad_decision_server_url"] = configuration.AdDecisionServerUrl
-		output["avail_suppression"] = []interface{}{map[string]interface{}{
-			"mode":  configuration.AvailSuppression.Mode,
-			"value": configuration.AvailSuppression.Value,
-		}}
-		output["bumper"] = []interface{}{map[string]interface{}{
-			"end_url":   configuration.Bumper.EndUrl,
-			"start_url": configuration.Bumper.StartUrl,
-		}}
-		output["cdn_configuration"] = []interface{}{map[string]interface{}{
-			"ad_segment_url_prefix":      configuration.CdnConfiguration.AdSegmentUrlPrefix,
-			"content_segment_url_prefix": configuration.CdnConfiguration.ContentSegmentUrlPrefix,
-		}}
-		if configuration.ConfigurationAliases != nil {
-			output["configuration_aliases"] = configuration.ConfigurationAliases
+		output["ad_decision_server_url"] = c.AdDecisionServerUrl
+		if !(*c.AvailSuppression.Mode == "OFF" && c.AvailSuppression.Value == nil) {
+			output["avail_suppression"] = []interface{}{map[string]interface{}{
+				"mode":  c.AvailSuppression.Mode,
+				"value": c.AvailSuppression.Value,
+			}}
+		}
+		if c.Bumper.EndUrl != nil || c.Bumper.StartUrl != nil {
+			output["bumper"] = []interface{}{map[string]interface{}{
+				"end_url":   c.Bumper.EndUrl,
+				"start_url": c.Bumper.StartUrl,
+			}}
+		}
+		if c.CdnConfiguration.AdSegmentUrlPrefix != nil || c.CdnConfiguration.ContentSegmentUrlPrefix != nil {
+			output["cdn_configuration"] = []interface{}{map[string]interface{}{
+				"ad_segment_url_prefix":      c.CdnConfiguration.AdSegmentUrlPrefix,
+				"content_segment_url_prefix": c.CdnConfiguration.ContentSegmentUrlPrefix,
+			}}
+		}
+		if c.ConfigurationAliases != nil {
+			output["configuration_aliases"] = c.ConfigurationAliases
 		}
 		output["dash_configuration"] = []interface{}{map[string]interface{}{
-			"manifest_endpoint_prefix": configuration.DashConfiguration.ManifestEndpointPrefix,
-			"mpd_location":             configuration.DashConfiguration.MpdLocation,
-			"origin_manifest_type":     configuration.DashConfiguration.OriginManifestType,
+			"manifest_endpoint_prefix": c.DashConfiguration.ManifestEndpointPrefix,
+			"mpd_location":             c.DashConfiguration.MpdLocation,
+			"origin_manifest_type":     c.DashConfiguration.OriginManifestType,
 		}}
 		output["hls_configuration"] = []interface{}{map[string]interface{}{
-			"manifest_endpoint_prefix": configuration.HlsConfiguration.ManifestEndpointPrefix,
+			"manifest_endpoint_prefix": c.HlsConfiguration.ManifestEndpointPrefix,
 		}}
-		output["live_pre_roll_configuration"] = []interface{}{map[string]interface{}{
-			"ad_decision_server_url": configuration.LivePreRollConfiguration.AdDecisionServerUrl,
-			"max_duration_seconds":   configuration.LivePreRollConfiguration.MaxDurationSeconds,
-		}}
-		if configuration.LogConfiguration != nil {
+		if !(c.LivePreRollConfiguration.MaxDurationSeconds == nil && c.LivePreRollConfiguration.AdDecisionServerUrl == nil) {
+			output["live_pre_roll_configuration"] = []interface{}{map[string]interface{}{
+				"ad_decision_server_url": c.LivePreRollConfiguration.AdDecisionServerUrl,
+				"max_duration_seconds":   c.LivePreRollConfiguration.MaxDurationSeconds,
+			}}
+		}
+		if c.LogConfiguration != nil {
 			output["log_configuration"] = []interface{}{map[string]interface{}{
-				"percent_enabled": configuration.LogConfiguration.PercentEnabled,
+				"percent_enabled": c.LogConfiguration.PercentEnabled,
 			}}
 		} else {
 			output["log_configuration"] = []interface{}{map[string]interface{}{
 				"percent_enabled": 0,
 			}}
 		}
-		output["manifest_processing_rules"] = []interface{}{map[string]interface{}{
-			"ad_marker_passthrough": []interface{}{map[string]interface{}{
-				"enabled": configuration.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
-			}},
-		}}
-		output["name"] = configuration.Name
-		output["personalization_threshold_seconds"] = configuration.PersonalizationThresholdSeconds
-		output["playback_configuration_arn"] = configuration.PlaybackConfigurationArn
-		output["playback_endpoint_prefix"] = configuration.PlaybackEndpointPrefix
-		output["session_initialization_endpoint_prefix"] = configuration.SessionInitializationEndpointPrefix
-		output["slate_ad_url"] = configuration.SlateAdUrl
-		output["tags"] = configuration.Tags
-		output["transcode_profile_name"] = configuration.TranscodeProfileName
-		output["video_content_source_url"] = configuration.VideoContentSourceUrl
+		if *c.ManifestProcessingRules.AdMarkerPassthrough.Enabled != false {
+			output["manifest_processing_rules"] = []interface{}{map[string]interface{}{
+				"ad_marker_passthrough": []interface{}{map[string]interface{}{
+					"enabled": c.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
+				}},
+			}}
+		}
+		output["name"] = c.Name
+		output["personalization_threshold_seconds"] = c.PersonalizationThresholdSeconds
+		output["playback_configuration_arn"] = c.PlaybackConfigurationArn
+		output["playback_endpoint_prefix"] = c.PlaybackEndpointPrefix
+		output["session_initialization_endpoint_prefix"] = c.SessionInitializationEndpointPrefix
+		output["slate_ad_url"] = c.SlateAdUrl
+		if len(c.Tags) > 0 {
+			output["tags"] = c.Tags
+		}
+		output["transcode_profile_name"] = c.TranscodeProfileName
+		output["video_content_source_url"] = c.VideoContentSourceUrl
 		return output
 	}
 	return map[string]interface{}{}
