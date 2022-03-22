@@ -162,7 +162,7 @@ func dataSourcePlaybackConfigurationRead(_ context.Context, d *schema.ResourceDa
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "`name` parameter required",
-			Detail:   "You need to specify a `name` parameter in your c",
+			Detail:   "You need to specify a `name` parameter in your configuration",
 		})
 	}
 	return diags
