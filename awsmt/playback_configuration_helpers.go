@@ -83,13 +83,19 @@ func flattenPlaybackConfiguration(c *mediatailor.PlaybackConfiguration) map[stri
 	return output
 }
 
-func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlaybackConfigurationInput {
-	input := mediatailor.PutPlaybackConfigurationInput{}
-	if v, ok := d.GetOk("ad_decision_server_url"); ok {
+type CreateInput struct {
+	d     *schema.ResourceData
+	input *mediatailor.PutPlaybackConfigurationInput
+}
+
+func (i CreateInput) getAdDecisionServerUrlInput() {
+	if v, ok := i.d.GetOk("ad_decision_server_url"); ok {
 		val := v.(string)
-		input.AdDecisionServerUrl = &val
+		i.input.AdDecisionServerUrl = &val
 	}
-	if v, ok := d.GetOk("avail_suppression"); ok && v.([]interface{})[0] != nil {
+}
+func (i CreateInput) getAvailSuppressionInput() {
+	if v, ok := i.d.GetOk("avail_suppression"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
 		output := mediatailor.AvailSuppression{}
 		if str, ok := val["mode"]; ok {
@@ -100,65 +106,11 @@ func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlayba
 			converted := str.(string)
 			output.Value = &converted
 		}
-		input.AvailSuppression = &output
+		i.input.AvailSuppression = &output
 	}
-	if v, ok := d.GetOk("bumper"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		output := mediatailor.Bumper{}
-		if str, ok := val["end_url"]; ok {
-			converted := str.(string)
-			output.EndUrl = &converted
-		}
-		if str, ok := val["start_url"]; ok {
-			converted := str.(string)
-			output.StartUrl = &converted
-		}
-		input.Bumper = &output
-	}
-	if v, ok := d.GetOk("configuration_aliases"); ok {
-		val := v.(map[string]map[string]*string)
-		input.ConfigurationAliases = val
-	}
-	if v, ok := d.GetOk("cdn_configuration"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		output := mediatailor.CdnConfiguration{}
-		if str, ok := val["ad_segment_url_prefix"]; ok {
-			converted := str.(string)
-			output.AdSegmentUrlPrefix = &converted
-		}
-		if str, ok := val["content_segment_url_prefix"]; ok {
-			converted := str.(string)
-			output.ContentSegmentUrlPrefix = &converted
-		}
-		input.CdnConfiguration = &output
-	}
-	if v, ok := d.GetOk("dash_configuration"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		output := mediatailor.DashConfigurationForPut{}
-		if str, ok := val["mpd_location"]; ok {
-			converted := str.(string)
-			output.MpdLocation = &converted
-		}
-		if str, ok := val["origin_manifest_type"]; ok {
-			converted := str.(string)
-			output.OriginManifestType = &converted
-		}
-		input.DashConfiguration = &output
-	}
-	if v, ok := d.GetOk("live_pre_roll_configuration"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		output := mediatailor.LivePreRollConfiguration{}
-		if str, ok := val["ad_decision_server_url"]; ok {
-			converted := str.(string)
-			output.AdDecisionServerUrl = &converted
-		}
-		if integer, ok := val["max_duration_seconds"]; ok {
-			converted := int64(integer.(int))
-			output.MaxDurationSeconds = &converted
-		}
-		input.LivePreRollConfiguration = &output
-	}
-	if v, ok := d.GetOk("manifest_processing_rules"); ok && v.([]interface{})[0] != nil {
+}
+func (i CreateInput) getManifestProcessingRulesInput() {
+	if v, ok := i.d.GetOk("manifest_processing_rules"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
 		output := mediatailor.ManifestProcessingRules{}
 		if v2, ok := val["ad_marker_passthrough"]; ok {
@@ -171,40 +123,137 @@ func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlayba
 			output.AdMarkerPassthrough = &output2
 		}
 
-		input.ManifestProcessingRules = &output
+		i.input.ManifestProcessingRules = &output
 	}
-
-	if v, ok := d.GetOk("name"); ok {
-		val := v.(string)
-		input.Name = &val
+}
+func (i CreateInput) getBumperInput() {
+	if v, ok := i.d.GetOk("bumper"); ok && v.([]interface{})[0] != nil {
+		val := v.([]interface{})[0].(map[string]interface{})
+		output := mediatailor.Bumper{}
+		if str, ok := val["end_url"]; ok {
+			converted := str.(string)
+			output.EndUrl = &converted
+		}
+		if str, ok := val["start_url"]; ok {
+			converted := str.(string)
+			output.StartUrl = &converted
+		}
+		i.input.Bumper = &output
 	}
-	if v, ok := d.GetOk("personalization_threshold_seconds"); ok {
-		val := int64(v.(int))
-		input.PersonalizationThresholdSeconds = &val
+}
+func (i CreateInput) getConfigurationAliasesInput() {
+	if v, ok := i.d.GetOk("configuration_aliases"); ok {
+		val := v.(map[string]map[string]*string)
+		i.input.ConfigurationAliases = val
 	}
-	if v, ok := d.GetOk("slate_ad_url"); ok {
-		val := v.(string)
-		input.SlateAdUrl = &val
+}
+func (i CreateInput) getCDNConfigurationInput() {
+	if v, ok := i.d.GetOk("cdn_configuration"); ok && v.([]interface{})[0] != nil {
+		val := v.([]interface{})[0].(map[string]interface{})
+		output := mediatailor.CdnConfiguration{}
+		if str, ok := val["ad_segment_url_prefix"]; ok {
+			converted := str.(string)
+			output.AdSegmentUrlPrefix = &converted
+		}
+		if str, ok := val["content_segment_url_prefix"]; ok {
+			converted := str.(string)
+			output.ContentSegmentUrlPrefix = &converted
+		}
+		i.input.CdnConfiguration = &output
 	}
+}
+func (i CreateInput) getDashConfigurationInput() {
+	if v, ok := i.d.GetOk("dash_configuration"); ok && v.([]interface{})[0] != nil {
+		val := v.([]interface{})[0].(map[string]interface{})
+		output := mediatailor.DashConfigurationForPut{}
+		if str, ok := val["mpd_location"]; ok {
+			converted := str.(string)
+			output.MpdLocation = &converted
+		}
+		if str, ok := val["origin_manifest_type"]; ok {
+			converted := str.(string)
+			output.OriginManifestType = &converted
+		}
+		i.input.DashConfiguration = &output
+	}
+}
+func (i CreateInput) getLivePreRollConfigurationInput() {
+	if v, ok := i.d.GetOk("live_pre_roll_configuration"); ok && v.([]interface{})[0] != nil {
+		val := v.([]interface{})[0].(map[string]interface{})
+		output := mediatailor.LivePreRollConfiguration{}
+		if str, ok := val["ad_decision_server_url"]; ok {
+			converted := str.(string)
+			output.AdDecisionServerUrl = &converted
+		}
+		if integer, ok := val["max_duration_seconds"]; ok {
+			converted := int64(integer.(int))
+			output.MaxDurationSeconds = &converted
+		}
+		i.input.LivePreRollConfiguration = &output
+	}
+}
+func (i CreateInput) getTagsInput() {
 	outputMap := make(map[string]*string)
-	if v, ok := d.GetOk("tags"); ok {
+	if v, ok := i.d.GetOk("tags"); ok {
 		val := v.(map[string]interface{})
 		for k, value := range val {
 			temp := value.(string)
 			outputMap[k] = &temp
 		}
-		input.Tags = outputMap
-	} else {
-		input.Tags = outputMap
 	}
-	if v, ok := d.GetOk("transcode_profile_name"); ok {
+	i.input.Tags = outputMap
+
+}
+func (i CreateInput) getNameInput() {
+	if v, ok := i.d.GetOk("name"); ok {
 		val := v.(string)
-		input.TranscodeProfileName = &val
+		i.input.Name = &val
 	}
-	if v, ok := d.GetOk("video_content_source_url"); ok {
+}
+func (i CreateInput) getPersonalizationThresholdSecondsInput() {
+	if v, ok := i.d.GetOk("personalization_threshold_seconds"); ok {
+		val := int64(v.(int))
+		i.input.PersonalizationThresholdSeconds = &val
+	}
+}
+func (i CreateInput) getSlateAdUrlInput() {
+	if v, ok := i.d.GetOk("slate_ad_url"); ok {
 		val := v.(string)
-		input.VideoContentSourceUrl = &val
+		i.input.SlateAdUrl = &val
 	}
+}
+func (i CreateInput) getTranscodeProfileNameInput() {
+	if v, ok := i.d.GetOk("transcode_profile_name"); ok {
+		val := v.(string)
+		i.input.TranscodeProfileName = &val
+	}
+}
+func (i CreateInput) getVideoContentSourceUrlInput() {
+	if v, ok := i.d.GetOk("video_content_source_url"); ok {
+		val := v.(string)
+		i.input.VideoContentSourceUrl = &val
+	}
+}
+func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlaybackConfigurationInput {
+	input := mediatailor.PutPlaybackConfigurationInput{}
+	i := CreateInput{
+		d:     d,
+		input: &input,
+	}
+	i.getAdDecisionServerUrlInput()
+	i.getAvailSuppressionInput()
+	i.getBumperInput()
+	i.getConfigurationAliasesInput()
+	i.getCDNConfigurationInput()
+	i.getDashConfigurationInput()
+	i.getLivePreRollConfigurationInput()
+	i.getManifestProcessingRulesInput()
+	i.getNameInput()
+	i.getPersonalizationThresholdSecondsInput()
+	i.getSlateAdUrlInput()
+	i.getTagsInput()
+	i.getTranscodeProfileNameInput()
+	i.getVideoContentSourceUrlInput()
 	return input
 }
 
