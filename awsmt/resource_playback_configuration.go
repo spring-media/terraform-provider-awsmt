@@ -171,12 +171,19 @@ func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.Resource
 		if d.HasChange("name") {
 			oldValue, newValue := d.GetChange("name")
 			oldName := oldValue.(string)
-			_, err := client.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: &oldName})
-			if err != nil {
-				return diag.FromErr(err)
-			}
+			deletePlaybackConfiguration(client, oldName)
 			d.SetId(newValue.(string))
 		}
+
+		if d.HasChange("tags") {
+			oldValue, newValue := d.GetChange("tags")
+			for k := range oldValue.(map[string]interface{}) {
+				if _, ok := (newValue.(map[string]interface{}))[k]; !ok {
+					deletePlaybackConfiguration(client, d.Get("name").(string))
+				}
+			}
+		}
+
 		input := getPlaybackConfigurationInput(d)
 		_, err := client.PutPlaybackConfiguration(&input)
 		if err != nil {
@@ -211,11 +218,7 @@ func resourcePlaybackConfigurationRead(_ context.Context, d *schema.ResourceData
 func resourcePlaybackConfigurationDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*mediatailor.MediaTailor)
 	var diags diag.Diagnostics
-	name := d.Get("name").(string)
-	_, err := client.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: &name})
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	deletePlaybackConfiguration(client, d.Get("name").(string))
 	d.SetId("")
 	return diags
 }
@@ -358,4 +361,12 @@ func setSingleValue(d *schema.ResourceData, values map[string]interface{}, diags
 		return diag.FromErr(err)
 	}
 	return diags
+}
+
+func deletePlaybackConfiguration(client *mediatailor.MediaTailor, name string) diag.Diagnostics {
+	_, err := client.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: &name})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	return nil
 }
