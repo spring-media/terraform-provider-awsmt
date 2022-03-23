@@ -165,34 +165,37 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 
 func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if d.HasChanges("ad_decision_server_url", "avail_suppression", "bumper", "cdn_configuration", "configuration_aliases", "dash_configuration", "live_pre_roll_configuration", "log_configuration", "manifest_processing_rules", "name", "personalization_threshold_seconds", "slate_ad_url", "tags", "transcode_profile_name", "video_content_source_url") {
-		client := m.(*mediatailor.MediaTailor)
+	if !d.HasChanges("ad_decision_server_url", "avail_suppression", "bumper", "cdn_configuration", "configuration_aliases", "dash_configuration", "live_pre_roll_configuration", "log_configuration", "manifest_processing_rules", "name", "personalization_threshold_seconds", "slate_ad_url", "tags", "transcode_profile_name", "video_content_source_url") {
+		resourcePlaybackConfigurationRead(ctx, d, m)
+		return diags
+	}
+	client := m.(*mediatailor.MediaTailor)
 
-		if d.HasChange("name") {
-			oldValue, newValue := d.GetChange("name")
-			oldName := oldValue.(string)
-			deletePlaybackConfiguration(client, oldName)
-			d.SetId(newValue.(string))
-		}
+	if d.HasChange("name") {
+		oldValue, newValue := d.GetChange("name")
+		oldName := oldValue.(string)
+		deletePlaybackConfiguration(client, oldName)
+		d.SetId(newValue.(string))
+	}
 
-		if d.HasChange("tags") {
-			oldValue, newValue := d.GetChange("tags")
-			for k := range oldValue.(map[string]interface{}) {
-				if _, ok := (newValue.(map[string]interface{}))[k]; !ok {
-					deletePlaybackConfiguration(client, d.Get("name").(string))
-				}
+	if d.HasChange("tags") {
+		oldValue, newValue := d.GetChange("tags")
+		for k := range oldValue.(map[string]interface{}) {
+			if _, ok := (newValue.(map[string]interface{}))[k]; !ok {
+				deletePlaybackConfiguration(client, d.Get("name").(string))
 			}
 		}
-
-		input := getPlaybackConfigurationInput(d)
-		_, err := client.PutPlaybackConfiguration(&input)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if err = d.Set("last_updated", time.Now().Format(time.RFC850)); err != nil {
-			return diag.FromErr(err)
-		}
 	}
+
+	input := getPlaybackConfigurationInput(d)
+	_, err := client.PutPlaybackConfiguration(&input)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if err = d.Set("last_updated", time.Now().Format(time.RFC850)); err != nil {
+		return diag.FromErr(err)
+	}
+
 	resourcePlaybackConfigurationRead(ctx, d, m)
 	return diags
 }
@@ -221,152 +224,4 @@ func resourcePlaybackConfigurationDelete(_ context.Context, d *schema.ResourceDa
 	deletePlaybackConfiguration(client, d.Get("name").(string))
 	d.SetId("")
 	return diags
-}
-
-func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlaybackConfigurationInput {
-	input := mediatailor.PutPlaybackConfigurationInput{}
-	if v, ok := d.GetOk("ad_decision_server_url"); ok {
-		val := v.(string)
-		input.AdDecisionServerUrl = &val
-	}
-	if v, ok := d.GetOk("avail_suppression"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		output := mediatailor.AvailSuppression{}
-		if str, ok := val["mode"]; ok {
-			converted := str.(string)
-			output.Mode = &converted
-		}
-		if str, ok := val["value"]; ok {
-			converted := str.(string)
-			output.Value = &converted
-		}
-		input.AvailSuppression = &output
-	}
-	if v, ok := d.GetOk("bumper"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		output := mediatailor.Bumper{}
-		if str, ok := val["end_url"]; ok {
-			converted := str.(string)
-			output.EndUrl = &converted
-		}
-		if str, ok := val["start_url"]; ok {
-			converted := str.(string)
-			output.StartUrl = &converted
-		}
-		input.Bumper = &output
-	}
-	if v, ok := d.GetOk("configuration_aliases"); ok {
-		val := v.(map[string]map[string]*string)
-		input.ConfigurationAliases = val
-	}
-	if v, ok := d.GetOk("cdn_configuration"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		output := mediatailor.CdnConfiguration{}
-		if str, ok := val["ad_segment_url_prefix"]; ok {
-			converted := str.(string)
-			output.AdSegmentUrlPrefix = &converted
-		}
-		if str, ok := val["content_segment_url_prefix"]; ok {
-			converted := str.(string)
-			output.ContentSegmentUrlPrefix = &converted
-		}
-		input.CdnConfiguration = &output
-	}
-	if v, ok := d.GetOk("dash_configuration"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		output := mediatailor.DashConfigurationForPut{}
-		if str, ok := val["mpd_location"]; ok {
-			converted := str.(string)
-			output.MpdLocation = &converted
-		}
-		if str, ok := val["origin_manifest_type"]; ok {
-			converted := str.(string)
-			output.OriginManifestType = &converted
-		}
-		input.DashConfiguration = &output
-	}
-	if v, ok := d.GetOk("live_pre_roll_configuration"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		output := mediatailor.LivePreRollConfiguration{}
-		if str, ok := val["ad_decision_server_url"]; ok {
-			converted := str.(string)
-			output.AdDecisionServerUrl = &converted
-		}
-		if integer, ok := val["max_duration_seconds"]; ok {
-			converted := int64(integer.(int))
-			output.MaxDurationSeconds = &converted
-		}
-		input.LivePreRollConfiguration = &output
-	}
-	if v, ok := d.GetOk("manifest_processing_rules"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		output := mediatailor.ManifestProcessingRules{}
-		if v2, ok := val["ad_marker_passthrough"]; ok {
-			output2 := mediatailor.AdMarkerPassthrough{}
-			val2 := v2.([]interface{})[0].(map[string]interface{})
-			if boolean, ok := val2["enabled"]; ok {
-				converted := boolean.(bool)
-				output2.Enabled = &converted
-			}
-			output.AdMarkerPassthrough = &output2
-		}
-
-		input.ManifestProcessingRules = &output
-	}
-
-	if v, ok := d.GetOk("name"); ok {
-		val := v.(string)
-		input.Name = &val
-	}
-	if v, ok := d.GetOk("personalization_threshold_seconds"); ok {
-		val := int64(v.(int))
-		input.PersonalizationThresholdSeconds = &val
-	}
-	if v, ok := d.GetOk("slate_ad_url"); ok {
-		val := v.(string)
-		input.SlateAdUrl = &val
-	}
-	outputMap := make(map[string]*string)
-	if v, ok := d.GetOk("tags"); ok {
-		val := v.(map[string]interface{})
-		for k, value := range val {
-			temp := value.(string)
-			outputMap[k] = &temp
-		}
-		input.Tags = outputMap
-	} else {
-		input.Tags = outputMap
-	}
-	if v, ok := d.GetOk("transcode_profile_name"); ok {
-		val := v.(string)
-		input.TranscodeProfileName = &val
-	}
-	if v, ok := d.GetOk("video_content_source_url"); ok {
-		val := v.(string)
-		input.VideoContentSourceUrl = &val
-	}
-	return input
-}
-
-func returnPlaybackConfigurationResource(d *schema.ResourceData, values map[string]interface{}, diags diag.Diagnostics) diag.Diagnostics {
-	for k := range values {
-		setSingleValue(d, values, diags, k)
-	}
-	return diags
-}
-
-func setSingleValue(d *schema.ResourceData, values map[string]interface{}, diags diag.Diagnostics, name string) diag.Diagnostics {
-	err := d.Set(name, values[name])
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	return diags
-}
-
-func deletePlaybackConfiguration(client *mediatailor.MediaTailor, name string) diag.Diagnostics {
-	_, err := client.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: &name})
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	return nil
 }

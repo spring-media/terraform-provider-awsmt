@@ -1,4 +1,4 @@
-#Resource: awsmt_playback_configuration
+# Resource: awsmt_playback_configuration
 
 Use this resource to manage a MediaTailor playback configuration.
 
