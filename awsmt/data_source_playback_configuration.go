@@ -238,9 +238,7 @@ func flattenPlaybackConfiguration(c *mediatailor.PlaybackConfiguration) map[stri
 		output["playback_endpoint_prefix"] = c.PlaybackEndpointPrefix
 		output["session_initialization_endpoint_prefix"] = c.SessionInitializationEndpointPrefix
 		output["slate_ad_url"] = c.SlateAdUrl
-		if len(c.Tags) > 0 {
-			output["tags"] = c.Tags
-		}
+		output["tags"] = c.Tags
 		output["transcode_profile_name"] = c.TranscodeProfileName
 		output["video_content_source_url"] = c.VideoContentSourceUrl
 		return output

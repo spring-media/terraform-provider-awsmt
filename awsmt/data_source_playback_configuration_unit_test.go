@@ -73,6 +73,7 @@ func TestFlattenPlaybackConfiguration(t *testing.T) {
 		"playback_endpoint_prefix":               &testString,
 		"session_initialization_endpoint_prefix": &testString,
 		"slate_ad_url":                           &testString,
+		"tags":                                   map[string]*string{},
 		"transcode_profile_name":                 &testString,
 		"video_content_source_url":               &testString,
 	}
