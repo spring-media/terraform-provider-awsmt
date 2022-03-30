@@ -292,3 +292,14 @@ func deletePlaybackConfiguration(client *mediatailor.MediaTailor, name string) d
 	}
 	return nil
 }
+
+func createOptionalList(fields map[string]*schema.Schema) *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: fields,
+		},
+	}
+}
