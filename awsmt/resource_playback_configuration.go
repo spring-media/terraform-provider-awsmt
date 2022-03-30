@@ -105,10 +105,6 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 
 func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if !d.HasChanges("ad_decision_server_url", "avail_suppression", "bumper", "cdn_configuration", "configuration_aliases", "dash_configuration", "live_pre_roll_configuration", "log_configuration", "manifest_processing_rules", "name", "personalization_threshold_seconds", "slate_ad_url", "tags", "transcode_profile_name", "video_content_source_url") {
-		resourcePlaybackConfigurationRead(ctx, d, m)
-		return diags
-	}
 	client := m.(*mediatailor.MediaTailor)
 
 	if d.HasChange("name") {
