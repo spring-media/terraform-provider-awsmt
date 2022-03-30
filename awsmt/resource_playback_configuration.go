@@ -187,6 +187,7 @@ func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.Resource
 					Summary:  "Tag removal detected, but not supported.",
 					Detail:   "This provider does not support tag removal. For more information about the issue, visit this link: https://github.com/aws/aws-sdk-go/issues/4337\nThe tag(s) will only be removed from the terraform state.",
 				})
+				break
 			}
 		}
 
