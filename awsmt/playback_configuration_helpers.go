@@ -303,3 +303,13 @@ func createOptionalList(fields map[string]*schema.Schema) *schema.Schema {
 		},
 	}
 }
+
+func createComputedList(fields map[string]*schema.Schema) *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: fields,
+		},
+	}
+}

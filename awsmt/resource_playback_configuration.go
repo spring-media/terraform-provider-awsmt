@@ -46,28 +46,16 @@ func resourcePlaybackConfiguration() *schema.Resource {
 				"mpd_location":             &optionalString,
 				"origin_manifest_type":     &optionalString,
 			}),
-			"hls_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"manifest_endpoint_prefix": &computedString,
-					},
-				},
-			},
+			"hls_configuration": createComputedList(map[string]*schema.Schema{
+				"manifest_endpoint_prefix": &computedString,
+			}),
 			"live_pre_roll_configuration": createOptionalList(map[string]*schema.Schema{
 				"ad_decision_server_url": &optionalString,
 				"max_duration_seconds":   &optionalInt,
 			}),
-			"log_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"percent_enabled": &computedInt,
-					},
-				},
-			},
+			"log_configuration": createComputedList(map[string]*schema.Schema{
+				"percent_enabled": &computedInt,
+			}),
 			"manifest_processing_rules": createOptionalList(map[string]*schema.Schema{
 				"ad_marker_passthrough": createOptionalList(map[string]*schema.Schema{
 					"enabled": &optionalBool,

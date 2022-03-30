@@ -21,37 +21,18 @@ func dataSourcePlaybackConfiguration() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ad_decision_server_url": &computedString,
-						"avail_suppression": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									//OFF | BEHIND_LIVE_EDGE
-									"mode":  &computedString,
-									"value": &computedString,
-								},
-							},
-						},
-						"bumper": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"end_url":   &computedString,
-									"start_url": &computedString,
-								},
-							},
-						},
-						"cdn_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ad_segment_url_prefix":      &computedString,
-									"content_segment_url_prefix": &computedString,
-								},
-							},
-						},
+						"avail_suppression": createComputedList(map[string]*schema.Schema{
+							"mode":  &computedString,
+							"value": &computedString,
+						}),
+						"bumper": createComputedList(map[string]*schema.Schema{
+							"end_url":   &computedString,
+							"start_url": &computedString,
+						}),
+						"cdn_configuration": createComputedList(map[string]*schema.Schema{
+							"ad_segment_url_prefix":      &computedString,
+							"content_segment_url_prefix": &computedString,
+						}),
 						"configuration_aliases": {
 							Type:     schema.TypeMap,
 							Computed: true,
@@ -63,62 +44,26 @@ func dataSourcePlaybackConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"dash_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"manifest_endpoint_prefix": &computedString,
-									"mpd_location":             &computedString,
-									"origin_manifest_type":     &computedString,
-								},
-							},
-						},
-						"hls_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"manifest_endpoint_prefix": &computedString,
-								},
-							},
-						},
-						"live_pre_roll_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ad_decision_server_url": &computedString,
-									"max_duration_seconds":   &computedInt,
-								},
-							},
-						},
-						"log_configuration": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"percent_enabled": &computedInt,
-								},
-							},
-						},
-						"manifest_processing_rules": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ad_marker_passthrough": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"enabled": &computedBool,
-											},
-										},
-									},
-								},
-							},
-						},
+						"dash_configuration": createComputedList(map[string]*schema.Schema{
+							"manifest_endpoint_prefix": &computedString,
+							"mpd_location":             &computedString,
+							"origin_manifest_type":     &computedString,
+						}),
+						"hls_configuration": createComputedList(map[string]*schema.Schema{
+							"manifest_endpoint_prefix": &computedString,
+						}),
+						"live_pre_roll_configuration": createComputedList(map[string]*schema.Schema{
+							"ad_decision_server_url": &computedString,
+							"max_duration_seconds":   &computedInt,
+						}),
+						"log_configuration": createComputedList(map[string]*schema.Schema{
+							"percent_enabled": &computedInt,
+						}),
+						"manifest_processing_rules": createComputedList(map[string]*schema.Schema{
+							"ad_marker_passthrough": createComputedList(map[string]*schema.Schema{
+								"enabled": &computedBool,
+							}),
+						}),
 						"name":                                   &computedString,
 						"personalization_threshold_seconds":      &computedInt,
 						"playback_configuration_arn":             &computedString,
