@@ -182,9 +182,14 @@ func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.Resource
 		oldValue, newValue := d.GetChange("tags")
 		for k := range oldValue.(map[string]interface{}) {
 			if _, ok := (newValue.(map[string]interface{}))[k]; !ok {
-				deletePlaybackConfiguration(client, d.Get("name").(string))
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Tag removal detected, but not supported.",
+					Detail:   "This provider does not support tag removal. For more information about the issue, visit this link: https://github.com/aws/aws-sdk-go/issues/4337\nThe tag(s) will only be removed from the terraform state.",
+				})
 			}
 		}
+
 	}
 
 	input := getPlaybackConfigurationInput(d)
