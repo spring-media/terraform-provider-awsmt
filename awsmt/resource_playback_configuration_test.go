@@ -113,34 +113,6 @@ func TestAccPlaybackConfigurationResourceTaint(t *testing.T) {
 	})
 }
 
-func TestAccPlaybackConfigurationRemoveResourceTag(t *testing.T) {
-	resourceName := "awsmt_playback_configuration.r1"
-	firstARN := ""
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: ProviderFactories,
-		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPlaybackConfigurationResource(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
-					resource.TestCheckResourceAttrSet(resourceName, "tags.Environment"),
-					testAccAssignARN(resourceName, &firstARN),
-				),
-			},
-			{
-				Config: testAccPlaybackConfigurationRemoveResourceTag(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
-					resource.TestCheckNoResourceAttr(resourceName, "tags.Environment"),
-					testAccCheckARN(resourceName, &firstARN),
-				),
-			},
-		},
-	})
-}
-
 func testAccAssignARN(resourceName string, ARNvariable *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -236,38 +208,6 @@ resource "awsmt_playback_configuration" "r1" {
   video_content_source_url = "https://exampleurl.com/"
 }
 
-`
-}
-
-func testAccPlaybackConfigurationRemoveResourceTag() string {
-	return `
-resource "awsmt_playback_configuration" "r1" {
-  ad_decision_server_url = "https://exampleurl.com/"
-  avail_suppression {
-   mode = "OFF"
-  }
-  bumper {}
-  cdn_configuration {
-    ad_segment_url_prefix = "test"
-    content_segment_url_prefix = "test"
-  }
-  dash_configuration {
-    mpd_location = "EMT_DEFAULT"
-    origin_manifest_type = "MULTI_PERIOD"
-  }
-  live_pre_roll_configuration {
-	max_duration_seconds = 1
-  }
-  manifest_processing_rules {
-	ad_marker_passthrough {
-	  enabled = true
-	}
-  }
-  name = "test-playback-configuration-awsmt"
-  personalization_threshold_seconds = 2
-  slate_ad_url = "https://exampleurl.com/"
-  video_content_source_url = "https://exampleurl.com/"
-}
 `
 }
 
