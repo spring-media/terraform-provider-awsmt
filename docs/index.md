@@ -11,7 +11,7 @@ Example configuration (using Terraform 0.13 or newer):
 terraform {
   required_providers {
     awsmt = {
-      version = "1.6.0"
+      version = "1.10.0"
       source  = "spring-media/awsmt"
      }
   }
@@ -25,7 +25,7 @@ provider "awsmt" {
 Terraform 0.12 or earlier:
 ```
 provider "awsmt" {
-  version = "1.6.0"
+  version = "1.10.0"
   region = "eu-central-1"
 }
 ```

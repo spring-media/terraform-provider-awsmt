@@ -94,6 +94,7 @@ func (i CreateInput) getAdDecisionServerUrlInput() {
 		i.input.AdDecisionServerUrl = &val
 	}
 }
+
 func (i CreateInput) getAvailSuppressionInput() {
 	if v, ok := i.d.GetOk("avail_suppression"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
@@ -109,6 +110,7 @@ func (i CreateInput) getAvailSuppressionInput() {
 		i.input.AvailSuppression = &output
 	}
 }
+
 func (i CreateInput) getManifestProcessingRulesInput() {
 	if v, ok := i.d.GetOk("manifest_processing_rules"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
@@ -126,6 +128,7 @@ func (i CreateInput) getManifestProcessingRulesInput() {
 		i.input.ManifestProcessingRules = &output
 	}
 }
+
 func (i CreateInput) getBumperInput() {
 	if v, ok := i.d.GetOk("bumper"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
@@ -141,12 +144,14 @@ func (i CreateInput) getBumperInput() {
 		i.input.Bumper = &output
 	}
 }
+
 func (i CreateInput) getConfigurationAliasesInput() {
 	if v, ok := i.d.GetOk("configuration_aliases"); ok {
 		val := v.(map[string]map[string]*string)
 		i.input.ConfigurationAliases = val
 	}
 }
+
 func (i CreateInput) getCDNConfigurationInput() {
 	if v, ok := i.d.GetOk("cdn_configuration"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
@@ -162,6 +167,7 @@ func (i CreateInput) getCDNConfigurationInput() {
 		i.input.CdnConfiguration = &output
 	}
 }
+
 func (i CreateInput) getDashConfigurationInput() {
 	if v, ok := i.d.GetOk("dash_configuration"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
@@ -177,6 +183,7 @@ func (i CreateInput) getDashConfigurationInput() {
 		i.input.DashConfiguration = &output
 	}
 }
+
 func (i CreateInput) getLivePreRollConfigurationInput() {
 	if v, ok := i.d.GetOk("live_pre_roll_configuration"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
@@ -192,6 +199,7 @@ func (i CreateInput) getLivePreRollConfigurationInput() {
 		i.input.LivePreRollConfiguration = &output
 	}
 }
+
 func (i CreateInput) getTagsInput() {
 	outputMap := make(map[string]*string)
 	if v, ok := i.d.GetOk("tags"); ok {
@@ -202,38 +210,43 @@ func (i CreateInput) getTagsInput() {
 		}
 	}
 	i.input.Tags = outputMap
-
 }
+
 func (i CreateInput) getNameInput() {
 	if v, ok := i.d.GetOk("name"); ok {
 		val := v.(string)
 		i.input.Name = &val
 	}
 }
+
 func (i CreateInput) getPersonalizationThresholdSecondsInput() {
 	if v, ok := i.d.GetOk("personalization_threshold_seconds"); ok {
 		val := int64(v.(int))
 		i.input.PersonalizationThresholdSeconds = &val
 	}
 }
+
 func (i CreateInput) getSlateAdUrlInput() {
 	if v, ok := i.d.GetOk("slate_ad_url"); ok {
 		val := v.(string)
 		i.input.SlateAdUrl = &val
 	}
 }
+
 func (i CreateInput) getTranscodeProfileNameInput() {
 	if v, ok := i.d.GetOk("transcode_profile_name"); ok {
 		val := v.(string)
 		i.input.TranscodeProfileName = &val
 	}
 }
+
 func (i CreateInput) getVideoContentSourceUrlInput() {
 	if v, ok := i.d.GetOk("video_content_source_url"); ok {
 		val := v.(string)
 		i.input.VideoContentSourceUrl = &val
 	}
 }
+
 func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlaybackConfigurationInput {
 	input := mediatailor.PutPlaybackConfigurationInput{}
 	i := CreateInput{
@@ -278,4 +291,25 @@ func deletePlaybackConfiguration(client *mediatailor.MediaTailor, name string) d
 		return diag.FromErr(err)
 	}
 	return nil
+}
+
+func createOptionalList(fields map[string]*schema.Schema) *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: fields,
+		},
+	}
+}
+
+func createComputedList(fields map[string]*schema.Schema) *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: fields,
+		},
+	}
 }

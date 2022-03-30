@@ -18,40 +18,18 @@ func resourcePlaybackConfiguration() *schema.Resource {
 		// and https://sourcegraph.com/github.com/aws/aws-sdk-go/-/docs/service/mediatailor#PutPlaybackConfigurationInput
 		Schema: map[string]*schema.Schema{
 			"ad_decision_server_url": &optionalString,
-			"avail_suppression": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						//OFF | BEHIND_LIVE_EDGE
-						"mode":  &optionalString,
-						"value": &optionalString,
-					},
-				},
-			},
-			"bumper": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"end_url":   &optionalString,
-						"start_url": &optionalString,
-					},
-				},
-			},
-			"cdn_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ad_segment_url_prefix":      &optionalString,
-						"content_segment_url_prefix": &optionalString,
-					},
-				},
-			},
+			"avail_suppression": createOptionalList(map[string]*schema.Schema{
+				"mode":  &optionalString,
+				"value": &optionalString,
+			}),
+			"bumper": createOptionalList(map[string]*schema.Schema{
+				"end_url":   &optionalString,
+				"start_url": &optionalString,
+			}),
+			"cdn_configuration": createOptionalList(map[string]*schema.Schema{
+				"ad_segment_url_prefix":      &optionalString,
+				"content_segment_url_prefix": &optionalString,
+			}),
 			"configuration_aliases": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -63,64 +41,26 @@ func resourcePlaybackConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"dash_configuration": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"manifest_endpoint_prefix": &computedString,
-						"mpd_location":             &optionalString,
-						//SINGLE_PERIOD | MULTI_PERIOD
-						"origin_manifest_type": &optionalString,
-					},
-				},
-			},
-			"hls_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"manifest_endpoint_prefix": &computedString,
-					},
-				},
-			},
-			"live_pre_roll_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ad_decision_server_url": &optionalString,
-						"max_duration_seconds":   &optionalInt,
-					},
-				},
-			},
-			"log_configuration": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"percent_enabled": &computedInt,
-					},
-				},
-			},
-			"manifest_processing_rules": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ad_marker_passthrough": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"enabled": &optionalBool,
-								},
-							},
-						},
-					},
-				},
-			},
+			"dash_configuration": createOptionalList(map[string]*schema.Schema{
+				"manifest_endpoint_prefix": &computedString,
+				"mpd_location":             &optionalString,
+				"origin_manifest_type":     &optionalString,
+			}),
+			"hls_configuration": createComputedList(map[string]*schema.Schema{
+				"manifest_endpoint_prefix": &computedString,
+			}),
+			"live_pre_roll_configuration": createOptionalList(map[string]*schema.Schema{
+				"ad_decision_server_url": &optionalString,
+				"max_duration_seconds":   &optionalInt,
+			}),
+			"log_configuration": createComputedList(map[string]*schema.Schema{
+				"percent_enabled": &computedInt,
+			}),
+			"manifest_processing_rules": createOptionalList(map[string]*schema.Schema{
+				"ad_marker_passthrough": createOptionalList(map[string]*schema.Schema{
+					"enabled": &optionalBool,
+				}),
+			}),
 			"name":                                   &requiredString,
 			"personalization_threshold_seconds":      &optionalInt,
 			"playback_configuration_arn":             &computedString,
@@ -182,9 +122,15 @@ func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.Resource
 		oldValue, newValue := d.GetChange("tags")
 		for k := range oldValue.(map[string]interface{}) {
 			if _, ok := (newValue.(map[string]interface{}))[k]; !ok {
-				deletePlaybackConfiguration(client, d.Get("name").(string))
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Warning,
+					Summary:  "Tag removal detected, but not supported.",
+					Detail:   "This provider does not support tag removal. For more information about the issue, visit this link: https://github.com/aws/aws-sdk-go/issues/4337\nThe tag(s) will only be removed from the terraform state.",
+				})
+				break
 			}
 		}
+
 	}
 
 	input := getPlaybackConfigurationInput(d)

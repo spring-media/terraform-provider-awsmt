@@ -33,6 +33,12 @@ resource "awsmt_playback_configuration" "conf" {
 }
 ```
 
+## Known bugs
+
+It is currently not possible to remove tags from a Playback Configuration using this provider. 
+
+For more information about this bug, see this issue on the official aws-sdk-go repo: [https://github.com/aws/aws-sdk-go/issues/4337](https://github.com/aws/aws-sdk-go/issues/4337).
+
 ## Arguments Reference
 All the descriptions for the fields are from the [official AWS documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#MediaTailor.PutPlaybackConfiguration).
 
