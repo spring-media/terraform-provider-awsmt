@@ -97,7 +97,7 @@ func TestAccPlaybackConfigurationResourceTaint(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
 					resource.TestMatchResourceAttr(resourceName, "playback_configuration_arn", regexp.MustCompile(`arn:aws:mediatailor`)),
-					testAccAssignARN(resourceName, &firstARN),
+					testAccAssignARN(resourceName, &firstARN, true),
 				),
 			},
 			{
@@ -105,7 +105,7 @@ func TestAccPlaybackConfigurationResourceTaint(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
 					resource.TestMatchResourceAttr(resourceName, "playback_configuration_arn", regexp.MustCompile(`arn:aws:mediatailor`)),
-					testAccCheckARN(resourceName, &firstARN),
+					testAccCheckARN(resourceName, &firstARN, true),
 				),
 				Taint: []string{resourceName},
 			},
@@ -113,26 +113,57 @@ func TestAccPlaybackConfigurationResourceTaint(t *testing.T) {
 	})
 }
 
-func testAccAssignARN(resourceName string, ARNvariable *string) resource.TestCheckFunc {
+func TestAccPlaybackConfigurationRemoveResourceTag(t *testing.T) {
+	resourceName := "awsmt_playback_configuration.r1"
+	firstARN := ""
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: ProviderFactories,
+		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlaybackConfigurationResource(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
+					testAccAssignARN(resourceName, &firstARN, false),
+				),
+			},
+			{
+				Config: testAccPlaybackConfigurationRemoveResourceTag(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
+					testAccCheckARN(resourceName, &firstARN, false),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccAssignARN(resourceName string, ARNVariable *string, taintArn bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
-		rs.Primary.Attributes["playback_configuration_arn"] = "taintedARN"
-		*ARNvariable = rs.Primary.Attributes["playback_configuration_arn"]
+		if taintArn {
+			rs.Primary.Attributes["playback_configuration_arn"] = "taintedARN"
+		}
+		*ARNVariable = rs.Primary.Attributes["playback_configuration_arn"]
 		return nil
 	}
 }
 
-func testAccCheckARN(resourceName string, ARNvariable *string) resource.TestCheckFunc {
+func testAccCheckARN(resourceName string, ARNVariable *string, expectDifferent bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
-		if *ARNvariable == rs.Primary.Attributes["playback_configuration_arn"] {
-			return fmt.Errorf("same ARN (%s), resource not recreated", *ARNvariable)
+		if expectDifferent && *ARNVariable == rs.Primary.Attributes["playback_configuration_arn"] {
+			return fmt.Errorf("same ARN (%s), resource not recreated", *ARNVariable)
+		} else if !expectDifferent && *ARNVariable != rs.Primary.Attributes["playback_configuration_arn"] {
+			return fmt.Errorf("different ARN (%s) != (%s), resource recreated", *ARNVariable, rs.Primary.Attributes["playback_configuration_arn"])
 		}
 		return nil
 	}
@@ -211,6 +242,38 @@ resource "awsmt_playback_configuration" "r1" {
 `
 }
 
+func testAccPlaybackConfigurationRemoveResourceTag() string {
+	return `
+resource "awsmt_playback_configuration" "r1" {
+  ad_decision_server_url = "https://exampleurl.com/"
+  avail_suppression {
+   mode = "OFF"
+  }
+  bumper {}
+  cdn_configuration {
+    ad_segment_url_prefix = "test"
+    content_segment_url_prefix = "test"
+  }
+  dash_configuration {
+    mpd_location = "EMT_DEFAULT"
+    origin_manifest_type = "MULTI_PERIOD"
+  }
+  live_pre_roll_configuration {
+	max_duration_seconds = 1
+  }
+  manifest_processing_rules {
+	ad_marker_passthrough {
+	  enabled = true
+	}
+  }
+  name = "test-playback-configuration-awsmt"
+  personalization_threshold_seconds = 2
+  slate_ad_url = "https://exampleurl.com/"
+  video_content_source_url = "https://exampleurl.com/"
+}
+`
+}
+
 func testAccPlaybackConfigurationUpdateResource() string {
 	return `
 resource "awsmt_playback_configuration" "r1" {
@@ -281,6 +344,10 @@ func testAccPlaybackConfigurationImportResource() string {
 	return `
 resource "awsmt_playback_configuration" "r2" {
   ad_decision_server_url = "https://exampleurl.com/"
+  bumper {
+	end_url = "https://wxample.com/endbumper"
+    start_url = "https://wxample.com/startbumper"
+  }
   cdn_configuration {
     ad_segment_url_prefix = "https://exampleurl.com/"
   }
