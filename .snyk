@@ -1,0 +1,35 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.24.0
+# ignores vulnerabilities until expiry date; change duration by modifying expiry date
+ignore:
+  'snyk:lic:golang:github.com:hashicorp:hcl:v2:MPL-2.0':
+    - '*':
+        reason: MPL2 license is not of concern for open source software
+        expires: 2099-12-31T00:00:00.000Z
+        created: 2022-04-05T08:10:23.652Z
+  'snyk:lic:golang:github.com:hashicorp:go-version:MPL-2.0':
+    - '*':
+        reason: MPL2 license is not of concern for open source software
+        expires: 2099-12-31T00:00:00.000Z
+        created: 2022-04-05T08:11:10.443Z
+  'snyk:lic:golang:github.com:hashicorp:go-uuid:MPL-2.0':
+    - '*':
+        reason: MPL2 license is not of concern for open source software
+        expires: 2099-12-31T00:00:00.000Z
+        created: 2022-04-05T08:11:44.790Z
+  'snyk:lic:golang:github.com:hashicorp:go-plugin:MPL-2.0':
+    - '*':
+        reason: MPL2 license is not of concern for open source software
+        expires: 2099-12-31T00:00:00.000Z
+        created: 2022-04-05T08:12:20.767Z
+  'snyk:lic:golang:github.com:hashicorp:go-multierror:MPL-2.0':
+    - '*':
+        reason: MPL2 license is not of concern for open source software
+        expires: 2099-12-31T00:00:00.000Z
+        created: 2022-04-05T08:12:52.597Z
+  'snyk:lic:golang:github.com:hashicorp:errwrap:MPL-2.0':
+    - '*':
+        reason: MPL2 license is not of concern for open source software
+        expires: 2099-12-31T00:00:00.000Z
+        created: 2022-04-05T08:13:24.068Z
+patch: {}
