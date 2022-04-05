@@ -32,4 +32,9 @@ ignore:
         reason: MPL2 license is not of concern for open source software
         expires: 2099-12-31T00:00:00.000Z
         created: 2022-04-05T08:13:24.068Z
+  'snyk:lic:golang:github.com:hashicorp:logutils:MPL-2.0':
+    - '*':
+        reason: MPL2 license is not of concern for open source software
+        expires: 2099-12-31T00:00:00.000Z
+        created: 2022-04-05T08:59:22.899Z
 patch: {}
