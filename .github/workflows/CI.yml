@@ -32,8 +32,14 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
       - name: Unit & Acceptance Test
         run: make test
-#      - name: sweep
-#        run: make sweep
+
+  sonarcloud:
+    name: SonarCloud Scan
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
@@ -41,7 +47,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   snyk:
-    name: Snyk
+    name: Snyk Scan
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -54,7 +60,7 @@ jobs:
 
   release:
     name: Release
-    needs: snyk
+    needs: [snyk, sonarcloud]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
