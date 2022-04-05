@@ -114,27 +114,31 @@ func TestAccPlaybackConfigurationResourceTaint(t *testing.T) {
 }
 
 func TestAccPlaybackConfigurationRemoveResourceTag(t *testing.T) {
-	resourceName := "awsmt_playback_configuration.r1"
-	firstARN := ""
+	resourceName := "awsmt_playback_configuration.tags-test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: ProviderFactories,
 		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlaybackConfigurationResource(),
+				Config: testAccPlaybackConfigurationResourceTags(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
-					testAccAssignARN(resourceName, &firstARN, false),
+					resource.TestCheckResourceAttr(resourceName, "name", "example-tag-removal"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Type", "Configuration"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Organization", "Example"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Team", "Example"),
 				),
 			},
 			{
-				Config: testAccPlaybackConfigurationRemoveResourceTag(),
+				Config: testAccPlaybackConfigurationResourceRemoveTags(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
-					testAccCheckARN(resourceName, &firstARN, false),
+					resource.TestCheckResourceAttr(resourceName, "name", "example-tag-removal"),
+					resource.TestCheckNoResourceAttr(resourceName, "tags.Environment"),
+					resource.TestCheckNoResourceAttr(resourceName, "tags.Type"),
+					resource.TestCheckNoResourceAttr(resourceName, "tags.Organization"),
+					resource.TestCheckNoResourceAttr(resourceName, "tags.Team"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -208,6 +212,41 @@ func testAccCheckPlaybackConfigurationDestroy(_ *terraform.State) error {
 	return nil
 }
 
+func testAccPlaybackConfigurationResourceTags() string {
+	return `
+resource "awsmt_playback_configuration" "tags-test"{
+  ad_decision_server_url = "https://exampleurl.com/"
+  name= "example-tag-removal"
+  dash_configuration {
+    mpd_location = "EMT_DEFAULT"
+    origin_manifest_type = "MULTI_PERIOD"
+  }
+  video_content_source_url = "https://exampleurl.com"
+  tags = {
+    "Environment": "test"
+    "Type": "Configuration"
+    "Organization": "Example"
+    "Team": "Example"
+  }
+}
+`
+}
+
+func testAccPlaybackConfigurationResourceRemoveTags() string {
+	return `
+resource "awsmt_playback_configuration" "tags-test"{
+  ad_decision_server_url = "https://exampleurl.com/"
+  name= "example-tag-removal"
+  dash_configuration {
+    mpd_location = "EMT_DEFAULT"
+    origin_manifest_type = "MULTI_PERIOD"
+  }
+  video_content_source_url = "https://exampleurl.com"
+  tags = {}
+}
+`
+}
+
 func testAccPlaybackConfigurationResource() string {
 	return `
 resource "awsmt_playback_configuration" "r1" {
@@ -239,38 +278,6 @@ resource "awsmt_playback_configuration" "r1" {
   video_content_source_url = "https://exampleurl.com/"
 }
 
-`
-}
-
-func testAccPlaybackConfigurationRemoveResourceTag() string {
-	return `
-resource "awsmt_playback_configuration" "r1" {
-  ad_decision_server_url = "https://exampleurl.com/"
-  avail_suppression {
-   mode = "OFF"
-  }
-  bumper {}
-  cdn_configuration {
-    ad_segment_url_prefix = "test"
-    content_segment_url_prefix = "test"
-  }
-  dash_configuration {
-    mpd_location = "EMT_DEFAULT"
-    origin_manifest_type = "MULTI_PERIOD"
-  }
-  live_pre_roll_configuration {
-	max_duration_seconds = 1
-  }
-  manifest_processing_rules {
-	ad_marker_passthrough {
-	  enabled = true
-	}
-  }
-  name = "test-playback-configuration-awsmt"
-  personalization_threshold_seconds = 2
-  slate_ad_url = "https://exampleurl.com/"
-  video_content_source_url = "https://exampleurl.com/"
-}
 `
 }
 

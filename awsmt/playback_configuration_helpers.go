@@ -293,23 +293,53 @@ func deletePlaybackConfiguration(client *mediatailor.MediaTailor, name string) d
 	return nil
 }
 
-func createOptionalList(fields map[string]*schema.Schema) *schema.Schema {
+func makeBaseList(fields map[string]*schema.Schema) *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
+		Type: schema.TypeList,
 		Elem: &schema.Resource{
 			Schema: fields,
 		},
 	}
 }
 
+func createOptionalList(fields map[string]*schema.Schema) *schema.Schema {
+	s := makeBaseList(fields)
+	s.Optional = true
+	s.MaxItems = 1
+	return s
+}
+
+func createRequiredList(fields map[string]*schema.Schema) *schema.Schema {
+	s := makeBaseList(fields)
+	s.Required = true
+	s.MaxItems = 1
+	return s
+}
+
 func createComputedList(fields map[string]*schema.Schema) *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Computed: true,
-		Elem: &schema.Resource{
-			Schema: fields,
-		},
+	s := makeBaseList(fields)
+	s.Computed = true
+	return s
+}
+
+func deleteTags(client *mediatailor.MediaTailor, resourceName string, removedTags []string) error {
+	if len(removedTags) != 0 {
+		res, err := client.GetPlaybackConfiguration(&mediatailor.GetPlaybackConfigurationInput{Name: &resourceName})
+		if err != nil {
+			return err
+		}
+		resourceArn := res.PlaybackConfigurationArn
+
+		var removedValuesPointer []*string
+		for i := range removedTags {
+			removedValuesPointer = append(removedValuesPointer, &removedTags[i])
+		}
+
+		untagInput := mediatailor.UntagResourceInput{ResourceArn: resourceArn, TagKeys: removedValuesPointer}
+		_, err = client.UntagResource(&untagInput)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }

@@ -33,12 +33,6 @@ resource "awsmt_playback_configuration" "conf" {
 }
 ```
 
-## Known bugs
-
-It is currently not possible to remove tags from a Playback Configuration using this provider. 
-
-For more information about this bug, see this issue on the official aws-sdk-go repo: [https://github.com/aws/aws-sdk-go/issues/4337](https://github.com/aws/aws-sdk-go/issues/4337).
-
 ## Arguments Reference
 All the descriptions for the fields are from the [official AWS documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#MediaTailor.PutPlaybackConfiguration).
 
@@ -46,6 +40,12 @@ The following arguments are required:
 
 * `name` - (required, string) </br>
   The identifier for the playback configuration.
+* `ad_decision_server_url` - (required, type string). <br/>
+  The URL for the ad decision server (ADS). This includes the specification
+  of static parameters and placeholders for dynamic parameters. AWS Elemental
+  MediaTailor substitutes player-specific and session-specific parameters as
+  needed when calling the ADS. Alternately, for testing you can provide a static
+  VAST URL. The maximum length is 25,000 characters.
 * `dash_configuration` - (required, structure) (see [below for nested schema](#dash_conf))<br/>
   The configuration for DASH content.
 * `video_content_source_url` - (required, type string)<br/>
@@ -53,19 +53,14 @@ The following arguments are required:
   The maximum length is 512 characters.
 
 
-  The following arguments are optional
+The following arguments are optional
 
-* `ad_decision_server_url` - (optional, type string). <br/>
-  The URL for the ad decision server (ADS). This includes the specification
-  of static parameters and placeholders for dynamic parameters. AWS Elemental
-  MediaTailor substitutes player-specific and session-specific parameters as
-  needed when calling the ADS. Alternately, for testing you can provide a static
-  VAST URL. The maximum length is 25,000 characters.
+
 * `avail_suppression` - (optional, structure) (see [below for nested schema](#avail_suppression))<br/>
   The configuration for avail suppression, also known as ad suppression.
 * `bumper` - (required, structure) (see [below for nested schema](#bumper))<br/>
   The configuration for bumpers. Bumpers are short audio or video clips that play at the start or before the end of an ad break.
-* `cdn_configuration` - (optional, structureò) (see [below for nested schema](#cdn_conf))<br/>
+* `cdn_configuration` - (optional, structure) (see [below for nested schema](#cdn_conf))<br/>
   The configuration for using a content delivery network (CDN), like Amazon
   CloudFront, for content and ad segment management.
 * `configuration_aliases` - (map)<br/>
