@@ -17,7 +17,7 @@ func resourcePlaybackConfiguration() *schema.Resource {
 		// schema based on: https://docs.aws.amazon.com/mediatailor/latest/apireference/playbackconfiguration.html#playbackconfiguration-prop-putplaybackconfigurationrequest-personalizationthresholdseconds
 		// and https://sourcegraph.com/github.com/aws/aws-sdk-go/-/docs/service/mediatailor#PutPlaybackConfigurationInput
 		Schema: map[string]*schema.Schema{
-			"ad_decision_server_url": &optionalString,
+			"ad_decision_server_url": &requiredString,
 			"avail_suppression": createOptionalList(map[string]*schema.Schema{
 				"mode":  &optionalString,
 				"value": &optionalString,
@@ -41,7 +41,7 @@ func resourcePlaybackConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"dash_configuration": createOptionalList(map[string]*schema.Schema{
+			"dash_configuration": createRequiredList(map[string]*schema.Schema{
 				"manifest_endpoint_prefix": &computedString,
 				"mpd_location":             &optionalString,
 				"origin_manifest_type":     &optionalString,
@@ -116,17 +116,17 @@ func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.Resource
 
 	if d.HasChange("tags") {
 		oldValue, newValue := d.GetChange("tags")
+		var removedTags []string
 		for k := range oldValue.(map[string]interface{}) {
 			if _, ok := (newValue.(map[string]interface{}))[k]; !ok {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Warning,
-					Summary:  "Tag removal detected, but not supported.",
-					Detail:   "This provider does not support tag removal. For more information about the issue, visit this link: https://github.com/aws/aws-sdk-go/issues/4337\nThe tag(s) will only be removed from the terraform state.",
-				})
-				break
+				removedTags = append(removedTags, k)
 			}
 		}
-
+		resourceName := d.Get("name").(string)
+		err := deleteTags(client, resourceName, removedTags)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	input := getPlaybackConfigurationInput(d)
