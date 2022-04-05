@@ -54,7 +54,7 @@ jobs:
 
   release:
     name: Release
-    needs: test
+    needs: snyk
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
