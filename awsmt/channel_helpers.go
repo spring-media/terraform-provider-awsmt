@@ -1,6 +1,7 @@
 package awsmt
 
 import (
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -67,7 +68,7 @@ func getUpdateChannelInput(d *schema.ResourceData) mediatailor.UpdateChannelInpu
 	return params
 }
 
-func setFillerState(values *mediatailor.DescribeChannelOutput, d *schema.ResourceData) {
+func setFillerState(values *mediatailor.DescribeChannelOutput, d *schema.ResourceData) error {
 	if values.FillerSlate != nil && values.FillerSlate != &(mediatailor.SlateSource{}) {
 		temp := map[string]interface{}{}
 		if values.FillerSlate.SourceLocationName != nil {
@@ -76,11 +77,14 @@ func setFillerState(values *mediatailor.DescribeChannelOutput, d *schema.Resourc
 		if values.FillerSlate.VodSourceName != nil {
 			temp["vod_source_name"] = values.FillerSlate.VodSourceName
 		}
-		d.Set("filler_slate", []interface{}{temp})
+		if err := d.Set("filler_slate", []interface{}{temp}); err != nil {
+			return fmt.Errorf("error while setting the filler slate: %w", err)
+		}
 	}
+	return nil
 }
 
-func setOutputs(values *mediatailor.DescribeChannelOutput, d *schema.ResourceData) {
+func setOutputs(values *mediatailor.DescribeChannelOutput, d *schema.ResourceData) error {
 	var outputs []map[string]interface{}
 	for _, o := range values.Outputs {
 		temp := map[string]interface{}{}
@@ -108,5 +112,8 @@ func setOutputs(values *mediatailor.DescribeChannelOutput, d *schema.ResourceDat
 		}
 		outputs = append(outputs, temp)
 	}
-	d.Set("outputs", outputs)
+	if err := d.Set("outputs", outputs); err != nil {
+		return fmt.Errorf("error while setting the outputs: %w", err)
+	}
+	return nil
 }
