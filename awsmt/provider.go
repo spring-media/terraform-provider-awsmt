@@ -26,8 +26,14 @@ func Provider() *schema.Provider {
 				Description: "AWS region. defaults to 'eu-central-1'.",
 			},
 		},
-		ResourcesMap:         map[string]*schema.Resource{"awsmt_playback_configuration": resourcePlaybackConfiguration()},
-		DataSourcesMap:       map[string]*schema.Resource{"awsmt_playback_configuration": dataSourcePlaybackConfiguration()},
+		ResourcesMap: map[string]*schema.Resource{
+			"awsmt_playback_configuration": resourcePlaybackConfiguration(),
+			"awsmt_channel":                resourceChannel(),
+		},
+		DataSourcesMap: map[string]*schema.Resource{
+			"awsmt_playback_configuration": dataSourcePlaybackConfiguration(),
+			"awsmt_channel":                dataSourceChannel(),
+		},
 		ConfigureContextFunc: providerConfigure,
 	}
 }

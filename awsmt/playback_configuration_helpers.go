@@ -1,6 +1,7 @@
 package awsmt
 
 import (
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -322,21 +323,16 @@ func createComputedList(fields map[string]*schema.Schema) *schema.Schema {
 	return s
 }
 
-func deleteTags(client *mediatailor.MediaTailor, resourceName string, removedTags []string) error {
+func deleteTags(client *mediatailor.MediaTailor, resourceArn string, removedTags []string) error {
 	if len(removedTags) != 0 {
-		res, err := client.GetPlaybackConfiguration(&mediatailor.GetPlaybackConfigurationInput{Name: &resourceName})
-		if err != nil {
-			return err
-		}
-		resourceArn := res.PlaybackConfigurationArn
 
 		var removedValuesPointer []*string
 		for i := range removedTags {
 			removedValuesPointer = append(removedValuesPointer, &removedTags[i])
 		}
 
-		untagInput := mediatailor.UntagResourceInput{ResourceArn: resourceArn, TagKeys: removedValuesPointer}
-		_, err = client.UntagResource(&untagInput)
+		untagInput := mediatailor.UntagResourceInput{ResourceArn: aws.String(resourceArn), TagKeys: removedValuesPointer}
+		_, err := client.UntagResource(&untagInput)
 		if err != nil {
 			return err
 		}

@@ -2,6 +2,7 @@ package awsmt
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -123,7 +124,11 @@ func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.Resource
 			}
 		}
 		resourceName := d.Get("name").(string)
-		err := deleteTags(client, resourceName, removedTags)
+		res, err := client.GetPlaybackConfiguration(&mediatailor.GetPlaybackConfigurationInput{Name: &resourceName})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		err = deleteTags(client, aws.StringValue(res.PlaybackConfigurationArn), removedTags)
 		if err != nil {
 			return diag.FromErr(err)
 		}
