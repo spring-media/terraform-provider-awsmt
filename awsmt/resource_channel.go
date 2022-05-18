@@ -161,23 +161,9 @@ func resourceChannelRead(_ context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(fmt.Errorf("error while retrieving the channel: %v", err))
 	}
 
-	var errors []error
-
-	errors = append(errors, d.Set("arn", res.Arn))
-	errors = append(errors, d.Set("channel_name", res.ChannelName))
-	errors = append(errors, d.Set("channel_state", res.ChannelState))
-	errors = append(errors, d.Set("creation_time", res.CreationTime.String()))
-	errors = append(errors, setFillerState(res, d))
-	errors = append(errors, d.Set("last_modified_time", res.LastModifiedTime.String()))
-	errors = append(errors, setOutputs(res, d))
-	errors = append(errors, d.Set("tags", res.Tags))
-	errors = append(errors, d.Set("playback_mode", res.PlaybackMode))
-	errors = append(errors, d.Set("tier", res.Tier))
-
-	for _, e := range errors {
-		if e != nil {
-			return diag.FromErr(fmt.Errorf("the following error occured while setting the values: %w", e))
-		}
+	err = returnChannel(res, d)
+	if err != nil {
+		diag.FromErr(err)
 	}
 
 	return nil
