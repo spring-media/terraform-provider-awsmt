@@ -20,9 +20,12 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"awsmt_playback_configuration": resourcePlaybackConfiguration(),
-			"awsmt_channel":                ResourceChannel(),
+			"awsmt_channel":                resourceChannel(),
 		},
-		DataSourcesMap:       map[string]*schema.Resource{"awsmt_playback_configuration": dataSourcePlaybackConfiguration()},
+		DataSourcesMap: map[string]*schema.Resource{
+			"awsmt_playback_configuration": dataSourcePlaybackConfiguration(),
+			"awsmt_channel":                dataSourceChannel(),
+		},
 		ConfigureContextFunc: providerConfigure,
 	}
 }
