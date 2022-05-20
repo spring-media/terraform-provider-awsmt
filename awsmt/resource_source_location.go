@@ -105,7 +105,7 @@ func resourceSourceLocationCreate(ctx context.Context, d *schema.ResourceData, m
 
 	sourceLocation, err := client.CreateSourceLocation(&params)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while creating the channel: %v", err))
+		return diag.FromErr(fmt.Errorf("error while creating the source location: %v", err))
 	}
 	d.SetId(aws.StringValue(sourceLocation.Arn))
 
@@ -160,7 +160,7 @@ func resourceSourceLocationUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.SetId(aws.StringValue(sourceLocation.Arn))
 
-	return resourceChannelRead(ctx, d, meta)
+	return resourceSourceLocationRead(ctx, d, meta)
 }
 
 func resourceSourceLocationDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
