@@ -189,7 +189,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var params = getUpdateChannelInput(d)
 	channel, err := client.UpdateChannel(&params)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while creating the channel: %v", err))
+		return diag.FromErr(fmt.Errorf("error while updating the channel: %v", err))
 	}
 	d.SetId(aws.StringValue(channel.Arn))
 
