@@ -118,7 +118,7 @@ func setOutputs(values *mediatailor.DescribeChannelOutput, d *schema.ResourceDat
 	return nil
 }
 
-func returnChannel(res *mediatailor.DescribeChannelOutput, d *schema.ResourceData) error {
+func setChannel(res *mediatailor.DescribeChannelOutput, d *schema.ResourceData) error {
 	var errors []error
 
 	errors = append(errors, d.Set("arn", res.Arn))

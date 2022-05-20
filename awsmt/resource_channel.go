@@ -161,7 +161,7 @@ func resourceChannelRead(_ context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(fmt.Errorf("error while retrieving the channel: %v", err))
 	}
 
-	err = returnChannel(res, d)
+	err = setChannel(res, d)
 	if err != nil {
 		diag.FromErr(err)
 	}

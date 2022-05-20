@@ -72,7 +72,7 @@ func dataSourceChannelRead(_ context.Context, d *schema.ResourceData, m interfac
 
 	d.SetId(aws.StringValue(res.ChannelName))
 
-	err = returnChannel(res, d)
+	err = setChannel(res, d)
 	if err != nil {
 		diag.FromErr(err)
 	}
