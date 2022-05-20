@@ -85,7 +85,7 @@ func resourceSourceLocation() *schema.Resource {
 			},
 			"source_location_name": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"tags": {
 				Type:     schema.TypeMap,
@@ -99,7 +99,17 @@ func resourceSourceLocation() *schema.Resource {
 }
 
 func resourceSourceLocationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	client := meta.(*mediatailor.MediaTailor)
+
+	var params = getCreateSourceLocationInput(d)
+
+	sourceLocation, err := client.CreateSourceLocation(&params)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error while creating the channel: %v", err))
+	}
+	d.SetId(aws.StringValue(sourceLocation.Arn))
+
+	return resourceSourceLocationRead(ctx, d, meta)
 }
 
 func resourceSourceLocationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

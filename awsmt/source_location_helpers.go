@@ -2,6 +2,7 @@ package awsmt
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -50,7 +51,9 @@ func setResourceLocation(values *mediatailor.DescribeSourceLocationOutput, d *sc
 	errors = append(errors, setAccessConfiguration(values, d))
 	errors = append(errors, d.Set("arn", values.Arn))
 	errors = append(errors, d.Set("creation_time", values.CreationTime.String()))
-	errors = append(errors, d.Set("default_segment_delivery_configuration_url", values.DefaultSegmentDeliveryConfiguration))
+	if values.DefaultSegmentDeliveryConfiguration != nil && values.DefaultSegmentDeliveryConfiguration != &(mediatailor.DefaultSegmentDeliveryConfiguration{}) {
+		errors = append(errors, d.Set("default_segment_delivery_configuration_url", values.DefaultSegmentDeliveryConfiguration.BaseUrl))
+	}
 	if values.HttpConfiguration != nil && values.HttpConfiguration != &(mediatailor.HttpConfiguration{}) {
 		if values.HttpConfiguration.BaseUrl != nil {
 			errors = append(errors, d.Set("http_configuration_url", values.HttpConfiguration.BaseUrl))
@@ -68,4 +71,93 @@ func setResourceLocation(values *mediatailor.DescribeSourceLocationOutput, d *sc
 	}
 
 	return nil
+}
+
+func getAccessConfiguration(d *schema.ResourceData) *mediatailor.AccessConfiguration {
+	if v, ok := d.GetOk("access_configuratino"); ok && v.([]interface{})[0] != nil {
+		val := v.([]interface{})[0].(map[string]interface{})
+		temp := mediatailor.AccessConfiguration{}
+		if str, ok := val["access_type"]; ok {
+			temp.AccessType = aws.String(str.(string))
+		}
+
+		tempSMATC := mediatailor.SecretsManagerAccessTokenConfiguration{}
+		if str, ok := val["smatc_header_name"]; ok {
+			tempSMATC.HeaderName = aws.String(str.(string))
+		}
+		if str, ok := val["smatc_secret_arn"]; ok {
+			tempSMATC.SecretArn = aws.String(str.(string))
+		}
+		if str, ok := val["smatc_secret_arn"]; ok {
+			tempSMATC.SecretArn = aws.String(str.(string))
+		}
+		if str, ok := val["smatc_secret_string_key"]; ok {
+			tempSMATC.SecretStringKey = aws.String(str.(string))
+		}
+		if tempSMATC != (mediatailor.SecretsManagerAccessTokenConfiguration{}) {
+			temp.SecretsManagerAccessTokenConfiguration = &tempSMATC
+		}
+		return &temp
+	}
+	return nil
+}
+
+func getSegmentDeliveryConfigurations(d *schema.ResourceData) []*mediatailor.SegmentDeliveryConfiguration {
+	if v, ok := d.GetOk("segment_delivery_configurations"); ok && v.([]interface{})[0] != nil {
+		configurations := v.([]interface{})
+
+		var res []*mediatailor.SegmentDeliveryConfiguration
+
+		for _, c := range configurations {
+			current := c.(map[string]interface{})
+			temp := mediatailor.SegmentDeliveryConfiguration{}
+
+			if str, ok := current["base_url"]; ok {
+				temp.BaseUrl = aws.String(str.(string))
+			}
+			if str, ok := current["name"]; ok {
+				temp.Name = aws.String(str.(string))
+			}
+			res = append(res, &temp)
+		}
+		return res
+	}
+	return nil
+}
+
+func getCreateSourceLocationInput(d *schema.ResourceData) mediatailor.CreateSourceLocationInput {
+	var params mediatailor.CreateSourceLocationInput
+
+	if a := getAccessConfiguration(d); a != nil {
+		params.AccessConfiguration = a
+	}
+
+	if v, ok := d.GetOk("default_segment_delivery_configuration_url"); ok {
+		params.DefaultSegmentDeliveryConfiguration = &mediatailor.DefaultSegmentDeliveryConfiguration{BaseUrl: aws.String(v.(string))}
+	}
+
+	if v, ok := d.GetOk("http_configuration_url"); ok {
+		params.HttpConfiguration = &mediatailor.HttpConfiguration{BaseUrl: aws.String(v.(string))}
+	}
+
+	if s := getSegmentDeliveryConfigurations(d); s != nil {
+		params.SegmentDeliveryConfigurations = s
+	}
+
+	if v, ok := d.GetOk("source_location_name"); ok {
+		params.SourceLocationName = aws.String(v.(string))
+	}
+
+	outputMap := make(map[string]*string)
+	if v, ok := d.GetOk("tags"); ok {
+		val := v.(map[string]interface{})
+		for k, value := range val {
+			temp := value.(string)
+			outputMap[k] = &temp
+		}
+	}
+	params.Tags = outputMap
+
+	return params
+
 }
