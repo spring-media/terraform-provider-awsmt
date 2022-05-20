@@ -2,8 +2,13 @@ package awsmt
 
 import (
 	"context"
+	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"strings"
 )
 
 func resourceSourceLocation() *schema.Resource {
@@ -98,6 +103,25 @@ func resourceSourceLocationCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceSourceLocationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*mediatailor.MediaTailor)
+
+	resourceName := d.Get("source_location_name").(string)
+	if len(resourceName) == 0 && len(d.Id()) > 0 {
+		resourceArn, err := arn.Parse(d.Id())
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error parsing the name from resource arn: %v", err))
+		}
+		arnSections := strings.Split(resourceArn.Resource, "/")
+		resourceName = arnSections[len(arnSections)-1]
+	}
+	res, err := client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: aws.String(resourceName)})
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error while retrieving the source location: %v", err))
+	}
+
+	if err = setResourceLocation(res, d); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
