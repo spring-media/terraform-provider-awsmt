@@ -174,32 +174,15 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.HasChange("tags") {
 		oldValue, newValue := d.GetChange("tags")
-		var removedTags []string
-		for k := range oldValue.(map[string]interface{}) {
-			if _, ok := (newValue.(map[string]interface{}))[k]; !ok {
-				removedTags = append(removedTags, k)
-			}
-		}
+
 		resourceName := d.Get("channel_name").(string)
 		res, err := client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: &resourceName})
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		err = deleteTags(client, aws.StringValue(res.Arn), removedTags)
-		if err != nil {
+
+		if err := updateTags(client, res.Arn, oldValue, newValue); err != nil {
 			return diag.FromErr(err)
-		}
-		if newValue != nil {
-			var newTags = make(map[string]*string)
-			for k, v := range newValue.(map[string]interface{}) {
-				val := v.(string)
-				newTags[k] = &val
-			}
-			tagInput := mediatailor.TagResourceInput{ResourceArn: res.Arn, Tags: newTags}
-			_, err := client.TagResource(&tagInput)
-			if err != nil {
-				return diag.FromErr(err)
-			}
 		}
 	}
 
