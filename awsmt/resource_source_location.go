@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"strings"
 )
 
@@ -27,8 +28,13 @@ func resourceSourceLocation() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"access_type": &optionalString,
-						// SMATC is short for Secret Manager Access Token Configuration
+						//may require s3:GetObject
+						"access_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"S3_SIGV4", "SECRETS_MANAGER_ACCESS_TOKEN"}, false),
+						},
+						// SMATC is short for Secrets Manager Access Token Configuration
 						"smatc_header_name":       &optionalString,
 						"smatc_secret_arn":        &optionalString,
 						"smatc_secret_string_key": &optionalString,
@@ -38,7 +44,7 @@ func resourceSourceLocation() *schema.Resource {
 			"arn":           &computedString,
 			"creation_time": &computedString,
 			"default_segment_delivery_configuration_url": &optionalString,
-			"http_configuration_url":                     &optionalString,
+			"http_configuration_url":                     &requiredString,
 			"last_modified_time":                         &computedString,
 			"segment_delivery_configurations": {
 				Type:     schema.TypeList,
