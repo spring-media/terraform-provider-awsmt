@@ -74,11 +74,13 @@ func setSourceLocation(values *mediatailor.DescribeSourceLocationOutput, d *sche
 }
 
 func getAccessConfiguration(d *schema.ResourceData) *mediatailor.AccessConfiguration {
-	if v, ok := d.GetOk("access_configuratino"); ok && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("access_configuration"); ok && v.([]interface{})[0] != nil {
 		val := v.([]interface{})[0].(map[string]interface{})
 		temp := mediatailor.AccessConfiguration{}
-		if str, ok := val["access_type"]; ok {
-			temp.AccessType = aws.String(str.(string))
+		var accessType string
+		if v, ok := val["access_type"]; ok {
+			temp.AccessType = aws.String(v.(string))
+			accessType = v.(string)
 		}
 
 		tempSMATC := mediatailor.SecretsManagerAccessTokenConfiguration{}
@@ -94,7 +96,7 @@ func getAccessConfiguration(d *schema.ResourceData) *mediatailor.AccessConfigura
 		if str, ok := val["smatc_secret_string_key"]; ok {
 			tempSMATC.SecretStringKey = aws.String(str.(string))
 		}
-		if tempSMATC != (mediatailor.SecretsManagerAccessTokenConfiguration{}) {
+		if tempSMATC != (mediatailor.SecretsManagerAccessTokenConfiguration{}) && accessType == "SECRETS_MANAGER_ACCESS_TOKEN" {
 			temp.SecretsManagerAccessTokenConfiguration = &tempSMATC
 		}
 		return &temp
