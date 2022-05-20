@@ -5,7 +5,7 @@ Provides an Elemental MediaTailor Channel.
 ## Example Usage
 
 ```terraform
-resource "aws_media_tailor_channel" "example" {
+resource "awsmt_channel" "example" {
   channel_name = "example-channel"
   outputs {
     manifest_name                             = "default"
@@ -59,5 +59,5 @@ In addition to all arguments above, the following attributes are exported:
 Channels can be imported using their ARN as identifier. For example:
 
 ```
-  $ terraform import aws_media_tailor_channel.example arn:aws:mediatailor:us-east-1:000000000000:channel/example
+  $ terraform import awsmt_channel.example arn:aws:mediatailor:us-east-1:000000000000:channel/example
 ```
