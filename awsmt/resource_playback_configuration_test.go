@@ -85,29 +85,29 @@ func TestAccPlaybackConfigurationResourceImport(t *testing.T) {
 }
 
 func TestAccPlaybackConfigurationResourceTaint(t *testing.T) {
-	resourceName := "awsmt_playback_configuration.r2"
-	firstARN := ""
+	resourceName := "awsmt_playback_configuration.taint-test"
+	firstEndpoint := ""
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: ProviderFactories,
 		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlaybackConfigurationImportResource(),
+				Config: testAccPlaybackConfigurationResourceTaint("tf-test-acc-name"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
+					resource.TestCheckResourceAttr(resourceName, "name", "tf-test-acc-name"),
 					resource.TestMatchResourceAttr(resourceName, "playback_configuration_arn", regexp.MustCompile(`arn:aws:mediatailor`)),
-					testAccAssignARN(resourceName, &firstARN, true),
+					testAccAssignEndpoint(resourceName, &firstEndpoint),
 				),
 			},
 			{
-				Config: testAccPlaybackConfigurationImportResource(),
+				Taint:  []string{resourceName},
+				Config: testAccPlaybackConfigurationResourceTaint("tf-test-acc-tainted-name"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
+					resource.TestCheckResourceAttr(resourceName, "name", "tf-test-acc-tainted-name"),
 					resource.TestMatchResourceAttr(resourceName, "playback_configuration_arn", regexp.MustCompile(`arn:aws:mediatailor`)),
-					testAccCheckARN(resourceName, &firstARN, true),
+					testAccCheckEndpoint(resourceName, &firstEndpoint),
 				),
-				Taint: []string{resourceName},
 			},
 		},
 	})
@@ -144,30 +144,25 @@ func TestAccPlaybackConfigurationRemoveResourceTag(t *testing.T) {
 	})
 }
 
-func testAccAssignARN(resourceName string, ARNVariable *string, taintArn bool) resource.TestCheckFunc {
+func testAccAssignEndpoint(resourceName string, EndpointVariable *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
-		if taintArn {
-			rs.Primary.Attributes["playback_configuration_arn"] = "taintedARN"
-		}
-		*ARNVariable = rs.Primary.Attributes["playback_configuration_arn"]
+		*EndpointVariable = rs.Primary.Attributes["playback_endpoint_prefix"]
 		return nil
 	}
 }
 
-func testAccCheckARN(resourceName string, ARNVariable *string, expectDifferent bool) resource.TestCheckFunc {
+func testAccCheckEndpoint(resourceName string, EndpointVariable *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
-		if expectDifferent && *ARNVariable == rs.Primary.Attributes["playback_configuration_arn"] {
-			return fmt.Errorf("same ARN (%s), resource not recreated", *ARNVariable)
-		} else if !expectDifferent && *ARNVariable != rs.Primary.Attributes["playback_configuration_arn"] {
-			return fmt.Errorf("different ARN (%s) != (%s), resource recreated", *ARNVariable, rs.Primary.Attributes["playback_configuration_arn"])
+		if *EndpointVariable == rs.Primary.Attributes["playback_endpoint_prefix"] {
+			return fmt.Errorf("same Endpoint: (%s), resource not recreated", *EndpointVariable)
 		}
 		return nil
 	}
@@ -376,4 +371,18 @@ resource "awsmt_playback_configuration" "r2" {
   video_content_source_url = "https://exampleurl.com/"
 }
 `
+}
+
+func testAccPlaybackConfigurationResourceTaint(rName string) string {
+	return fmt.Sprintf(`
+resource "awsmt_playback_configuration" "taint-test"{
+  ad_decision_server_url = "https://exampleurl.com/"
+  name = "%[1]s"
+  dash_configuration {
+    mpd_location = "EMT_DEFAULT"
+    origin_manifest_type = "MULTI_PERIOD"
+  }
+  video_content_source_url = "https://exampleurl.com"
+}
+`, rName)
 }
