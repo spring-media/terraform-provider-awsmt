@@ -26,7 +26,8 @@ func resourceSourceLocation() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"smatc_header": {
+						// SMATC is short for Secret Manager Access Token Configuration
+						"smatc_header_name": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -61,7 +62,7 @@ func resourceSourceLocation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"segment_delivery_configuration": {
+			"segment_delivery_configurations": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
