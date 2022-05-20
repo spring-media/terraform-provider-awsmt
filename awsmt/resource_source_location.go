@@ -129,7 +129,7 @@ func resourceSourceLocationRead(_ context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(fmt.Errorf("error while retrieving the source location: %v", err))
 	}
 
-	if err = setResourceLocation(res, d); err != nil {
+	if err = setSourceLocation(res, d); err != nil {
 		return diag.FromErr(err)
 	}
 

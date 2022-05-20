@@ -45,7 +45,7 @@ func setSegmentDeliveryConfigurations(values *mediatailor.DescribeSourceLocation
 	return nil
 }
 
-func setResourceLocation(values *mediatailor.DescribeSourceLocationOutput, d *schema.ResourceData) error {
+func setSourceLocation(values *mediatailor.DescribeSourceLocationOutput, d *schema.ResourceData) error {
 	var errors []error
 
 	errors = append(errors, setAccessConfiguration(values, d))
