@@ -154,11 +154,11 @@ func resourceSourceLocationUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	var params = getUpdateSourceLocationInput(d)
-	channel, err := client.UpdateSourceLocation(&params)
+	sourceLocation, err := client.UpdateSourceLocation(&params)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while updating the source location: %v", err))
 	}
-	d.SetId(aws.StringValue(channel.Arn))
+	d.SetId(aws.StringValue(sourceLocation.Arn))
 
 	return resourceChannelRead(ctx, d, meta)
 }
