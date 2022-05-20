@@ -58,6 +58,8 @@ func setResourceLocation(values *mediatailor.DescribeSourceLocationOutput, d *sc
 	}
 	errors = append(errors, d.Set("last_modified_time", values.LastModifiedTime.String()))
 	errors = append(errors, setSegmentDeliveryConfigurations(values, d))
+	errors = append(errors, d.Set("source_location_name", values.SourceLocationName))
+	errors = append(errors, d.Set("tags", values.Tags))
 
 	for _, e := range errors {
 		if e != nil {
