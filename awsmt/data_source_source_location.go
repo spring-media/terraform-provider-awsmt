@@ -18,66 +18,30 @@ func dataSourceSourceLocation() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"access_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
+						"access_type": &computedString,
 						// SMATC is short for Secret Manager Access Token Configuration
-						"smatc_header_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"smatc_secret_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"smatc_secret_string_key": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
+						"smatc_header_name":       &computedString,
+						"smatc_secret_arn":        &computedString,
+						"smatc_secret_string_key": &computedString,
 					},
 				},
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creation_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_segment_delivery_configuration_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"http_configuration_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			"arn":           &computedString,
+			"creation_time": &computedString,
+			"default_segment_delivery_configuration_url": &computedString,
+			"http_configuration_url":                     &computedString,
+			"last_modified_time":                         &computedString,
 			"segment_delivery_configurations": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"base_url": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
+						"base_url": &computedString,
+						"name":     &computedString,
 					},
 				},
 			},
-			"source_location_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+			"source_location_name": &requiredString,
 			"tags": {
 				Type:     schema.TypeMap,
 				Computed: true,
