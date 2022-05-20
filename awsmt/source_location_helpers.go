@@ -161,3 +161,29 @@ func getCreateSourceLocationInput(d *schema.ResourceData) mediatailor.CreateSour
 	return params
 
 }
+
+func getUpdateSourceLocationInput(d *schema.ResourceData) mediatailor.UpdateSourceLocationInput {
+	var params mediatailor.UpdateSourceLocationInput
+
+	if a := getAccessConfiguration(d); a != nil {
+		params.AccessConfiguration = a
+	}
+
+	if v, ok := d.GetOk("default_segment_delivery_configuration_url"); ok {
+		params.DefaultSegmentDeliveryConfiguration = &mediatailor.DefaultSegmentDeliveryConfiguration{BaseUrl: aws.String(v.(string))}
+	}
+
+	if v, ok := d.GetOk("http_configuration_url"); ok {
+		params.HttpConfiguration = &mediatailor.HttpConfiguration{BaseUrl: aws.String(v.(string))}
+	}
+
+	if s := getSegmentDeliveryConfigurations(d); s != nil {
+		params.SegmentDeliveryConfigurations = s
+	}
+
+	if v, ok := d.GetOk("source_location_name"); ok {
+		params.SourceLocationName = aws.String(v.(string))
+	}
+
+	return params
+}

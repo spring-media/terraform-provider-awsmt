@@ -137,7 +137,30 @@ func resourceSourceLocationRead(_ context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceSourceLocationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	client := meta.(*mediatailor.MediaTailor)
+
+	if d.HasChange("tags") {
+		oldValue, newValue := d.GetChange("tags")
+
+		resourceName := d.Get("source_location_name").(string)
+		res, err := client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: &resourceName})
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err := updateTags(client, res.Arn, oldValue, newValue); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	var params = getUpdateChannelInput(d)
+	channel, err := client.UpdateChannel(&params)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error while creating the channel: %v", err))
+	}
+	d.SetId(aws.StringValue(channel.Arn))
+
+	return resourceChannelRead(ctx, d, meta)
 }
 
 func resourceSourceLocationDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
