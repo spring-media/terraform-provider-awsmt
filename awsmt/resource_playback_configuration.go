@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"time"
 )
@@ -86,6 +87,9 @@ func resourcePlaybackConfiguration() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ForceNewIfChange("name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
+		),
 	}
 }
 
@@ -107,13 +111,6 @@ func resourcePlaybackConfigurationCreate(ctx context.Context, d *schema.Resource
 func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := m.(*mediatailor.MediaTailor)
-
-	if d.HasChange("name") {
-		oldValue, newValue := d.GetChange("name")
-		oldName := oldValue.(string)
-		deletePlaybackConfiguration(client, oldName)
-		d.SetId(newValue.(string))
-	}
 
 	if d.HasChange("tags") {
 		oldValue, newValue := d.GetChange("tags")
