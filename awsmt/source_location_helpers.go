@@ -128,26 +128,26 @@ func getSegmentDeliveryConfigurations(d *schema.ResourceData) []*mediatailor.Seg
 }
 
 func getCreateSourceLocationInput(d *schema.ResourceData) mediatailor.CreateSourceLocationInput {
-	var params mediatailor.CreateSourceLocationInput
+	var inputParams mediatailor.CreateSourceLocationInput
 
 	if a := getAccessConfiguration(d); a != nil {
-		params.AccessConfiguration = a
+		inputParams.AccessConfiguration = a
 	}
 
 	if v, ok := d.GetOk("default_segment_delivery_configuration_url"); ok {
-		params.DefaultSegmentDeliveryConfiguration = &mediatailor.DefaultSegmentDeliveryConfiguration{BaseUrl: aws.String(v.(string))}
+		inputParams.DefaultSegmentDeliveryConfiguration = &mediatailor.DefaultSegmentDeliveryConfiguration{BaseUrl: aws.String(v.(string))}
 	}
 
 	if v, ok := d.GetOk("http_configuration_url"); ok {
-		params.HttpConfiguration = &mediatailor.HttpConfiguration{BaseUrl: aws.String(v.(string))}
+		inputParams.HttpConfiguration = &mediatailor.HttpConfiguration{BaseUrl: aws.String(v.(string))}
 	}
 
 	if s := getSegmentDeliveryConfigurations(d); s != nil {
-		params.SegmentDeliveryConfigurations = s
+		inputParams.SegmentDeliveryConfigurations = s
 	}
 
 	if v, ok := d.GetOk("source_location_name"); ok {
-		params.SourceLocationName = aws.String(v.(string))
+		inputParams.SourceLocationName = aws.String(v.(string))
 	}
 
 	outputMap := make(map[string]*string)
@@ -158,34 +158,34 @@ func getCreateSourceLocationInput(d *schema.ResourceData) mediatailor.CreateSour
 			outputMap[k] = &temp
 		}
 	}
-	params.Tags = outputMap
+	inputParams.Tags = outputMap
 
-	return params
+	return inputParams
 
 }
 
 func getUpdateSourceLocationInput(d *schema.ResourceData) mediatailor.UpdateSourceLocationInput {
-	var params mediatailor.UpdateSourceLocationInput
+	var updateParams mediatailor.UpdateSourceLocationInput
 
 	if a := getAccessConfiguration(d); a != nil {
-		params.AccessConfiguration = a
+		updateParams.AccessConfiguration = a
 	}
 
 	if v, ok := d.GetOk("default_segment_delivery_configuration_url"); ok {
-		params.DefaultSegmentDeliveryConfiguration = &mediatailor.DefaultSegmentDeliveryConfiguration{BaseUrl: aws.String(v.(string))}
+		updateParams.DefaultSegmentDeliveryConfiguration = &mediatailor.DefaultSegmentDeliveryConfiguration{BaseUrl: aws.String(v.(string))}
 	}
 
 	if v, ok := d.GetOk("http_configuration_url"); ok {
-		params.HttpConfiguration = &mediatailor.HttpConfiguration{BaseUrl: aws.String(v.(string))}
+		updateParams.HttpConfiguration = &mediatailor.HttpConfiguration{BaseUrl: aws.String(v.(string))}
 	}
 
 	if s := getSegmentDeliveryConfigurations(d); s != nil {
-		params.SegmentDeliveryConfigurations = s
+		updateParams.SegmentDeliveryConfigurations = s
 	}
 
 	if v, ok := d.GetOk("source_location_name"); ok {
-		params.SourceLocationName = aws.String(v.(string))
+		updateParams.SourceLocationName = aws.String(v.(string))
 	}
 
-	return params
+	return updateParams
 }
