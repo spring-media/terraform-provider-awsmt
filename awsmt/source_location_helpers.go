@@ -11,7 +11,7 @@ func setAccessConfiguration(values *mediatailor.DescribeSourceLocationOutput, d 
 	if values.AccessConfiguration != nil && values.AccessConfiguration != &(mediatailor.AccessConfiguration{}) {
 		temp := map[string]interface{}{}
 		if values.AccessConfiguration.AccessType != nil {
-			temp["access_type"] = values.AccessConfiguration
+			temp["access_type"] = values.AccessConfiguration.AccessType
 		}
 		if values.AccessConfiguration.SecretsManagerAccessTokenConfiguration != nil && values.AccessConfiguration.SecretsManagerAccessTokenConfiguration != &(mediatailor.SecretsManagerAccessTokenConfiguration{}) {
 			if values.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != nil {
