@@ -71,7 +71,7 @@ func resourceVodSourceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return resourceVodSourceRead(ctx, d, meta)
 }
 
-func resourceVodSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVodSourceRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
 	resourceName := d.Get("vod_source_name").(string)
 	sourceLocationName := d.Get("source_location_name").(string)
