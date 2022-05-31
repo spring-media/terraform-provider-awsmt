@@ -169,9 +169,6 @@ resource "awsmt_source_location" "test"{
 func testAccSourceLocationConfig_update(rName, exampleString, exampleUrl, baseUrl string) string {
 	return fmt.Sprintf(`
 resource "awsmt_source_location" "test_update"{
-  access_configuration {
-    access_type = "S3_SIGV4"
-  }
   default_segment_delivery_configuration_url = "%[3]s"
   http_configuration_url = "%[4]s"
   source_location_name = "%[1]s"

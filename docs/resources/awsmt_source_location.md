@@ -2,6 +2,8 @@
 
 Use this resource to manage a MediaTailor Source Location.
 
+~> **NOTE:** The source location data source currently does not support the use of access configuration using Amazon Secrets Manager Access Token.
+
 ## Example Usage
 
 ```terraform

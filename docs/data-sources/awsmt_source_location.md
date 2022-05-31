@@ -2,6 +2,8 @@
 
 This data source provides information about a MediaTailor Source Location.
 
+~> **NOTE:** The source location data source currently does not support the use of access configuration using Amazon Secrets Manager Access Token.
+
 ## Example Usage
 
 ```terraform
@@ -25,15 +27,6 @@ In addition to all arguments above, the following attributes are exported:
 * `http_configuration_url` - The base URL for the source location host server.
 * `last_modified_time` - The timestamp of when the channel was last modified.
 * `tags` - Key-value mapping of resource tags.
-
-
-### `access_configuration`
-Access configuration parameters. Configures the type of authentication used to access content from your source location.
-
-* `access_type` - The type of authentication used to access content from HttpConfiguration::BaseUrl on your source location. Accepted values: "S3_SIGV4" and "SECRETS_MANAGER_ACCESS_TOKEN". [Read More](https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#AccessConfiguration).
-* `smatc_header_name` - Part of Secrets Manager Access Token Configuration. The name of the HTTP header used to supply the access token in requests to the source location.
-* `smatc_secret_arn` - Part of Secrets Manager Access Token Configuration. The Amazon Resource Name (ARN) of the AWS Secrets Manager secret that contains the access token.
-* `smatc_secret_string_key` - Part of Secrets Manager Access Token Configuration. The AWS Secrets Manager SecretString key associated with the access token.
 
 ### `segment_delivery_configurations`
 (List) A list of the segment delivery configurations associated with this resource.

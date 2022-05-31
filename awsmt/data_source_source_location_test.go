@@ -30,9 +30,6 @@ func TestAccSourceLocationDataSourceBasic(t *testing.T) {
 func testAccSourceLocationDataSourceBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "awsmt_source_location" "test_data_source"{
-  access_configuration {
-    access_type = "S3_SIGV4"
-  }
   default_segment_delivery_configuration_url = "https://www.example.com"
   http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
   source_location_name = "%[1]s"
