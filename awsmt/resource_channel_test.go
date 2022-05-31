@@ -199,6 +199,28 @@ func TestAccChannelResource_tags(t *testing.T) {
 	})
 }
 
+func TestAccChannelResource_linear(t *testing.T) {
+	channelName := "linear_channel"
+	vodSourceName := "vod_source_channel"
+	sourceLocationName := "source_location_channel"
+	resourceName := "awsmt_channel.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: ProviderFactories,
+		CheckDestroy:      testAccCheckChannelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannelConfig_Linear(sourceLocationName, vodSourceName, channelName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "channel_name", channelName),
+					resource.TestCheckResourceAttr(resourceName, "filler_slate.0.source_location_name", sourceLocationName),
+					resource.TestCheckResourceAttr(resourceName, "filler_slate.0.vod_source_name", vodSourceName),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckChannelDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*mediatailor.MediaTailor)
 
@@ -236,7 +258,7 @@ func testAccCheckChannelDestroy(s *terraform.State) error {
 
 func testAccChannelConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "awsmt_channel" "test"{
+resource "awsmt_channel" "test" {
   channel_name = "%[1]s"
   outputs {
     manifest_name                = "default"
@@ -251,7 +273,7 @@ resource "awsmt_channel" "test"{
 
 func testAccChannelConfig_Conflict(rName string) string {
 	return fmt.Sprintf(`
-resource "awsmt_channel" "test"{
+resource "awsmt_channel" "test" {
   channel_name = "%[1]s"
   outputs {
     manifest_name                 = "default"
@@ -267,7 +289,7 @@ resource "awsmt_channel" "test"{
 
 func testAccChannelConfig_Tier(rName, tier string) string {
 	return fmt.Sprintf(`
-resource "awsmt_channel" "test"{
+resource "awsmt_channel" "test" {
   channel_name = "%[1]s"
   outputs {
     manifest_name                 = "default"
@@ -282,7 +304,7 @@ resource "awsmt_channel" "test"{
 
 func testAccChannelConfig_PlaybackMode(rName, playbackMode string) string {
 	return fmt.Sprintf(`
-resource "awsmt_channel" "test"{
+resource "awsmt_channel" "test" {
   channel_name = "%[1]s"
   outputs {
     manifest_name                 = "default"
@@ -297,7 +319,7 @@ resource "awsmt_channel" "test"{
 
 func testAccChannelConfig_Update(rName string, num int) string {
 	return fmt.Sprintf(`
-resource "awsmt_channel" "test"{
+resource "awsmt_channel" "test" {
   channel_name = "%[1]s"
   outputs {
     manifest_name                             = "default"
@@ -315,7 +337,7 @@ resource "awsmt_channel" "test"{
 
 func testAccChannelConfig_Tags(rName, k1, v1, k2, v2 string) string {
 	return fmt.Sprintf(`
-resource "awsmt_channel" "test"{
+resource "awsmt_channel" "test" {
   channel_name = "%[1]s"
   outputs {
     manifest_name                = "default"
@@ -330,4 +352,38 @@ resource "awsmt_channel" "test"{
   tier = "BASIC"
 }
 `, rName, k1, v1, k2, v2)
+}
+
+func testAccChannelConfig_Linear(sourceLocationName, vodSourceName, channelName string) string {
+	return fmt.Sprintf(`
+resource "awsmt_source_location" "example" {
+  source_location_name = "%[1]s"
+  http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
+}
+
+resource "awsmt_vod_source" "test" {
+  http_package_configurations {
+    path = "/"
+    source_group = "default"
+    type = "HLS"
+  }
+  source_location_name = awsmt_source_location.example.source_location_name
+  vod_source_name = "%[2]s"
+}
+
+resource "awsmt_channel" "test"{
+  channel_name = "%[3]s"
+  outputs {
+    manifest_name                = "default"
+    source_group                 = "default"
+    hls_manifest_windows_seconds = 30
+  }
+  filler_slate {
+    source_location_name = awsmt_source_location.example.source_location_name
+	vod_source_name = awsmt_vod_source.test.vod_source_name
+  }
+  playback_mode = "LINEAR"
+  tier = "STANDARD"
+}
+`, sourceLocationName, vodSourceName, channelName)
 }
