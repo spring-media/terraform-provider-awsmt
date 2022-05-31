@@ -52,6 +52,8 @@ func dataSourceVodSourceRead(_ context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(fmt.Errorf("error while reading the vod source: %v", err))
 	}
 
+	d.SetId(fmt.Sprintf("%q/%q", *res.SourceLocationName, *res.VodSourceName))
+
 	if err = setVodSource(res, d); err != nil {
 		return diag.FromErr(err)
 	}
