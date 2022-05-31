@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"strings"
 )
 
@@ -26,25 +25,6 @@ func resourceSourceLocation() *schema.Resource {
 			customdiff.ForceNewIfChange("source_location_name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
 		),
 		Schema: map[string]*schema.Schema{
-			"access_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						//may require s3:GetObject
-						"access_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"S3_SIGV4", "SECRETS_MANAGER_ACCESS_TOKEN"}, false),
-						},
-						// SMATC is short for Secrets Manager Access Token Configuration
-						"smatc_header_name":       &optionalString,
-						"smatc_secret_arn":        &optionalString,
-						"smatc_secret_string_key": &optionalString,
-					},
-				},
-			},
 			"arn":           &computedString,
 			"creation_time": &computedString,
 			"default_segment_delivery_configuration_url": &optionalString,
