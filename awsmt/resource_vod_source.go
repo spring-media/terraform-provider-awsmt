@@ -74,6 +74,8 @@ func resourceVodSourceCreate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceVodSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
 	resourceName := d.Get("vod_source_name").(string)
+	sourceLocationName := d.Get("source_location_name").(string)
+
 	if len(resourceName) == 0 && len(d.Id()) > 0 {
 		resourceArn, err := arn.Parse(d.Id())
 		if err != nil {
@@ -81,11 +83,14 @@ func resourceVodSourceRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 		arnSections := strings.Split(resourceArn.Resource, "/")
 		resourceName = arnSections[len(arnSections)-1]
+		sourceLocationName = arnSections[len(arnSections)-2]
 	}
 
-	res, err := client.DescribeVodSource(&mediatailor.DescribeVodSourceInput{VodSourceName: aws.String(resourceName), SourceLocationName: aws.String(d.Get("source_location_name").(string))})
+	input := &mediatailor.DescribeVodSourceInput{SourceLocationName: &(sourceLocationName), VodSourceName: aws.String(resourceName)}
+
+	res, err := client.DescribeVodSource(input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while retrieving the vod location: %v", err))
+		return diag.FromErr(fmt.Errorf("error while reading the vod source: %v", err))
 	}
 
 	if err = setVodSource(res, d); err != nil {
