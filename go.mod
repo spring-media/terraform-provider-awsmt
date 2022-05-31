@@ -3,7 +3,7 @@ module terraform-provider-mediatailor
 go 1.17
 
 require (
-	github.com/aws/aws-sdk-go v1.44.23
+	github.com/aws/aws-sdk-go v1.44.24
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.16.0
 )
@@ -52,7 +52,7 @@ require (
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20220526192754-51939a95c655 // indirect
+	google.golang.org/genproto v0.0.0-20220527130721-00d5c0f3be58 // indirect
 	google.golang.org/grpc v1.46.2 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 )
