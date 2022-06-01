@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func setHttpPackageConfigurations(values *mediatailor.DescribeVodSourceOutput, d *schema.ResourceData) error {
+func setHttpPackageConfigurations(values []*mediatailor.HttpPackageConfiguration, d *schema.ResourceData) error {
 	var configurations []map[string]interface{}
-	for _, c := range values.HttpPackageConfigurations {
+	for _, c := range values {
 		temp := map[string]interface{}{}
 		temp["path"] = c.Path
 		temp["source_group"] = c.SourceGroup
@@ -31,7 +31,7 @@ func setVodSource(values *mediatailor.DescribeVodSourceOutput, d *schema.Resourc
 	if values.CreationTime != nil {
 		errors = append(errors, d.Set("creation_time", values.CreationTime.String()))
 	}
-	errors = append(errors, setHttpPackageConfigurations(values, d))
+	errors = append(errors, setHttpPackageConfigurations(values.HttpPackageConfigurations, d))
 	if values.LastModifiedTime != nil {
 		errors = append(errors, d.Set("last_modified_time", values.LastModifiedTime.String()))
 	}
