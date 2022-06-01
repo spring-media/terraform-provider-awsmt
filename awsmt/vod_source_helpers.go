@@ -23,26 +23,26 @@ func setHttpPackageConfigurations(values []*mediatailor.HttpPackageConfiguration
 }
 
 func setVodSource(values *mediatailor.DescribeVodSourceOutput, d *schema.ResourceData) error {
-	var errors []error
+	var errs []error
 
 	if values.Arn != nil {
-		errors = append(errors, d.Set("arn", values.Arn))
+		errs = append(errs, d.Set("arn", values.Arn))
 	}
 	if values.CreationTime != nil {
-		errors = append(errors, d.Set("creation_time", values.CreationTime.String()))
+		errs = append(errs, d.Set("creation_time", values.CreationTime.String()))
 	}
-	errors = append(errors, setHttpPackageConfigurations(values.HttpPackageConfigurations, d))
+	errs = append(errs, setHttpPackageConfigurations(values.HttpPackageConfigurations, d))
 	if values.LastModifiedTime != nil {
-		errors = append(errors, d.Set("last_modified_time", values.LastModifiedTime.String()))
+		errs = append(errs, d.Set("last_modified_time", values.LastModifiedTime.String()))
 	}
 	if values.SourceLocationName != nil {
-		errors = append(errors, d.Set("source_location_name", values.SourceLocationName))
+		errs = append(errs, d.Set("source_location_name", values.SourceLocationName))
 	}
-	errors = append(errors, d.Set("tags", values.Tags))
+	errs = append(errs, d.Set("tags", values.Tags))
 	if values.VodSourceName != nil {
-		errors = append(errors, d.Set("vod_source_name", values.VodSourceName))
+		errs = append(errs, d.Set("vod_source_name", values.VodSourceName))
 	}
-	for _, e := range errors {
+	for _, e := range errs {
 		if e != nil {
 			return fmt.Errorf("the following error occured while setting the values: %w", e)
 		}
