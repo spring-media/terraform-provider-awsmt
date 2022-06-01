@@ -78,14 +78,14 @@ func getHttpPackageConfigurations(d *schema.ResourceData) []*mediatailor.HttpPac
 }
 
 func getCreateVodSourceInput(d *schema.ResourceData) mediatailor.CreateVodSourceInput {
-	var inputParams mediatailor.CreateVodSourceInput
+	var vodSourceInputParams mediatailor.CreateVodSourceInput
 
 	if c := getHttpPackageConfigurations(d); c != nil {
-		inputParams.HttpPackageConfigurations = c
+		vodSourceInputParams.HttpPackageConfigurations = c
 	}
 
 	if s, ok := d.GetOk("source_location_name"); ok {
-		inputParams.SourceLocationName = aws.String(s.(string))
+		vodSourceInputParams.SourceLocationName = aws.String(s.(string))
 	}
 
 	outputMap := make(map[string]*string)
@@ -96,26 +96,26 @@ func getCreateVodSourceInput(d *schema.ResourceData) mediatailor.CreateVodSource
 			outputMap[k] = &temp
 		}
 	}
-	inputParams.Tags = outputMap
+	vodSourceInputParams.Tags = outputMap
 
 	if s, ok := d.GetOk("vod_source_name"); ok {
-		inputParams.VodSourceName = aws.String(s.(string))
+		vodSourceInputParams.VodSourceName = aws.String(s.(string))
 	}
 
-	return inputParams
+	return vodSourceInputParams
 }
 
 func getUpdateVodSourceInput(d *schema.ResourceData) mediatailor.UpdateVodSourceInput {
-	var updateParams mediatailor.UpdateVodSourceInput
+	var updatedVodSourceParams mediatailor.UpdateVodSourceInput
 
 	if c := getHttpPackageConfigurations(d); c != nil {
-		updateParams.HttpPackageConfigurations = c
+		updatedVodSourceParams.HttpPackageConfigurations = c
 	}
 	if s, ok := d.GetOk("source_location_name"); ok {
-		updateParams.SourceLocationName = aws.String(s.(string))
+		updatedVodSourceParams.SourceLocationName = aws.String(s.(string))
 	}
 	if s, ok := d.GetOk("vod_source_name"); ok {
-		updateParams.VodSourceName = aws.String(s.(string))
+		updatedVodSourceParams.VodSourceName = aws.String(s.(string))
 	}
-	return updateParams
+	return updatedVodSourceParams
 }

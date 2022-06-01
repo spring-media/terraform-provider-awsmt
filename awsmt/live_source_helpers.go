@@ -36,14 +36,14 @@ func setLiveSource(values *mediatailor.DescribeLiveSourceOutput, d *schema.Resou
 }
 
 func getCreateLiveSourceInput(d *schema.ResourceData) mediatailor.CreateLiveSourceInput {
-	var inputParams mediatailor.CreateLiveSourceInput
+	var liveSourceInputParams mediatailor.CreateLiveSourceInput
 
 	if c := getHttpPackageConfigurations(d); c != nil {
-		inputParams.HttpPackageConfigurations = c
+		liveSourceInputParams.HttpPackageConfigurations = c
 	}
 
 	if s, ok := d.GetOk("source_location_name"); ok {
-		inputParams.SourceLocationName = aws.String(s.(string))
+		liveSourceInputParams.SourceLocationName = aws.String(s.(string))
 	}
 
 	outputMap := make(map[string]*string)
@@ -54,26 +54,26 @@ func getCreateLiveSourceInput(d *schema.ResourceData) mediatailor.CreateLiveSour
 			outputMap[k] = &temp
 		}
 	}
-	inputParams.Tags = outputMap
+	liveSourceInputParams.Tags = outputMap
 
 	if s, ok := d.GetOk("live_source_name"); ok {
-		inputParams.LiveSourceName = aws.String(s.(string))
+		liveSourceInputParams.LiveSourceName = aws.String(s.(string))
 	}
 
-	return inputParams
+	return liveSourceInputParams
 }
 
 func getUpdateLiveSourceInput(d *schema.ResourceData) mediatailor.UpdateLiveSourceInput {
-	var updateParams mediatailor.UpdateLiveSourceInput
+	var updatedLiveSourceParams mediatailor.UpdateLiveSourceInput
 
 	if c := getHttpPackageConfigurations(d); c != nil {
-		updateParams.HttpPackageConfigurations = c
+		updatedLiveSourceParams.HttpPackageConfigurations = c
 	}
 	if s, ok := d.GetOk("source_location_name"); ok {
-		updateParams.SourceLocationName = aws.String(s.(string))
+		updatedLiveSourceParams.SourceLocationName = aws.String(s.(string))
 	}
 	if s, ok := d.GetOk("vod_source_name"); ok {
-		updateParams.LiveSourceName = aws.String(s.(string))
+		updatedLiveSourceParams.LiveSourceName = aws.String(s.(string))
 	}
-	return updateParams
+	return updatedLiveSourceParams
 }
