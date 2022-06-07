@@ -19,9 +19,6 @@ func resourceLiveSource() *schema.Resource {
 		ReadContext:   resourceLiveSourceRead,
 		UpdateContext: resourceLiveSourceUpdate,
 		DeleteContext: resourceLiveSourceDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 		Schema: map[string]*schema.Schema{
 			"arn":           &computedString,
 			"creation_time": &computedString,
@@ -51,6 +48,9 @@ func resourceLiveSource() *schema.Resource {
 				},
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("live_source_name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
 			customdiff.ForceNewIfChange("source_location_name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
@@ -73,20 +73,20 @@ func resourceLiveSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceLiveSourceRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
-	resourceName := d.Get("live_source_name").(string)
+	liveSourceName := d.Get("live_source_name").(string)
 	sourceLocationName := d.Get("source_location_name").(string)
 
-	if len(resourceName) == 0 && len(d.Id()) > 0 {
+	if len(liveSourceName) == 0 && len(d.Id()) > 0 {
 		resourceArn, err := arn.Parse(d.Id())
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error parsing the name from resource arn: %v", err))
 		}
 		arnSections := strings.Split(resourceArn.Resource, "/")
-		resourceName = arnSections[len(arnSections)-1]
+		liveSourceName = arnSections[len(arnSections)-1]
 		sourceLocationName = arnSections[len(arnSections)-2]
 	}
 
-	input := &mediatailor.DescribeLiveSourceInput{SourceLocationName: &(sourceLocationName), LiveSourceName: aws.String(resourceName)}
+	input := &mediatailor.DescribeLiveSourceInput{SourceLocationName: &(sourceLocationName), LiveSourceName: aws.String(liveSourceName)}
 
 	res, err := client.DescribeLiveSource(input)
 	if err != nil {
