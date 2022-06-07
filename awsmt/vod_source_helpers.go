@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func setHttpPackageConfigurations(values *mediatailor.DescribeVodSourceOutput, d *schema.ResourceData) error {
+func setHttpPackageConfigurations(values []*mediatailor.HttpPackageConfiguration, d *schema.ResourceData) error {
 	var configurations []map[string]interface{}
-	for _, c := range values.HttpPackageConfigurations {
+	for _, c := range values {
 		temp := map[string]interface{}{}
 		temp["path"] = c.Path
 		temp["source_group"] = c.SourceGroup
@@ -23,26 +23,26 @@ func setHttpPackageConfigurations(values *mediatailor.DescribeVodSourceOutput, d
 }
 
 func setVodSource(values *mediatailor.DescribeVodSourceOutput, d *schema.ResourceData) error {
-	var errors []error
+	var errs []error
 
 	if values.Arn != nil {
-		errors = append(errors, d.Set("arn", values.Arn))
+		errs = append(errs, d.Set("arn", values.Arn))
 	}
 	if values.CreationTime != nil {
-		errors = append(errors, d.Set("creation_time", values.CreationTime.String()))
+		errs = append(errs, d.Set("creation_time", values.CreationTime.String()))
 	}
-	errors = append(errors, setHttpPackageConfigurations(values, d))
+	errs = append(errs, setHttpPackageConfigurations(values.HttpPackageConfigurations, d))
 	if values.LastModifiedTime != nil {
-		errors = append(errors, d.Set("last_modified_time", values.LastModifiedTime.String()))
+		errs = append(errs, d.Set("last_modified_time", values.LastModifiedTime.String()))
 	}
 	if values.SourceLocationName != nil {
-		errors = append(errors, d.Set("source_location_name", values.SourceLocationName))
+		errs = append(errs, d.Set("source_location_name", values.SourceLocationName))
 	}
-	errors = append(errors, d.Set("tags", values.Tags))
+	errs = append(errs, d.Set("tags", values.Tags))
 	if values.VodSourceName != nil {
-		errors = append(errors, d.Set("vod_source_name", values.VodSourceName))
+		errs = append(errs, d.Set("vod_source_name", values.VodSourceName))
 	}
-	for _, e := range errors {
+	for _, e := range errs {
 		if e != nil {
 			return fmt.Errorf("the following error occured while setting the values: %w", e)
 		}
@@ -78,14 +78,14 @@ func getHttpPackageConfigurations(d *schema.ResourceData) []*mediatailor.HttpPac
 }
 
 func getCreateVodSourceInput(d *schema.ResourceData) mediatailor.CreateVodSourceInput {
-	var inputParams mediatailor.CreateVodSourceInput
+	var vodSourceInputParams mediatailor.CreateVodSourceInput
 
 	if c := getHttpPackageConfigurations(d); c != nil {
-		inputParams.HttpPackageConfigurations = c
+		vodSourceInputParams.HttpPackageConfigurations = c
 	}
 
 	if s, ok := d.GetOk("source_location_name"); ok {
-		inputParams.SourceLocationName = aws.String(s.(string))
+		vodSourceInputParams.SourceLocationName = aws.String(s.(string))
 	}
 
 	outputMap := make(map[string]*string)
@@ -96,26 +96,26 @@ func getCreateVodSourceInput(d *schema.ResourceData) mediatailor.CreateVodSource
 			outputMap[k] = &temp
 		}
 	}
-	inputParams.Tags = outputMap
+	vodSourceInputParams.Tags = outputMap
 
 	if s, ok := d.GetOk("vod_source_name"); ok {
-		inputParams.VodSourceName = aws.String(s.(string))
+		vodSourceInputParams.VodSourceName = aws.String(s.(string))
 	}
 
-	return inputParams
+	return vodSourceInputParams
 }
 
 func getUpdateVodSourceInput(d *schema.ResourceData) mediatailor.UpdateVodSourceInput {
-	var updateParams mediatailor.UpdateVodSourceInput
+	var updatedVodSourceParams mediatailor.UpdateVodSourceInput
 
 	if c := getHttpPackageConfigurations(d); c != nil {
-		updateParams.HttpPackageConfigurations = c
+		updatedVodSourceParams.HttpPackageConfigurations = c
 	}
 	if s, ok := d.GetOk("source_location_name"); ok {
-		updateParams.SourceLocationName = aws.String(s.(string))
+		updatedVodSourceParams.SourceLocationName = aws.String(s.(string))
 	}
 	if s, ok := d.GetOk("vod_source_name"); ok {
-		updateParams.VodSourceName = aws.String(s.(string))
+		updatedVodSourceParams.VodSourceName = aws.String(s.(string))
 	}
-	return updateParams
+	return updatedVodSourceParams
 }

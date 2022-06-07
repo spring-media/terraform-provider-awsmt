@@ -8,12 +8,6 @@ Use this resource to manage a MediaTailor Source Location.
 
 ```terraform
 resource "awsmt_source_location" "example" {
-  access_configuration {
-    access_type = "SECRETS_MANAGER_ACCESS_TOKEN"
-    smatc_header_name =       "auth" 
-    smatc_secret_arn =        "arn:aws:secretsmanager:us-east-1:000000000000:secret/example"
-    smatc_secret_string_key = "example"
-  }
   default_segment_delivery_configuration_url = "https://example.com"
   http_configuration_url = "https://example.com"
   segment_delivery_configurations {

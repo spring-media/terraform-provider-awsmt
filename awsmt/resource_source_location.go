@@ -21,9 +21,6 @@ func resourceSourceLocation() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("source_location_name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
-		),
 		Schema: map[string]*schema.Schema{
 			"arn":           &computedString,
 			"creation_time": &computedString,
@@ -49,6 +46,9 @@ func resourceSourceLocation() *schema.Resource {
 				},
 			},
 		},
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ForceNewIfChange("source_location_name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
+		),
 	}
 }
 
