@@ -72,7 +72,7 @@ func getUpdateLiveSourceInput(d *schema.ResourceData) mediatailor.UpdateLiveSour
 	if s, ok := d.GetOk("source_location_name"); ok {
 		updatedLiveSourceParams.SourceLocationName = aws.String(s.(string))
 	}
-	if s, ok := d.GetOk("vod_source_name"); ok {
+	if s, ok := d.GetOk("live_source_name"); ok {
 		updatedLiveSourceParams.LiveSourceName = aws.String(s.(string))
 	}
 	return updatedLiveSourceParams
