@@ -38,6 +38,7 @@ func Provider() *schema.Provider {
 			"awsmt_channel":                dataSourceChannel(),
 			"awsmt_source_location":        dataSourceSourceLocation(),
 			"awsmt_vod_source":             dataSourceVodSource(),
+			"awsmt_live_source":            dataSourceLiveSource(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
