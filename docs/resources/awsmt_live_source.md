@@ -13,7 +13,7 @@ resource "awsmt_live_source" "example" {
     type = "HLS"
   }
   source_location_name = "existing_source_location"
-  live_source_name = "live_source_example"
+  name = "live_source_example"
 }
 ```
 
@@ -21,7 +21,7 @@ resource "awsmt_live_source" "example" {
 The following arguments are supported:
 
 * `source_location_name` - (Required) The name of the Source Location to which the Live Source refers.
-* `live_source_name` - (Required) The name of the Live Source.
+* `name` - (Required) The name of the Live Source.
 * `tags` - (Optional) Key-value mapping of resource tags.
 
 ### `http_package_configurations` - (Required)

@@ -27,7 +27,7 @@ func dataSourceLiveSource() *schema.Resource {
 				},
 			},
 			"last_modified_time":   &computedString,
-			"live_source_name":     &requiredString,
+			"name":                 &requiredString,
 			"source_location_name": &requiredString,
 			"tags": {
 				Type:     schema.TypeMap,
@@ -42,7 +42,7 @@ func dataSourceLiveSource() *schema.Resource {
 
 func dataSourceLiveSourceRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
-	resourceName := d.Get("live_source_name").(string)
+	resourceName := d.Get("name").(string)
 	sourceLocationName := d.Get("source_location_name").(string)
 
 	input := &mediatailor.DescribeLiveSourceInput{SourceLocationName: &(sourceLocationName), LiveSourceName: aws.String(resourceName)}

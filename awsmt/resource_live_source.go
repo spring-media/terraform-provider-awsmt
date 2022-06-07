@@ -38,7 +38,7 @@ func resourceLiveSource() *schema.Resource {
 				},
 			},
 			"last_modified_time":   &computedString,
-			"live_source_name":     &requiredString,
+			"name":                 &requiredString,
 			"source_location_name": &requiredString,
 			"tags": {
 				Type:     schema.TypeMap,
@@ -52,7 +52,7 @@ func resourceLiveSource() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("live_source_name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
+			customdiff.ForceNewIfChange("name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
 			customdiff.ForceNewIfChange("source_location_name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
 		),
 	}
@@ -73,7 +73,7 @@ func resourceLiveSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceLiveSourceRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
-	liveSourceName := d.Get("live_source_name").(string)
+	liveSourceName := d.Get("name").(string)
 	sourceLocationName := d.Get("source_location_name").(string)
 
 	if len(liveSourceName) == 0 && len(d.Id()) > 0 {
@@ -106,7 +106,7 @@ func resourceLiveSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	if d.HasChange("tags") {
 		oldValue, newValue := d.GetChange("tags")
 
-		resourceName := d.Get("live_source_name").(string)
+		resourceName := d.Get("name").(string)
 		sourceLocationName := d.Get("source_location_name").(string)
 		res, err := client.DescribeLiveSource(&mediatailor.DescribeLiveSourceInput{SourceLocationName: &sourceLocationName, LiveSourceName: &resourceName})
 		if err != nil {
@@ -131,7 +131,7 @@ func resourceLiveSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceLiveSourceDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
 
-	_, err := client.DeleteLiveSource(&mediatailor.DeleteLiveSourceInput{LiveSourceName: aws.String(d.Get("live_source_name").(string)), SourceLocationName: aws.String(d.Get("source_location_name").(string))})
+	_, err := client.DeleteLiveSource(&mediatailor.DeleteLiveSourceInput{LiveSourceName: aws.String(d.Get("name").(string)), SourceLocationName: aws.String(d.Get("source_location_name").(string))})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while deleting the resource: %v", err))
 	}

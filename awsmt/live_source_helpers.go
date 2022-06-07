@@ -21,7 +21,7 @@ func setLiveSource(values *mediatailor.DescribeLiveSourceOutput, d *schema.Resou
 		errors = append(errors, d.Set("last_modified_time", values.LastModifiedTime.String()))
 	}
 	if values.LiveSourceName != nil {
-		errors = append(errors, d.Set("live_source_name", values.LiveSourceName))
+		errors = append(errors, d.Set("name", values.LiveSourceName))
 	}
 	if values.SourceLocationName != nil {
 		errors = append(errors, d.Set("source_location_name", values.SourceLocationName))
@@ -56,7 +56,7 @@ func getCreateLiveSourceInput(d *schema.ResourceData) mediatailor.CreateLiveSour
 	}
 	liveSourceInputParams.Tags = outputMap
 
-	if s, ok := d.GetOk("live_source_name"); ok {
+	if s, ok := d.GetOk("name"); ok {
 		liveSourceInputParams.LiveSourceName = aws.String(s.(string))
 	}
 
@@ -72,7 +72,7 @@ func getUpdateLiveSourceInput(d *schema.ResourceData) mediatailor.UpdateLiveSour
 	if s, ok := d.GetOk("source_location_name"); ok {
 		updatedLiveSourceParams.SourceLocationName = aws.String(s.(string))
 	}
-	if s, ok := d.GetOk("live_source_name"); ok {
+	if s, ok := d.GetOk("name"); ok {
 		updatedLiveSourceParams.LiveSourceName = aws.String(s.(string))
 	}
 	return updatedLiveSourceParams
