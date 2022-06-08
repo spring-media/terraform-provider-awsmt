@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"regexp"
 )
 
 func resourceChannelPolicy() *schema.Resource {
@@ -17,7 +18,17 @@ func resourceChannelPolicy() *schema.Resource {
 		DeleteContext: resourceChannelPolicyDelete,
 		Schema: map[string]*schema.Schema{
 			"channel_name": &requiredString,
-			"policy":       &requiredString,
+			"policy": {
+				Type:     schema.TypeString,
+				Required: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					re := regexp.MustCompile(`\s?|\r?|\n?`)
+					if re.ReplaceAllString(old, "") == re.ReplaceAllString(new, "") {
+						return true
+					}
+					return false
+				},
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
