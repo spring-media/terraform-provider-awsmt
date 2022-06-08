@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"strings"
 )
 
 func dataSourceChannel() *schema.Resource {
@@ -46,6 +47,7 @@ func dataSourceChannel() *schema.Resource {
 				},
 			},
 			"playback_mode": &computedString,
+			"policy":        &computedString,
 			"tags": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -68,6 +70,14 @@ func dataSourceChannelRead(_ context.Context, d *schema.ResourceData, m interfac
 	res, err := client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: &name})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while retrieving the channel: %w", err))
+	}
+
+	policy, err := client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: aws.String(name)})
+	if err != nil && !strings.Contains(err.Error(), "NotFound") {
+		return diag.FromErr(fmt.Errorf("error while getting the channel policy: %v", err))
+	}
+	if err := setChannelPolicy(policy, d); err != nil {
+		diag.FromErr(err)
 	}
 
 	d.SetId(aws.StringValue(res.ChannelName))
