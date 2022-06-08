@@ -3,8 +3,11 @@ package awsmt
 import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"strings"
 )
 
 func getFillerSlate(d *schema.ResourceData) *mediatailor.SlateSource {
@@ -74,6 +77,60 @@ func getUpdateChannelInput(d *schema.ResourceData) mediatailor.UpdateChannelInpu
 	return params
 }
 
+func createChannelPolicy(client *mediatailor.MediaTailor, d *schema.ResourceData) error {
+	if v, ok := d.GetOk("policy"); ok {
+		var putChannelPolicyParams = mediatailor.PutChannelPolicyInput{
+			ChannelName: aws.String((d.Get("channel_name")).(string)),
+			Policy:      aws.String(v.(string)),
+		}
+
+		_, err := client.PutChannelPolicy(&putChannelPolicyParams)
+		if err != nil {
+			return fmt.Errorf("error while creating the policy: %v", err)
+		}
+	}
+	return nil
+}
+
+func updateChannelPolicy(client *mediatailor.MediaTailor, d *schema.ResourceData, channelName *string) error {
+	res, err := client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: channelName})
+
+	if err != nil && !strings.Contains(err.Error(), "NotFound") {
+		return fmt.Errorf("error while getting the  the channel policy: %v", err)
+	}
+
+	if res != nil {
+		if putError := putChannelPolicy(res, d); err != nil {
+			diag.FromErr(putError)
+		}
+	}
+	return nil
+}
+
+func deleteChannelPolicy(client *mediatailor.MediaTailor, d *schema.ResourceData, channelName *string) error {
+	_, err := client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: channelName})
+	if err != nil {
+		return fmt.Errorf("error while deleting the policy: %v", err)
+	}
+	if err := d.Set("policy", ""); err != nil {
+		return fmt.Errorf("error while unsetting the policy: %v", err)
+	}
+	return nil
+}
+
+func getResourceName(d *schema.ResourceData, fieldName string) (*string, error) {
+	resourceName := d.Get(fieldName).(string)
+	if len(resourceName) == 0 && len(d.Id()) > 0 {
+		resourceArn, err := arn.Parse(d.Id())
+		if err != nil {
+			return nil, fmt.Errorf("error parsing the name from resource arn: %v", err)
+		}
+		arnSections := strings.Split(resourceArn.Resource, "/")
+		resourceName = arnSections[len(arnSections)-1]
+	}
+	return &resourceName, nil
+}
+
 func setFillerState(values *mediatailor.DescribeChannelOutput, d *schema.ResourceData) error {
 	if values.FillerSlate != nil && values.FillerSlate != &(mediatailor.SlateSource{}) {
 		temp := map[string]interface{}{}
@@ -141,6 +198,15 @@ func setChannel(res *mediatailor.DescribeChannelOutput, d *schema.ResourceData) 
 	for _, e := range errors {
 		if e != nil {
 			return fmt.Errorf("the following error occured while setting the values: %w", e)
+		}
+	}
+	return nil
+}
+
+func putChannelPolicy(res *mediatailor.GetChannelPolicyOutput, d *schema.ResourceData) error {
+	if res.Policy != nil {
+		if err := d.Set("policy", res.Policy); err != nil {
+			return fmt.Errorf("error while setting the  the channel policy: %v", err)
 		}
 	}
 	return nil
