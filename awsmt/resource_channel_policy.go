@@ -23,10 +23,7 @@ func resourceChannelPolicy() *schema.Resource {
 				Required: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					re := regexp.MustCompile(`\s?|\r?|\n?`)
-					if re.ReplaceAllString(old, "") == re.ReplaceAllString(new, "") {
-						return true
-					}
-					return false
+					return re.ReplaceAllString(old, "") == re.ReplaceAllString(new, "")
 				},
 			},
 		},
