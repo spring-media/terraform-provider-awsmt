@@ -76,7 +76,12 @@ func resourceChannelPolicyRead(_ context.Context, d *schema.ResourceData, meta i
 func resourceChannelPolicyDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
 
-	_, err := client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: aws.String(d.Get("channel_name").(string))})
+	channelName := d.Get("channel_name").(string)
+	if len(channelName) == 0 && len(d.Id()) > 0 {
+		channelName = d.Id()
+	}
+
+	_, err := client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: aws.String(channelName)})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while deleting the policy: %v", err))
 	}
