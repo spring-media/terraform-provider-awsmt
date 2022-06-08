@@ -5,7 +5,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"strings"
 )
@@ -93,16 +92,10 @@ func createChannelPolicy(client *mediatailor.MediaTailor, d *schema.ResourceData
 }
 
 func updateChannelPolicy(client *mediatailor.MediaTailor, d *schema.ResourceData, channelName *string) error {
-	res, err := client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: channelName})
+	_, err := client.PutChannelPolicy(&mediatailor.PutChannelPolicyInput{ChannelName: channelName, Policy: aws.String(d.Get("policy").(string))})
 
 	if err != nil && !strings.Contains(err.Error(), "NotFound") {
-		return fmt.Errorf("error while getting the  the channel policy: %v", err)
-	}
-
-	if res != nil {
-		if putError := putChannelPolicy(res, d); err != nil {
-			diag.FromErr(putError)
-		}
+		return fmt.Errorf("error while getting the channel policy: %v", err)
 	}
 	return nil
 }
@@ -203,7 +196,7 @@ func setChannel(res *mediatailor.DescribeChannelOutput, d *schema.ResourceData) 
 	return nil
 }
 
-func putChannelPolicy(res *mediatailor.GetChannelPolicyOutput, d *schema.ResourceData) error {
+func setChannelPolicy(res *mediatailor.GetChannelPolicyOutput, d *schema.ResourceData) error {
 	if res.Policy != nil {
 		if err := d.Set("policy", res.Policy); err != nil {
 			return fmt.Errorf("error while setting the  the channel policy: %v", err)

@@ -177,7 +177,7 @@ func resourceChannelRead(_ context.Context, d *schema.ResourceData, meta interfa
 	if err != nil && !strings.Contains(err.Error(), "NotFound") {
 		return diag.FromErr(fmt.Errorf("error while getting the channel policy: %v", err))
 	}
-	if err := putChannelPolicy(policy, d); err != nil {
+	if err := setChannelPolicy(policy, d); err != nil {
 		diag.FromErr(err)
 	}
 
