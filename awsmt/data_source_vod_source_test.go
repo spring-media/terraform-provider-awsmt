@@ -9,7 +9,7 @@ import (
 
 func TestAccVodSourceDataSourceBasic(t *testing.T) {
 	dataSourceName := "data.awsmt_vod_source.test"
-	sourceLocationName := "basic_source_location"
+	sourceLocationName := "vod_basic_sl"
 	vodSourceName := "vod_source_data_source_test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
