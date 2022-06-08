@@ -32,7 +32,6 @@ func Provider() *schema.Provider {
 			"awsmt_source_location":        resourceSourceLocation(),
 			"awsmt_vod_source":             resourceVodSource(),
 			"awsmt_live_source":            resourceLiveSource(),
-			"awsmt_channel_policy":         resourceChannelPolicy(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"awsmt_playback_configuration": dataSourcePlaybackConfiguration(),
@@ -40,7 +39,6 @@ func Provider() *schema.Provider {
 			"awsmt_source_location":        dataSourceSourceLocation(),
 			"awsmt_vod_source":             dataSourceVodSource(),
 			"awsmt_live_source":            dataSourceLiveSource(),
-			"awsmt_channel_policy":         dataSourceChannelPolicy(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
