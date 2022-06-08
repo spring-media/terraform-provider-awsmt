@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"regexp"
+	"strings"
 )
 
 func resourceChannel() *schema.Resource {
@@ -173,8 +174,8 @@ func resourceChannelRead(_ context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	policy, err := client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: resourceName})
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while getting the  the channel policy: %v", err))
+	if err != nil && !strings.Contains(err.Error(), "NotFound") {
+		return diag.FromErr(fmt.Errorf("error while getting the channel policy: %v", err))
 	}
 	if err := putChannelPolicy(policy, d); err != nil {
 		diag.FromErr(err)
@@ -201,7 +202,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.HasChange("policy") {
 		_, newValue := d.GetChange("policy")
-		if newValue != nil || newValue != "" {
+		if len(newValue.(string)) > 0 {
 			err := updateChannelPolicy(client, d, &resourceName)
 			if err != nil {
 				return diag.FromErr(err)
