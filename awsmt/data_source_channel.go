@@ -64,9 +64,6 @@ func dataSourceChannelRead(_ context.Context, d *schema.ResourceData, m interfac
 	client := m.(*mediatailor.MediaTailor)
 
 	name := d.Get("channel_name").(string)
-	if name == "" {
-		return diag.Errorf("`channel_name` parameter required")
-	}
 	res, err := client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: &name})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while retrieving the channel: %w", err))
