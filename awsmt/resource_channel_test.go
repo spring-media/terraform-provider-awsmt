@@ -401,7 +401,7 @@ resource "awsmt_vod_source" "test" {
     type = "HLS"
   }
   source_location_name = awsmt_source_location.example.source_location_name
-  vod_source_name = "%[2]s"
+  name = "%[2]s"
 }
 
 resource "awsmt_channel" "test"{
@@ -413,7 +413,7 @@ resource "awsmt_channel" "test"{
   }
   filler_slate {
     source_location_name = awsmt_source_location.example.source_location_name
-	vod_source_name = awsmt_vod_source.test.vod_source_name
+	vod_source_name = awsmt_vod_source.test.name
   }
   playback_mode = "LINEAR"
   tier = "STANDARD"

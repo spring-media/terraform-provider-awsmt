@@ -23,7 +23,7 @@ func TestAccVodSourceResource_basic(t *testing.T) {
 			{
 				Config: testAccVodSourceConfig(SourceLocationName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "vod_source_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "source_location_name", SourceLocationName),
 					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.path", "/"),
 					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.source_group", "default"),
@@ -51,7 +51,7 @@ func TestAccVodSourceResource_update(t *testing.T) {
 			{
 				Config: testAccVodSourceConfig_update(SourceLocationName, rName, "/"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "vod_source_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "source_location_name", SourceLocationName),
 					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.path", "/"),
 					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.source_group", "default"),
@@ -61,7 +61,7 @@ func TestAccVodSourceResource_update(t *testing.T) {
 			{
 				Config: testAccVodSourceConfig_update(SourceLocationName, rName, "/test"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "vod_source_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "source_location_name", SourceLocationName),
 					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.path", "/test"),
 					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.source_group", "default"),
@@ -84,7 +84,7 @@ func TestAccVodSourceResource_tags(t *testing.T) {
 			{
 				Config: testAccVodSourceConfig_tags(SourceLocationName, rName, "a", "b", "c", "d"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "vod_source_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "source_location_name", SourceLocationName),
 					resource.TestCheckResourceAttr(resourceName, "tags.a", "b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.c", "d"),
@@ -93,7 +93,7 @@ func TestAccVodSourceResource_tags(t *testing.T) {
 			{
 				Config: testAccVodSourceConfig_tags(SourceLocationName, rName, "e", "f", "g", "h"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "vod_source_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "source_location_name", SourceLocationName),
 					resource.TestCheckResourceAttr(resourceName, "tags.e", "f"),
 					resource.TestCheckResourceAttr(resourceName, "tags.g", "h"),
@@ -152,7 +152,7 @@ resource "awsmt_vod_source" "test" {
     type = "HLS"
   }
   source_location_name = awsmt_source_location.example.source_location_name
-  vod_source_name = "%[2]s"
+  name = "%[2]s"
 }
 `, sourceLocationName, vodSourceName)
 }
@@ -171,7 +171,7 @@ resource "awsmt_vod_source" "test" {
     type = "HLS"
   }
   source_location_name = awsmt_source_location.example.source_location_name
-  vod_source_name = "%[2]s"
+  name = "%[2]s"
 }
 `, sourceLocationName, vodSourceName, path)
 }
@@ -194,7 +194,7 @@ resource "awsmt_vod_source" "test" {
     "%[3]s": "%[4]s",
 	"%[5]s": "%[6]s",
   }
-  vod_source_name = "%[2]s"
+  name = "%[2]s"
 }
 `, sourceLocationName, vodSourceName, k1, v1, k2, v2)
 }
