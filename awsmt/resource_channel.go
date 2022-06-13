@@ -27,7 +27,7 @@ func resourceChannel() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"channel_name": {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -132,7 +132,7 @@ func resourceChannel() *schema.Resource {
 			},
 		},
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("channel_name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
+			customdiff.ForceNewIfChange("name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
 		),
 	}
 }
@@ -159,7 +159,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceChannelRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
 	var resourceName *string
-	resourceName, err := getResourceName(d, "channel_name")
+	resourceName, err := getResourceName(d, "name")
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -187,7 +187,7 @@ func resourceChannelRead(_ context.Context, d *schema.ResourceData, meta interfa
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
 
-	resourceName := d.Get("channel_name").(string)
+	resourceName := d.Get("name").(string)
 
 	if d.HasChange("tags") {
 		oldValue, newValue := d.GetChange("tags")
@@ -228,12 +228,12 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceChannelDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
 
-	_, err := client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: aws.String(d.Get("channel_name").(string))})
+	_, err := client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: aws.String(d.Get("name").(string))})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while deleting the channel policy: %v", err))
 	}
 
-	_, err = client.DeleteChannel(&mediatailor.DeleteChannelInput{ChannelName: aws.String(d.Get("channel_name").(string))})
+	_, err = client.DeleteChannel(&mediatailor.DeleteChannelInput{ChannelName: aws.String(d.Get("name").(string))})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while deleting the resource: %v", err))
 	}

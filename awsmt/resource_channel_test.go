@@ -25,7 +25,7 @@ func TestAccChannelResource_basic(t *testing.T) {
 			{
 				Config: testAccChannelConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "channel_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "outputs.0.manifest_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.0.source_group", "default"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.0.hls_manifest_windows_seconds", "30"),
@@ -57,7 +57,7 @@ func TestAccChannelResource_recreate(t *testing.T) {
 			{
 				Config: testAccChannelConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "channel_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "outputs.0.manifest_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.0.source_group", "default"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.0.hls_manifest_windows_seconds", "30"),
@@ -72,7 +72,7 @@ func TestAccChannelResource_recreate(t *testing.T) {
 				Taint:  []string{resourceName},
 				Config: testAccChannelConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "channel_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "outputs.0.manifest_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.0.source_group", "default"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.0.hls_manifest_windows_seconds", "30"),
@@ -145,7 +145,7 @@ func TestAccChannelResource_update(t *testing.T) {
 			{
 				Config: testAccChannelConfig_Update(rName, number),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "channel_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "outputs.0.dash_manifest_windows_seconds", fmt.Sprint(number)),
 					resource.TestCheckResourceAttr(resourceName, "outputs.0.dash_min_buffer_time_seconds", fmt.Sprint(number)),
 					resource.TestCheckResourceAttr(resourceName, "outputs.0.dash_min_update_period_seconds", fmt.Sprint(number)),
@@ -158,7 +158,7 @@ func TestAccChannelResource_update(t *testing.T) {
 			{
 				Config: testAccChannelConfig_Update(rName, updatedNumber),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "channel_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "outputs.0.dash_manifest_windows_seconds", fmt.Sprint(updatedNumber)),
 					resource.TestCheckResourceAttr(resourceName, "outputs.0.dash_min_buffer_time_seconds", fmt.Sprint(updatedNumber)),
 					resource.TestCheckResourceAttr(resourceName, "outputs.0.dash_min_update_period_seconds", fmt.Sprint(updatedNumber)),
@@ -183,7 +183,7 @@ func TestAccChannelResource_tags(t *testing.T) {
 			{
 				Config: testAccChannelConfig_Tags(rName, "a", "b", "c", "d"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "channel_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.a", "b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.c", "d"),
 				),
@@ -191,7 +191,7 @@ func TestAccChannelResource_tags(t *testing.T) {
 			{
 				Config: testAccChannelConfig_Tags(rName, "e", "f", "g", "h"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "channel_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.e", "f"),
 					resource.TestCheckResourceAttr(resourceName, "tags.g", "h"),
 				),
@@ -213,7 +213,7 @@ func TestAccChannelResource_linear(t *testing.T) {
 			{
 				Config: testAccChannelConfig_Linear(sourceLocationName, vodSourceName, channelName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "channel_name", channelName),
+					resource.TestCheckResourceAttr(resourceName, "name", channelName),
 					resource.TestCheckResourceAttr(resourceName, "filler_slate.0.source_location_name", sourceLocationName),
 					resource.TestCheckResourceAttr(resourceName, "filler_slate.0.vod_source_name", vodSourceName),
 				),
@@ -236,7 +236,7 @@ func TestAccChannelResource_policy(t *testing.T) {
 			{
 				Config: testAccChannelConfig_Policy(channelName, channelPolicyAction, region, accountId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "channel_name", channelName),
+					resource.TestCheckResourceAttr(resourceName, "name", channelName),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`mediatailor:GetManifest`)),
 				),
 			},
@@ -292,7 +292,7 @@ func testAccCheckChannelDestroy(s *terraform.State) error {
 func testAccChannelConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "awsmt_channel" "test" {
-  channel_name = "%[1]s"
+  name = "%[1]s"
   outputs {
     manifest_name                = "default"
     source_group                 = "default"
@@ -307,7 +307,7 @@ resource "awsmt_channel" "test" {
 func testAccChannelConfig_Conflict(rName string) string {
 	return fmt.Sprintf(`
 resource "awsmt_channel" "test" {
-  channel_name = "%[1]s"
+  name = "%[1]s"
   outputs {
     manifest_name                 = "default"
     source_group                  = "default"
@@ -323,7 +323,7 @@ resource "awsmt_channel" "test" {
 func testAccChannelConfig_Tier(rName, tier string) string {
 	return fmt.Sprintf(`
 resource "awsmt_channel" "test" {
-  channel_name = "%[1]s"
+  name = "%[1]s"
   outputs {
     manifest_name                 = "default"
     source_group                  = "default"
@@ -338,7 +338,7 @@ resource "awsmt_channel" "test" {
 func testAccChannelConfig_PlaybackMode(rName, playbackMode string) string {
 	return fmt.Sprintf(`
 resource "awsmt_channel" "test" {
-  channel_name = "%[1]s"
+  name = "%[1]s"
   outputs {
     manifest_name                 = "default"
     source_group                  = "default"
@@ -353,7 +353,7 @@ resource "awsmt_channel" "test" {
 func testAccChannelConfig_Update(rName string, num int) string {
 	return fmt.Sprintf(`
 resource "awsmt_channel" "test" {
-  channel_name = "%[1]s"
+  name = "%[1]s"
   outputs {
     manifest_name                             = "default"
     source_group                              = "default"
@@ -371,7 +371,7 @@ resource "awsmt_channel" "test" {
 func testAccChannelConfig_Tags(rName, k1, v1, k2, v2 string) string {
 	return fmt.Sprintf(`
 resource "awsmt_channel" "test" {
-  channel_name = "%[1]s"
+  name = "%[1]s"
   outputs {
     manifest_name                = "default"
     source_group                 = "default"
@@ -405,7 +405,7 @@ resource "awsmt_vod_source" "test" {
 }
 
 resource "awsmt_channel" "test"{
-  channel_name = "%[3]s"
+  name = "%[3]s"
   outputs {
     manifest_name                = "default"
     source_group                 = "default"
@@ -424,7 +424,7 @@ resource "awsmt_channel" "test"{
 func testAccChannelConfig_Policy(rName, policy, region, accountId string) string {
 	return fmt.Sprintf(`
 	resource "awsmt_channel" "test" {
-      channel_name = "%[1]s"
+      name = "%[1]s"
  	  outputs {
 	    manifest_name                = "default"
 		source_group                 = "default"

@@ -6,14 +6,14 @@ Provides information about a Elemental MediaTailor Channel.
 
 ```terraform
 data "aws_media_tailor_channel" "example" {
-  channel_name = "example-channel"
+  name = "example-channel"
 }
 ```
 
 ## Argument Reference
 The following arguments are supported:
 
-* `channel_name` - (Required) The name of the channel.
+* `name` - (Required) The name of the channel.
 
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:

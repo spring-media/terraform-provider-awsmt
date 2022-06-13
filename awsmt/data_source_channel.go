@@ -15,7 +15,7 @@ func dataSourceChannel() *schema.Resource {
 		ReadContext: dataSourceChannelRead,
 		Schema: map[string]*schema.Schema{
 			"arn":           &computedString,
-			"channel_name":  &requiredString,
+			"name":          &requiredString,
 			"channel_state": &computedString,
 			"creation_time": &computedString,
 			"filler_slate": {
@@ -63,7 +63,7 @@ func dataSourceChannel() *schema.Resource {
 func dataSourceChannelRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*mediatailor.MediaTailor)
 
-	name := d.Get("channel_name").(string)
+	name := d.Get("name").(string)
 	res, err := client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: &name})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while retrieving the channel: %w", err))

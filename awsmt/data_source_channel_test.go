@@ -21,7 +21,7 @@ func TestAccChannelDataSourceBasic(t *testing.T) {
 					resource.TestMatchResourceAttr(dataSourceName, "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \+\d{4} \w+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \+\d{4} \w+$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "outputs.0.hls_manifest_windows_seconds", "30"),
-					resource.TestCheckResourceAttr(dataSourceName, "channel_name", rName),
+					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
 				),
 			},
 		},
@@ -31,7 +31,7 @@ func TestAccChannelDataSourceBasic(t *testing.T) {
 func testAccChannelDataSourceBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "awsmt_channel" "test" {
-  channel_name = "%[1]s"
+  name = "%[1]s"
   outputs {
     manifest_name                = "default"
     source_group                 = "default"
@@ -42,7 +42,7 @@ resource "awsmt_channel" "test" {
 }
 
 data "awsmt_channel" "test" {
-  channel_name = awsmt_channel.test.channel_name
+  name = awsmt_channel.test.name
 }
 `, rName)
 }

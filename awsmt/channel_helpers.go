@@ -27,7 +27,7 @@ func getFillerSlate(d *schema.ResourceData) *mediatailor.SlateSource {
 func getCreateChannelInput(d *schema.ResourceData) mediatailor.CreateChannelInput {
 	var params mediatailor.CreateChannelInput
 
-	if v, ok := d.GetOk("channel_name"); ok {
+	if v, ok := d.GetOk("name"); ok {
 		params.ChannelName = aws.String(v.(string))
 	}
 
@@ -63,7 +63,7 @@ func getCreateChannelInput(d *schema.ResourceData) mediatailor.CreateChannelInpu
 func getUpdateChannelInput(d *schema.ResourceData) mediatailor.UpdateChannelInput {
 	var params mediatailor.UpdateChannelInput
 
-	if v, ok := d.GetOk("channel_name"); ok {
+	if v, ok := d.GetOk("name"); ok {
 		params.ChannelName = aws.String(v.(string))
 	}
 
@@ -79,7 +79,7 @@ func getUpdateChannelInput(d *schema.ResourceData) mediatailor.UpdateChannelInpu
 func createChannelPolicy(client *mediatailor.MediaTailor, d *schema.ResourceData) error {
 	if v, ok := d.GetOk("policy"); ok {
 		var putChannelPolicyParams = mediatailor.PutChannelPolicyInput{
-			ChannelName: aws.String((d.Get("channel_name")).(string)),
+			ChannelName: aws.String((d.Get("name")).(string)),
 			Policy:      aws.String(v.(string)),
 		}
 
@@ -178,7 +178,7 @@ func setChannel(res *mediatailor.DescribeChannelOutput, d *schema.ResourceData) 
 	var errors []error
 
 	errors = append(errors, d.Set("arn", res.Arn))
-	errors = append(errors, d.Set("channel_name", res.ChannelName))
+	errors = append(errors, d.Set("name", res.ChannelName))
 	errors = append(errors, d.Set("channel_state", res.ChannelState))
 	errors = append(errors, d.Set("creation_time", res.CreationTime.String()))
 	errors = append(errors, setFillerState(res, d))
