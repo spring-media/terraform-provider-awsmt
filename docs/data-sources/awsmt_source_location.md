@@ -8,7 +8,7 @@ This data source provides information about a MediaTailor Source Location.
 
 ```terraform
 data "awsmt_source_location" "example" {
-  source_location_name = "example"
+  name = "example"
 }
 ```
 
@@ -16,7 +16,7 @@ data "awsmt_source_location" "example" {
 
 The following arguments are supported:
 
-* `source_location_name` - (Required) The name of the source location.
+* `name` - (Required) The name of the source location.
 
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:

@@ -37,7 +37,7 @@ func resourceSourceLocation() *schema.Resource {
 					},
 				},
 			},
-			"source_location_name": &requiredString,
+			"name": &requiredString,
 			"tags": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -47,7 +47,7 @@ func resourceSourceLocation() *schema.Resource {
 			},
 		},
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("source_location_name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
+			customdiff.ForceNewIfChange("name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
 		),
 	}
 }
@@ -69,7 +69,7 @@ func resourceSourceLocationCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceSourceLocationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
 
-	resourceName := d.Get("source_location_name").(string)
+	resourceName := d.Get("name").(string)
 	if len(resourceName) == 0 && len(d.Id()) > 0 {
 		resourceArn, err := arn.Parse(d.Id())
 		if err != nil {
@@ -96,7 +96,7 @@ func resourceSourceLocationUpdate(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChange("tags") {
 		oldValue, newValue := d.GetChange("tags")
 
-		resourceName := d.Get("source_location_name").(string)
+		resourceName := d.Get("name").(string)
 		res, err := client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: &resourceName})
 		if err != nil {
 			return diag.FromErr(err)
@@ -120,7 +120,7 @@ func resourceSourceLocationUpdate(ctx context.Context, d *schema.ResourceData, m
 func resourceSourceLocationDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
 
-	_, err := client.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: aws.String(d.Get("source_location_name").(string))})
+	_, err := client.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: aws.String(d.Get("name").(string))})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while deleting the resource: %v", err))
 	}

@@ -14,7 +14,7 @@ resource "awsmt_source_location" "example" {
     base_url = "https://example.com",
     name =     "example"
   }
-  source_location_name = "example"
+  name = "example"
   tags = {
     "key": "value"
   }
@@ -25,7 +25,7 @@ resource "awsmt_source_location" "example" {
 
 The following arguments are supported:
 
-* `source_location_name` - (Required) The name of the source location.
+* `name` - (Required) The name of the source location.
 * `default_segment_delivery_configuration_url` - (Optional) The hostname of the server that will be used to serve segments.
 * `http_configuration_url` - (Optional) The base URL for the source location host server.
 * `tags` - (Optional) Key-value mapping of resource tags.

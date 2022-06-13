@@ -390,7 +390,7 @@ resource "awsmt_channel" "test" {
 func testAccChannelConfig_Linear(sourceLocationName, vodSourceName, channelName string) string {
 	return fmt.Sprintf(`
 resource "awsmt_source_location" "example" {
-  source_location_name = "%[1]s"
+  name = "%[1]s"
   http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
 }
 
@@ -400,7 +400,7 @@ resource "awsmt_vod_source" "test" {
     source_group = "default"
     type = "HLS"
   }
-  source_location_name = awsmt_source_location.example.source_location_name
+  source_location_name = awsmt_source_location.example.name
   name = "%[2]s"
 }
 
@@ -412,7 +412,7 @@ resource "awsmt_channel" "test"{
     hls_manifest_windows_seconds = 30
   }
   filler_slate {
-    source_location_name = awsmt_source_location.example.source_location_name
+    source_location_name = awsmt_source_location.example.name
 	vod_source_name = awsmt_vod_source.test.name
   }
   playback_mode = "LINEAR"

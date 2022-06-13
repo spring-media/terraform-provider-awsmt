@@ -20,7 +20,7 @@ func TestAccSourceLocationDataSourceBasic(t *testing.T) {
 					resource.TestMatchResourceAttr(dataSourceName, "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:sourceLocation\/.*$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \+\d{4} \w+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \+\d{4} \w+$`)),
-					resource.TestCheckResourceAttr(dataSourceName, "source_location_name", rName),
+					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
 				),
 			},
 		},
@@ -32,7 +32,7 @@ func testAccSourceLocationDataSourceBasic(rName string) string {
 resource "awsmt_source_location" "test_data_source"{
   default_segment_delivery_configuration_url = "https://www.example.com"
   http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
-  source_location_name = "%[1]s"
+  name = "%[1]s"
   segment_delivery_configurations {
     base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
     name =     "example"
@@ -40,7 +40,7 @@ resource "awsmt_source_location" "test_data_source"{
 }
 
 data "awsmt_source_location" "test" {
-  source_location_name = awsmt_source_location.test_data_source.source_location_name
+  name = awsmt_source_location.test_data_source.name
 }
 `, rName)
 }

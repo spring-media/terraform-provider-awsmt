@@ -32,7 +32,7 @@ func TestAccVodSourceDataSourceBasic(t *testing.T) {
 func testAccVodSourceDataSourceBasic(sourceLocationName, vodSourceName string) string {
 	return fmt.Sprintf(`
 resource "awsmt_source_location" "example"{
-  source_location_name = "%[1]s"
+  name = "%[1]s"
   http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
 }
 
@@ -42,12 +42,12 @@ resource "awsmt_vod_source" "test" {
     source_group = "default"
     type = "HLS"
   }
-  source_location_name = awsmt_source_location.example.source_location_name
+  source_location_name = awsmt_source_location.example.name
   name = "%[2]s"
 }
 
 data "awsmt_vod_source" "test" {
-  source_location_name = awsmt_source_location.example.source_location_name
+  source_location_name = awsmt_source_location.example.name
   name = awsmt_vod_source.test.name
 }
 `, sourceLocationName, vodSourceName)
