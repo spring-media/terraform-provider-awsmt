@@ -49,10 +49,10 @@ func resourceVodSource() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"vod_source_name": &requiredString,
+			"name": &requiredString,
 		},
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("vod_source_name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
+			customdiff.ForceNewIfChange("name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
 			customdiff.ForceNewIfChange("source_location_name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
 		),
 	}
@@ -73,7 +73,7 @@ func resourceVodSourceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceVodSourceRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
-	resourceName := d.Get("vod_source_name").(string)
+	resourceName := d.Get("name").(string)
 	sourceLocationName := d.Get("source_location_name").(string)
 
 	if len(resourceName) == 0 && len(d.Id()) > 0 {
@@ -106,7 +106,7 @@ func resourceVodSourceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if d.HasChange("tags") {
 		oldValue, newValue := d.GetChange("tags")
 
-		resourceName := d.Get("vod_source_name").(string)
+		resourceName := d.Get("name").(string)
 		sourceLocationName := d.Get("source_location_name").(string)
 		res, err := client.DescribeVodSource(&mediatailor.DescribeVodSourceInput{SourceLocationName: &sourceLocationName, VodSourceName: &resourceName})
 		if err != nil {
@@ -131,7 +131,7 @@ func resourceVodSourceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceVodSourceDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
 
-	_, err := client.DeleteVodSource(&mediatailor.DeleteVodSourceInput{VodSourceName: aws.String(d.Get("vod_source_name").(string)), SourceLocationName: aws.String(d.Get("source_location_name").(string))})
+	_, err := client.DeleteVodSource(&mediatailor.DeleteVodSourceInput{VodSourceName: aws.String(d.Get("name").(string)), SourceLocationName: aws.String(d.Get("source_location_name").(string))})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while deleting the resource: %v", err))
 	}

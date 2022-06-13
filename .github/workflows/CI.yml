@@ -32,6 +32,9 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
       - name: Unit & Acceptance Test
         run: make test
+        env:
+          AWS_ACCOUNT_ID: "319158032161"
+          AWS_REGION: "eu-central-1"
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:

@@ -6,14 +6,14 @@ Provides information about a Elemental MediaTailor Channel.
 
 ```terraform
 data "aws_media_tailor_channel" "example" {
-  channel_name = "example-channel"
+  name = "example-channel"
 }
 ```
 
 ## Argument Reference
 The following arguments are supported:
 
-* `channel_name` - (Required) The name of the channel.
+* `name` - (Required) The name of the channel.
 
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:
@@ -23,6 +23,7 @@ In addition to all arguments above, the following attributes are exported:
 * `creation_time` - The timestamp of when the channel was created.
 * `last_modified_time` - The timestamp of when the channel was last modified.
 * `playback_mode` - The type of playback mode for this channel. Can be either LINEAR or LOOP.
+* `policy` - The IAM policy for the channel.
 * `source_group` - A string used to match which HttpPackageConfiguration is used for each VodSource.
 * `tags` - Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tier` - The tier for this channel. STANDARD tier channels can contain live programs.

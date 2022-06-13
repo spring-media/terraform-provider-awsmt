@@ -6,7 +6,7 @@ Provides an Elemental MediaTailor Channel.
 
 ```terraform
 resource "awsmt_channel" "example" {
-  channel_name = "example-channel"
+  name = "example-channel"
   outputs {
     manifest_name                             = "default"
     source_group                              = "default"
@@ -20,8 +20,9 @@ resource "awsmt_channel" "example" {
 ## Argument Reference
 The following arguments are supported:
 
-* `channel_name` - (Required) The name of the channel.
+* `name` - (Required) The name of the channel.
 * `playback_mode` - (Required) The type of playback mode for this channel. Can be either LINEAR or LOOP.
+* `policy` - (Required) The IAM policy for the channel. 
 * `source_group` - (Required) A string used to match which HttpPackageConfiguration is used for each VodSource.
 * `tags` - (Optional) Key-value mapping of resource tags.
 * `tier` - (Required)  The tier for this channel. STANDARD tier channels can contain live programs.

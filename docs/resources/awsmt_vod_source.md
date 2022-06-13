@@ -13,7 +13,7 @@ resource "awsmt_vod_source" "example" {
     type = "HLS"
   }
   source_location_name = "existing_source_location"
-  vod_source_name = "vod_source_example"
+  name = "vod_source_example"
 }
 ```
 
@@ -22,7 +22,7 @@ The following arguments are supported:
 
 * `source_location_name` - (Required) The name of the Source Location to which the VOD source refers.
 * `tags` - (Optional) Key-value mapping of resource tags.
-* `vod_source_name` - (Required) The name of the VOD Source.
+* `name` - (Required) The name of the VOD Source.
 
 ### `http_package_configurations` - (Required)
 A list of HTTP package configuration parameters for this VOD source.

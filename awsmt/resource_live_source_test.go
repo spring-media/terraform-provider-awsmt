@@ -141,7 +141,7 @@ func testAccCheckLiveSourceDestroy(s *terraform.State) error {
 func testAccLiveSourceConfig(sourceLocationName, liveSourceName string) string {
 	return fmt.Sprintf(`
 resource "awsmt_source_location" "example"{
-  source_location_name = "%[1]s"
+  name = "%[1]s"
   http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
 }
 
@@ -151,7 +151,7 @@ resource "awsmt_live_source" "test" {
     source_group = "default"
     type = "HLS"
   }
-  source_location_name = awsmt_source_location.example.source_location_name
+  source_location_name = awsmt_source_location.example.name
   name = "%[2]s"
 }
 `, sourceLocationName, liveSourceName)
@@ -160,7 +160,7 @@ resource "awsmt_live_source" "test" {
 func testAccLiveSourceConfig_update(sourceLocationName, liveSourceName, path string) string {
 	return fmt.Sprintf(`
 resource "awsmt_source_location" "example"{
-  source_location_name = "%[1]s"
+  name = "%[1]s"
   http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
 }
 
@@ -170,7 +170,7 @@ resource "awsmt_live_source" "test" {
     source_group = "default"
     type = "HLS"
   }
-  source_location_name = awsmt_source_location.example.source_location_name
+  source_location_name = awsmt_source_location.example.name
   name = "%[2]s"
 }
 `, sourceLocationName, liveSourceName, path)
@@ -179,7 +179,7 @@ resource "awsmt_live_source" "test" {
 func testAccLiveSourceConfig_tags(sourceLocationName, liveSourceName, k1, v1, k2, v2 string) string {
 	return fmt.Sprintf(`
 resource "awsmt_source_location" "example"{
-  source_location_name = "%[1]s"
+  name = "%[1]s"
   http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
 }
 
@@ -189,7 +189,7 @@ resource "awsmt_live_source" "test" {
     source_group = "default"
     type = "HLS"
   }
-  source_location_name = awsmt_source_location.example.source_location_name
+  source_location_name = awsmt_source_location.example.name
   tags = {
     "%[3]s": "%[4]s",
 	"%[5]s": "%[6]s",

@@ -28,7 +28,7 @@ func dataSourceSourceLocation() *schema.Resource {
 					},
 				},
 			},
-			"source_location_name": &requiredString,
+			"name": &requiredString,
 			"tags": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -43,9 +43,9 @@ func dataSourceSourceLocation() *schema.Resource {
 func dataSourceSourceLocationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*mediatailor.MediaTailor)
 
-	name := d.Get("source_location_name").(string)
+	name := d.Get("name").(string)
 	if name == "" {
-		return diag.Errorf("`source_location_name` parameter required")
+		return diag.Errorf("`name` parameter required")
 	}
 	res, err := client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: &name})
 	if err != nil {

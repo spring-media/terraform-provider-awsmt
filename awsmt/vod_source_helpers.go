@@ -40,7 +40,7 @@ func setVodSource(values *mediatailor.DescribeVodSourceOutput, d *schema.Resourc
 	}
 	errs = append(errs, d.Set("tags", values.Tags))
 	if values.VodSourceName != nil {
-		errs = append(errs, d.Set("vod_source_name", values.VodSourceName))
+		errs = append(errs, d.Set("name", values.VodSourceName))
 	}
 	for _, e := range errs {
 		if e != nil {
@@ -98,7 +98,7 @@ func getCreateVodSourceInput(d *schema.ResourceData) mediatailor.CreateVodSource
 	}
 	vodSourceInputParams.Tags = outputMap
 
-	if s, ok := d.GetOk("vod_source_name"); ok {
+	if s, ok := d.GetOk("name"); ok {
 		vodSourceInputParams.VodSourceName = aws.String(s.(string))
 	}
 
@@ -114,7 +114,7 @@ func getUpdateVodSourceInput(d *schema.ResourceData) mediatailor.UpdateVodSource
 	if s, ok := d.GetOk("source_location_name"); ok {
 		updatedVodSourceParams.SourceLocationName = aws.String(s.(string))
 	}
-	if s, ok := d.GetOk("vod_source_name"); ok {
+	if s, ok := d.GetOk("name"); ok {
 		updatedVodSourceParams.VodSourceName = aws.String(s.(string))
 	}
 	return updatedVodSourceParams

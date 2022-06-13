@@ -22,7 +22,7 @@ func TestAccSourceLocationResource_basic(t *testing.T) {
 			{
 				Config: testAccSourceLocationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "source_location_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "http_configuration_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"),
 				),
 			},
@@ -46,7 +46,7 @@ func TestAccSourceLocationResource_recreate(t *testing.T) {
 			{
 				Config: testAccSourceLocationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "source_location_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "http_configuration_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"),
 				),
 			},
@@ -54,7 +54,7 @@ func TestAccSourceLocationResource_recreate(t *testing.T) {
 				Taint:  []string{resourceName},
 				Config: testAccSourceLocationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "source_location_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "http_configuration_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"),
 				),
 			},
@@ -73,7 +73,7 @@ func TestAccSourceLocationResource_update(t *testing.T) {
 			{
 				Config: testAccSourceLocationConfig_update(rName, "example", "https://example.com", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "source_location_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "default_segment_delivery_configuration_url", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "segment_delivery_configurations.0.name", "example"),
 					resource.TestCheckResourceAttr(resourceName, "segment_delivery_configurations.0.base_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"),
@@ -83,7 +83,7 @@ func TestAccSourceLocationResource_update(t *testing.T) {
 			{
 				Config: testAccSourceLocationConfig_update(rName, "test", "https://test.com", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "source_location_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "default_segment_delivery_configuration_url", "https://test.com"),
 					resource.TestCheckResourceAttr(resourceName, "segment_delivery_configurations.0.name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "segment_delivery_configurations.0.base_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"),
@@ -105,7 +105,7 @@ func TestAccSourceLocationResource_tags(t *testing.T) {
 			{
 				Config: testAccSourceLocationConfig_tags(rName, "a", "b", "c", "d"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "source_location_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.a", "b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.c", "d"),
 				),
@@ -113,7 +113,7 @@ func TestAccSourceLocationResource_tags(t *testing.T) {
 			{
 				Config: testAccSourceLocationConfig_tags(rName, "e", "f", "g", "h"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "source_location_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.e", "f"),
 					resource.TestCheckResourceAttr(resourceName, "tags.g", "h"),
 				),
@@ -160,7 +160,7 @@ func testAccCheckSourceLocationDestroy(s *terraform.State) error {
 func testAccSourceLocationConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "awsmt_source_location" "test"{
-  source_location_name = "%[1]s"
+  name = "%[1]s"
   http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
 }
 `, rName)
@@ -171,7 +171,7 @@ func testAccSourceLocationConfig_update(rName, exampleString, exampleUrl, baseUr
 resource "awsmt_source_location" "test_update"{
   default_segment_delivery_configuration_url = "%[3]s"
   http_configuration_url = "%[4]s"
-  source_location_name = "%[1]s"
+  name = "%[1]s"
   segment_delivery_configurations {
     base_url = "%[4]s"
     name =     "%[2]s"
@@ -183,7 +183,7 @@ resource "awsmt_source_location" "test_update"{
 func testAccSourceLocationConfig_tags(rName, k1, v1, k2, v2 string) string {
 	return fmt.Sprintf(`
 resource "awsmt_source_location" "test_tags"{
-  source_location_name = "%[1]s"
+  name = "%[1]s"
   http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
   tags = {
     "%[2]s": "%[3]s",

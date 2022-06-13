@@ -36,7 +36,7 @@ func setSourceLocation(values *mediatailor.DescribeSourceLocationOutput, d *sche
 	}
 	errors = append(errors, d.Set("last_modified_time", values.LastModifiedTime.String()))
 	errors = append(errors, setSegmentDeliveryConfigurations(values, d))
-	errors = append(errors, d.Set("source_location_name", values.SourceLocationName))
+	errors = append(errors, d.Set("name", values.SourceLocationName))
 	errors = append(errors, d.Set("tags", values.Tags))
 
 	for _, e := range errors {
@@ -86,7 +86,7 @@ func getCreateSourceLocationInput(d *schema.ResourceData) mediatailor.CreateSour
 		inputParams.SegmentDeliveryConfigurations = s
 	}
 
-	if v, ok := d.GetOk("source_location_name"); ok {
+	if v, ok := d.GetOk("name"); ok {
 		inputParams.SourceLocationName = aws.String(v.(string))
 	}
 
@@ -119,7 +119,7 @@ func getUpdateSourceLocationInput(d *schema.ResourceData) mediatailor.UpdateSour
 		updateParams.SegmentDeliveryConfigurations = s
 	}
 
-	if v, ok := d.GetOk("source_location_name"); ok {
+	if v, ok := d.GetOk("name"); ok {
 		updateParams.SourceLocationName = aws.String(v.(string))
 	}
 

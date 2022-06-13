@@ -3,15 +3,14 @@ package awsmt
 import (
 	"context"
 	"fmt"
-	"strings"
-
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"regexp"
+	"strings"
 )
 
 func resourceChannel() *schema.Resource {
@@ -28,7 +27,7 @@ func resourceChannel() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"channel_name": {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -111,6 +110,14 @@ func resourceChannel() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"LINEAR", "LOOP"}, false),
 			},
+			"policy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					re := regexp.MustCompile(`\s?|\r?|\n?`)
+					return re.ReplaceAllString(old, "") == re.ReplaceAllString(new, "")
+				},
+			},
 			"tags": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -125,7 +132,7 @@ func resourceChannel() *schema.Resource {
 			},
 		},
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("channel_name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
+			customdiff.ForceNewIfChange("name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
 		),
 	}
 }
@@ -139,6 +146,11 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while creating the channel: %v", err))
 	}
+
+	if err := createChannelPolicy(client, d); err != nil {
+		return diag.FromErr(fmt.Errorf("%v", err))
+	}
+
 	d.SetId(aws.StringValue(channel.Arn))
 
 	return resourceChannelRead(ctx, d, meta)
@@ -146,23 +158,26 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceChannelRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
-
-	resourceName := d.Get("channel_name").(string)
-	if len(resourceName) == 0 && len(d.Id()) > 0 {
-		resourceArn, err := arn.Parse(d.Id())
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error parsing the name from resource arn: %v", err))
-		}
-		arnSections := strings.Split(resourceArn.Resource, "/")
-		resourceName = arnSections[len(arnSections)-1]
+	var resourceName *string
+	resourceName, err := getResourceName(d, "name")
+	if err != nil {
+		return diag.FromErr(err)
 	}
-	res, err := client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: aws.String(resourceName)})
+
+	res, err := client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: resourceName})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while retrieving the channel: %v", err))
 	}
-
 	err = setChannel(res, d)
 	if err != nil {
+		diag.FromErr(err)
+	}
+
+	policy, err := client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: resourceName})
+	if err != nil && !strings.Contains(err.Error(), "NotFound") {
+		return diag.FromErr(fmt.Errorf("error while getting the channel policy: %v", err))
+	}
+	if err := setChannelPolicy(policy, d); err != nil {
 		diag.FromErr(err)
 	}
 
@@ -172,17 +187,31 @@ func resourceChannelRead(_ context.Context, d *schema.ResourceData, meta interfa
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
 
+	resourceName := d.Get("name").(string)
+
 	if d.HasChange("tags") {
 		oldValue, newValue := d.GetChange("tags")
-
-		resourceName := d.Get("channel_name").(string)
 		res, err := client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: &resourceName})
 		if err != nil {
 			return diag.FromErr(err)
 		}
-
 		if err := updateTags(client, res.Arn, oldValue, newValue); err != nil {
 			return diag.FromErr(err)
+		}
+	}
+
+	if d.HasChange("policy") {
+		_, newValue := d.GetChange("policy")
+		if len(newValue.(string)) > 0 {
+			err := updateChannelPolicy(client, d, &resourceName)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		} else {
+			err := deleteChannelPolicy(client, d, &resourceName)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 
@@ -199,7 +228,12 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceChannelDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
 
-	_, err := client.DeleteChannel(&mediatailor.DeleteChannelInput{ChannelName: aws.String(d.Get("channel_name").(string))})
+	_, err := client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: aws.String(d.Get("name").(string))})
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error while deleting the channel policy: %v", err))
+	}
+
+	_, err = client.DeleteChannel(&mediatailor.DeleteChannelInput{ChannelName: aws.String(d.Get("name").(string))})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while deleting the resource: %v", err))
 	}

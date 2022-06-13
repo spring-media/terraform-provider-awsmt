@@ -35,14 +35,14 @@ func dataSourceVodSource() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"vod_source_name": &requiredString,
+			"name": &requiredString,
 		},
 	}
 }
 
 func dataSourceVodSourceRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
-	resourceName := d.Get("vod_source_name").(string)
+	resourceName := d.Get("name").(string)
 	sourceLocationName := d.Get("source_location_name").(string)
 
 	input := &mediatailor.DescribeVodSourceInput{SourceLocationName: &(sourceLocationName), VodSourceName: aws.String(resourceName)}
