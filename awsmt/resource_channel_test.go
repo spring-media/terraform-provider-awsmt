@@ -2,6 +2,7 @@ package awsmt
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -221,6 +222,38 @@ func TestAccChannelResource_linear(t *testing.T) {
 	})
 }
 
+func TestAccChannelResource_policy(t *testing.T) {
+	channelName := "channel_policy"
+	resourceName := "awsmt_channel.test"
+	channelPolicyAction := "mediatailor:GetManifest"
+	region := os.Getenv("AWS_REGION")
+	accountId := os.Getenv("AWS_ACCOUNT_ID")
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: ProviderFactories,
+		CheckDestroy:      testAccCheckChannelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannelConfig_Policy(channelName, channelPolicyAction, region, accountId),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "channel_name", channelName),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`mediatailor:GetManifest`)),
+				),
+			},
+			{
+				Config:      testAccChannelConfig_Policy(channelName, "mediatailor:GetChannelSchedule", region, accountId),
+				ExpectError: regexp.MustCompile(`The following action names are invalid:`),
+			},
+			{
+				Config: testAccChannelConfig(channelName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "policy", ""),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckChannelDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*mediatailor.MediaTailor)
 
@@ -386,4 +419,20 @@ resource "awsmt_channel" "test"{
   tier = "STANDARD"
 }
 `, sourceLocationName, vodSourceName, channelName)
+}
+
+func testAccChannelConfig_Policy(rName, policy, region, accountId string) string {
+	return fmt.Sprintf(`
+	resource "awsmt_channel" "test" {
+      channel_name = "%[1]s"
+ 	  outputs {
+	    manifest_name                = "default"
+		source_group                 = "default"
+		hls_manifest_windows_seconds = 30
+	  }
+	  playback_mode = "LOOP"
+      policy = "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"AllowAnonymous\", \"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\": \"%[2]s\", \"Resource\": \"arn:aws:mediatailor:%[3]s:%[4]s:channel/%[1]s\"}]}"
+      tier = "BASIC"
+	}
+	`, rName, policy, region, accountId)
 }

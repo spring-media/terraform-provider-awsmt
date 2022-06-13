@@ -37,6 +37,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          AWS_ACCOUNT_ID: "319158032161"
+          AWS_REGION: "eu-central-1"
 
   snyk:
     name: Snyk Monitor
