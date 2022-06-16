@@ -19,10 +19,12 @@ func init() {
 				return fmt.Errorf("error getting client: %s", err)
 			}
 			conn := client.(*mediatailor.MediaTailor)
-			name := "test-playback-configuration-awsmt"
-			_, err = conn.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: &name})
-			if err != nil {
-				return err
+			names := []string{"test-playback-configuration-awsmt", "example-tag-removal"}
+			for _, n := range names {
+				_, err = conn.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: &n})
+				if err != nil {
+					return err
+				}
 			}
 			return nil
 		},
