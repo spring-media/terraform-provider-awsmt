@@ -110,6 +110,17 @@ func resourceChannel() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"LINEAR", "LOOP"}, false),
 			},
+			// @ADR
+			// In the context of developing a specific resource for channel policies,
+			// facing concerns with the fact that such resource does not have an own ARN
+			// we decided for incorporating the resource in the channel
+			// and neglected continuing to develop a standalone resource
+			// to be able to manage channel policies,
+			// accepting the downsides it comes with: mainly the fact that the CRUD functions for the channel resource now
+			// have to perform more than 1 API calls, increasing the chances of error, and the fact that the policy requires
+			// the developer to specify the ARN for the channel it refers to, ignoring the fact that the arn is not known
+			// while declaring the resource and needs to be built by the developer knowing the account ID and resource name,
+			// because we did not want to create a different resource with no arn.
 			"policy": {
 				Type:     schema.TypeString,
 				Optional: true,

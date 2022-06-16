@@ -21,6 +21,12 @@ func resourceSourceLocation() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		// @ADR
+		// In the context of developing the source location resource,
+		// facing problems while testing the access configuration using Secrets Manager Access Token Configuration option
+		// (specifically, problems configuring a KMS key that works with the configuration)
+		// we decided for leaving the configuration out to achieve a resource in which each field and configuration block is tested,
+		// accepting that we cannot use the feature at the moment.
 		Schema: map[string]*schema.Schema{
 			"arn":           &computedString,
 			"creation_time": &computedString,
