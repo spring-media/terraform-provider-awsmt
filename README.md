@@ -26,7 +26,7 @@ provider_installation {
 
 ## Prerequisites
 
-Make sure that `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are exported as environmental variables.
+Make sure to be logged in. To learn more about log in methods, please refer to the [official documentation](https://registry.terraform.io/providers/spring-media/awsmt/latest/docs).
 
 ## Testing
 
