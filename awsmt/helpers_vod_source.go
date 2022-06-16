@@ -50,33 +50,6 @@ func setVodSource(values *mediatailor.DescribeVodSourceOutput, d *schema.Resourc
 	return nil
 }
 
-func getHttpPackageConfigurations(d *schema.ResourceData) []*mediatailor.HttpPackageConfiguration {
-	if v, ok := d.GetOk("http_package_configurations"); ok && v.([]interface{})[0] != nil {
-		configurations := v.([]interface{})
-
-		var res []*mediatailor.HttpPackageConfiguration
-
-		for _, c := range configurations {
-			current := c.(map[string]interface{})
-			temp := mediatailor.HttpPackageConfiguration{}
-
-			if str, ok := current["path"]; ok {
-				temp.Path = aws.String(str.(string))
-			}
-			if str, ok := current["source_group"]; ok {
-				temp.SourceGroup = aws.String(str.(string))
-			}
-			if str, ok := current["type"]; ok {
-				temp.Type = aws.String(str.(string))
-			}
-
-			res = append(res, &temp)
-		}
-		return res
-	}
-	return nil
-}
-
 func getCreateVodSourceInput(d *schema.ResourceData) mediatailor.CreateVodSourceInput {
 	var vodSourceInputParams mediatailor.CreateVodSourceInput
 
