@@ -271,7 +271,7 @@ func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlayba
 	return input
 }
 
-func returnPlaybackConfigurationResource(d *schema.ResourceData, values map[string]interface{}, diags diag.Diagnostics) diag.Diagnostics {
+func returnPlaybackConfiguration(d *schema.ResourceData, values map[string]interface{}, diags diag.Diagnostics) diag.Diagnostics {
 	for k := range values {
 		setSingleValue(d, values, diags, k)
 	}

@@ -158,7 +158,7 @@ func resourcePlaybackConfigurationRead(_ context.Context, d *schema.ResourceData
 	}
 
 	output := flattenPlaybackConfiguration((*mediatailor.PlaybackConfiguration)(res))
-	returnPlaybackConfigurationResource(d, output, diags)
+	returnPlaybackConfiguration(d, output, diags)
 	return diags
 }
 
