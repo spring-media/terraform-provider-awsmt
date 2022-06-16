@@ -15,7 +15,7 @@ func TestAccPlaybackConfigurationDataSourceBasic(t *testing.T) {
 			{
 				Config: testAccPlaybackConfigurationDataSource1(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.c1", "name", "test-acc-configuration"),
+					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.c1", "name", "testacc_example_playback"),
 				),
 			},
 		},
@@ -30,11 +30,17 @@ func testAccPreCheck(t *testing.T) {
 
 func testAccPlaybackConfigurationDataSource1() string {
 	return `
-data "awsmt_playback_configuration" "c1" {
-  name = "test-acc-configuration"
+resource "awsmt_playback_configuration" "test"{
+  ad_decision_server_url = "https://exampleurl.com/"
+  name= "testacc_example_playback"
+  dash_configuration {
+    mpd_location = "EMT_DEFAULT"
+    origin_manifest_type = "MULTI_PERIOD"
+  }
+  video_content_source_url = "https://exampleurl.com"
 }
-output "out1" {
-  value = data.awsmt_playback_configuration.c1
+data "awsmt_playback_configuration" "c1" {
+  name = awsmt_playback_configuration.test.name
 }
 `
 }
