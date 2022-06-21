@@ -33,24 +33,14 @@ func resourceSourceLocation() *schema.Resource {
 			"default_segment_delivery_configuration_url": &optionalString,
 			"http_configuration_url":                     &requiredString,
 			"last_modified_time":                         &computedString,
-			"segment_delivery_configurations": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"base_url": &optionalString,
-						"name":     &optionalString,
-					},
+			"segment_delivery_configurations": createOptionalList(
+				map[string]*schema.Schema{
+					"base_url": &optionalString,
+					"name":     &optionalString,
 				},
-			},
+			),
 			"name": &requiredString,
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
+			"tags": &optionalTags,
 		},
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),

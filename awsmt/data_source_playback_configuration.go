@@ -63,15 +63,9 @@ func dataSourcePlaybackConfiguration() *schema.Resource {
 			"playback_endpoint_prefix":               &computedString,
 			"session_initialization_endpoint_prefix": &computedString,
 			"slate_ad_url":                           &computedString,
-			"tags": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"transcode_profile_name":   &computedString,
-			"video_content_source_url": &computedString,
+			"tags":                                   &computedTags,
+			"transcode_profile_name":                 &computedString,
+			"video_content_source_url":               &computedString,
 		},
 	}
 }

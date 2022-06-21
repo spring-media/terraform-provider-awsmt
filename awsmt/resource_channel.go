@@ -23,43 +23,15 @@ func resourceChannel() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"channel_state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creation_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"filler_slate": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"source_location_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"vod_source_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"last_modified_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			"arn":           &computedString,
+			"name":          &requiredString,
+			"channel_state": &computedString,
+			"creation_time": &computedString,
+			"filler_slate": createOptionalList(map[string]*schema.Schema{
+				"source_location_name": &optionalString,
+				"vod_source_name":      &optionalString,
+			}),
+			"last_modified_time": &computedString,
 			"outputs": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -90,18 +62,9 @@ func resourceChannel() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(30, 3600),
 						},
-						"manifest_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"playback_url": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"source_group": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
+						"manifest_name": &requiredString,
+						"playback_url":  &computedString,
+						"source_group":  &requiredString,
 					},
 				},
 			},
@@ -129,13 +92,7 @@ func resourceChannel() *schema.Resource {
 					return re.ReplaceAllString(old, "") == re.ReplaceAllString(new, "")
 				},
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
+			"tags": &optionalTags,
 			"tier": {
 				Type:         schema.TypeString,
 				Optional:     true,

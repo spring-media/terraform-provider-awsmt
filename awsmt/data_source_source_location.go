@@ -18,24 +18,12 @@ func dataSourceSourceLocation() *schema.Resource {
 			"default_segment_delivery_configuration_url": &computedString,
 			"http_configuration_url":                     &computedString,
 			"last_modified_time":                         &computedString,
-			"segment_delivery_configurations": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"base_url": &computedString,
-						"name":     &computedString,
-					},
-				},
-			},
+			"segment_delivery_configurations": createComputedList(map[string]*schema.Schema{
+				"base_url": &computedString,
+				"name":     &computedString,
+			}),
 			"name": &requiredString,
-			"tags": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
+			"tags": &computedTags,
 		},
 	}
 }

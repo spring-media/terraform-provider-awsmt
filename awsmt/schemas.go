@@ -36,3 +36,19 @@ var optionalBool = schema.Schema{
 	Type:     schema.TypeBool,
 	Optional: true,
 }
+
+var computedTags = schema.Schema{
+	Type:     schema.TypeMap,
+	Computed: true,
+	Elem: &schema.Schema{
+		Type: schema.TypeString,
+	},
+}
+
+var optionalTags = schema.Schema{
+	Type:     schema.TypeMap,
+	Optional: true,
+	Elem: &schema.Schema{
+		Type: schema.TypeString,
+	},
+}

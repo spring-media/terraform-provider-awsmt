@@ -15,27 +15,15 @@ func dataSourceVodSource() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"arn":           &computedString,
 			"creation_time": &computedString,
-			"http_package_configurations": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"path":         &computedString,
-						"source_group": &computedString,
-						"type":         &computedString,
-					},
-				},
-			},
+			"http_package_configurations": createComputedList(map[string]*schema.Schema{
+				"path":         &computedString,
+				"source_group": &computedString,
+				"type":         &computedString,
+			}),
 			"last_modified_time":   &computedString,
 			"source_location_name": &requiredString,
-			"tags": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"name": &requiredString,
+			"tags":                 &computedTags,
+			"name":                 &requiredString,
 		},
 	}
 }
