@@ -116,7 +116,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err := createChannelPolicy(client, d); err != nil {
-		return diag.FromErr(fmt.Errorf("%v", err))
+		return diag.FromErr(err)
 	}
 
 	d.SetId(aws.StringValue(channel.Arn))

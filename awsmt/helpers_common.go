@@ -1,7 +1,6 @@
 package awsmt
 
 import (
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -47,7 +46,7 @@ func updateTags(client *mediatailor.MediaTailor, arn *string, oldTagValue, newTa
 
 	err := deleteTags(client, aws.StringValue(arn), removedTags)
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		return err
 	}
 
 	if newTagValue != nil {
@@ -59,7 +58,7 @@ func updateTags(client *mediatailor.MediaTailor, arn *string, oldTagValue, newTa
 		tagInput := mediatailor.TagResourceInput{ResourceArn: arn, Tags: newTags}
 		_, err := client.TagResource(&tagInput)
 		if err != nil {
-			return fmt.Errorf("%w", err)
+			return err
 		}
 	}
 	return nil
