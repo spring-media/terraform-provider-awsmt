@@ -205,6 +205,42 @@ func setChannelPolicy(res *mediatailor.GetChannelPolicyOutput, d *schema.Resourc
 	return nil
 }
 
+func getOutput(output interface{}) *mediatailor.RequestOutputItem {
+	current := output.(map[string]interface{})
+	temp := mediatailor.RequestOutputItem{}
+
+	if str, ok := current["manifest_name"]; ok {
+		temp.ManifestName = aws.String(str.(string))
+	}
+	if str, ok := current["source_group"]; ok {
+		temp.SourceGroup = aws.String(str.(string))
+	}
+
+	if num, ok := current["hls_manifest_windows_seconds"]; ok && num.(int) != 0 {
+		tempHls := mediatailor.HlsPlaylistSettings{}
+		tempHls.ManifestWindowSeconds = aws.Int64(int64(num.(int)))
+		temp.HlsPlaylistSettings = &tempHls
+	}
+
+	tempDash := mediatailor.DashPlaylistSettings{}
+	if num, ok := current["dash_manifest_windows_seconds"]; ok && num.(int) != 0 {
+		tempDash.ManifestWindowSeconds = aws.Int64(int64(num.(int)))
+	}
+	if num, ok := current["dash_min_buffer_time_seconds"]; ok && num.(int) != 0 {
+		tempDash.MinBufferTimeSeconds = aws.Int64(int64(num.(int)))
+	}
+	if num, ok := current["dash_min_update_period_seconds"]; ok && num.(int) != 0 {
+		tempDash.MinUpdatePeriodSeconds = aws.Int64(int64(num.(int)))
+	}
+	if num, ok := current["dash_suggested_presentation_delay_seconds"]; ok && num.(int) != 0 {
+		tempDash.SuggestedPresentationDelaySeconds = aws.Int64(int64(num.(int)))
+	}
+	if tempDash != (mediatailor.DashPlaylistSettings{}) {
+		temp.DashPlaylistSettings = &tempDash
+	}
+	return &temp
+}
+
 func getOutputs(d *schema.ResourceData) []*mediatailor.RequestOutputItem {
 	if v, ok := d.GetOk("outputs"); ok && v.([]interface{})[0] != nil {
 		outputs := v.([]interface{})
@@ -212,40 +248,10 @@ func getOutputs(d *schema.ResourceData) []*mediatailor.RequestOutputItem {
 		var res []*mediatailor.RequestOutputItem
 
 		for _, output := range outputs {
-			current := output.(map[string]interface{})
-			temp := mediatailor.RequestOutputItem{}
 
-			if str, ok := current["manifest_name"]; ok {
-				temp.ManifestName = aws.String(str.(string))
-			}
-			if str, ok := current["source_group"]; ok {
-				temp.SourceGroup = aws.String(str.(string))
-			}
+			var temp = getOutput(output)
 
-			if num, ok := current["hls_manifest_windows_seconds"]; ok && num.(int) != 0 {
-				tempHls := mediatailor.HlsPlaylistSettings{}
-				tempHls.ManifestWindowSeconds = aws.Int64(int64(num.(int)))
-				temp.HlsPlaylistSettings = &tempHls
-			}
-
-			tempDash := mediatailor.DashPlaylistSettings{}
-			if num, ok := current["dash_manifest_windows_seconds"]; ok && num.(int) != 0 {
-				tempDash.ManifestWindowSeconds = aws.Int64(int64(num.(int)))
-			}
-			if num, ok := current["dash_min_buffer_time_seconds"]; ok && num.(int) != 0 {
-				tempDash.MinBufferTimeSeconds = aws.Int64(int64(num.(int)))
-			}
-			if num, ok := current["dash_min_update_period_seconds"]; ok && num.(int) != 0 {
-				tempDash.MinUpdatePeriodSeconds = aws.Int64(int64(num.(int)))
-			}
-			if num, ok := current["dash_suggested_presentation_delay_seconds"]; ok && num.(int) != 0 {
-				tempDash.SuggestedPresentationDelaySeconds = aws.Int64(int64(num.(int)))
-			}
-			if tempDash != (mediatailor.DashPlaylistSettings{}) {
-				temp.DashPlaylistSettings = &tempDash
-			}
-
-			res = append(res, &temp)
+			res = append(res, temp)
 		}
 		return res
 	}
