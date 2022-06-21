@@ -140,32 +140,37 @@ func setFillerState(values *mediatailor.DescribeChannelOutput, d *schema.Resourc
 	return nil
 }
 
+func flattenOutput(o *mediatailor.ResponseOutputItem) map[string]interface{} {
+	temp := map[string]interface{}{}
+	temp["manifest_name"] = o.ManifestName
+	temp["playback_url"] = o.PlaybackUrl
+	temp["source_group"] = o.SourceGroup
+
+	if o.HlsPlaylistSettings != nil && o.HlsPlaylistSettings.ManifestWindowSeconds != nil {
+		temp["hls_manifest_windows_seconds"] = o.HlsPlaylistSettings.ManifestWindowSeconds
+	}
+
+	if o.DashPlaylistSettings != nil && o.DashPlaylistSettings != &(mediatailor.DashPlaylistSettings{}) {
+		if o.DashPlaylistSettings.ManifestWindowSeconds != nil {
+			temp["dash_manifest_windows_seconds"] = o.DashPlaylistSettings.ManifestWindowSeconds
+		}
+		if o.DashPlaylistSettings.MinBufferTimeSeconds != nil {
+			temp["dash_min_buffer_time_seconds"] = o.DashPlaylistSettings.MinBufferTimeSeconds
+		}
+		if o.DashPlaylistSettings.MinUpdatePeriodSeconds != nil {
+			temp["dash_min_update_period_seconds"] = o.DashPlaylistSettings.MinUpdatePeriodSeconds
+		}
+		if o.DashPlaylistSettings.SuggestedPresentationDelaySeconds != nil {
+			temp["dash_suggested_presentation_delay_seconds"] = o.DashPlaylistSettings.SuggestedPresentationDelaySeconds
+		}
+	}
+	return temp
+}
+
 func setOutputs(values *mediatailor.DescribeChannelOutput, d *schema.ResourceData) error {
 	var outputs []map[string]interface{}
 	for _, o := range values.Outputs {
-		temp := map[string]interface{}{}
-		temp["manifest_name"] = o.ManifestName
-		temp["playback_url"] = o.PlaybackUrl
-		temp["source_group"] = o.SourceGroup
-
-		if o.HlsPlaylistSettings != nil && o.HlsPlaylistSettings.ManifestWindowSeconds != nil {
-			temp["hls_manifest_windows_seconds"] = o.HlsPlaylistSettings.ManifestWindowSeconds
-		}
-
-		if o.DashPlaylistSettings != nil && o.DashPlaylistSettings != &(mediatailor.DashPlaylistSettings{}) {
-			if o.DashPlaylistSettings.ManifestWindowSeconds != nil {
-				temp["dash_manifest_windows_seconds"] = o.DashPlaylistSettings.ManifestWindowSeconds
-			}
-			if o.DashPlaylistSettings.MinBufferTimeSeconds != nil {
-				temp["dash_min_buffer_time_seconds"] = o.DashPlaylistSettings.MinBufferTimeSeconds
-			}
-			if o.DashPlaylistSettings.MinUpdatePeriodSeconds != nil {
-				temp["dash_min_update_period_seconds"] = o.DashPlaylistSettings.MinUpdatePeriodSeconds
-			}
-			if o.DashPlaylistSettings.SuggestedPresentationDelaySeconds != nil {
-				temp["dash_suggested_presentation_delay_seconds"] = o.DashPlaylistSettings.SuggestedPresentationDelaySeconds
-			}
-		}
+		temp := flattenOutput(o)
 		outputs = append(outputs, temp)
 	}
 	if err := d.Set("outputs", outputs); err != nil {
