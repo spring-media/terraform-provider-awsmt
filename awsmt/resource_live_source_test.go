@@ -11,6 +11,36 @@ import (
 	"testing"
 )
 
+func init() {
+	resource.AddTestSweepers("test_live_source", &resource.Sweeper{
+		Name: "test_live_source",
+		F: func(region string) error {
+			client, err := sharedClientForRegion(region)
+			if err != nil {
+				return fmt.Errorf("error getting client: %s", err)
+			}
+			conn := client.(*mediatailor.MediaTailor)
+			names := map[string]string{"live_source_basic_sl": "live_source_test_basic", "live_source_update_sl": "live_source_test_basic", "live_source_tags_sl": "live_source_test_basic"}
+			for k, v := range names {
+				_, err = conn.DeleteLiveSource(&mediatailor.DeleteLiveSourceInput{SourceLocationName: &k, LiveSourceName: &v})
+				if err != nil {
+					if !strings.Contains(err.Error(), "NotFound") {
+						return err
+					}
+				}
+				_, err = conn.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: &k})
+				if err != nil {
+					if !strings.Contains(err.Error(), "NotFound") {
+						return err
+					}
+				}
+
+			}
+			return nil
+		},
+	})
+}
+
 func TestAccLiveSourceResource_basic(t *testing.T) {
 	rName := "live_source_test_basic"
 	resourceName := "awsmt_live_source.test"

@@ -19,10 +19,12 @@ func init() {
 				return fmt.Errorf("error getting client: %s", err)
 			}
 			conn := client.(*mediatailor.MediaTailor)
-			name := "test-playback-configuration-awsmt"
-			_, err = conn.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: &name})
-			if err != nil {
-				return err
+			names := []string{"test_playback_configuration_awsmt", "example_tag_removal"}
+			for _, n := range names {
+				_, err = conn.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: &n})
+				if err != nil {
+					return err
+				}
 			}
 			return nil
 		},
@@ -39,21 +41,21 @@ func TestAccPlaybackConfigurationResourceBasic(t *testing.T) {
 			{
 				Config: testAccPlaybackConfigurationResource(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
+					resource.TestCheckResourceAttr(resourceName, "name", "test_playback_configuration_awsmt"),
 					resource.TestMatchResourceAttr(resourceName, "playback_configuration_arn", regexp.MustCompile(`arn:aws:mediatailor`)),
 				),
 			},
 			{
 				Config: testAccPlaybackConfigurationUpdateResource(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
+					resource.TestCheckResourceAttr(resourceName, "name", "test_playback_configuration_awsmt"),
 					resource.TestCheckResourceAttr(resourceName, "slate_ad_url", "https://exampleurl.com/updated"),
 				),
 			},
 			{
 				Config: testAccPlaybackConfigurationUpdateResourceName(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt-changed"),
+					resource.TestCheckResourceAttr(resourceName, "name", "test_playback_configuration_awsmt_changed"),
 					resource.TestCheckResourceAttr(resourceName, "slate_ad_url", "https://exampleurl.com/updated"),
 				),
 			},
@@ -71,7 +73,7 @@ func TestAccPlaybackConfigurationResourceImport(t *testing.T) {
 			{
 				Config: testAccPlaybackConfigurationImportResource(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test-playback-configuration-awsmt"),
+					resource.TestCheckResourceAttr(resourceName, "name", "test_playback_configuration_awsmt"),
 					resource.TestMatchResourceAttr(resourceName, "playback_configuration_arn", regexp.MustCompile(`arn:aws:mediatailor`)),
 				),
 			},
@@ -85,7 +87,7 @@ func TestAccPlaybackConfigurationResourceImport(t *testing.T) {
 }
 
 func TestAccPlaybackConfigurationResourceTaint(t *testing.T) {
-	resourceName := "awsmt_playback_configuration.taint-test"
+	resourceName := "awsmt_playback_configuration.taint_test"
 	firstEndpoint := ""
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -93,18 +95,18 @@ func TestAccPlaybackConfigurationResourceTaint(t *testing.T) {
 		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlaybackConfigurationResourceTaint("tf-test-acc-name"),
+				Config: testAccPlaybackConfigurationResourceTaint("tf_test_acc_name"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "tf-test-acc-name"),
+					resource.TestCheckResourceAttr(resourceName, "name", "tf_test_acc_name"),
 					resource.TestMatchResourceAttr(resourceName, "playback_configuration_arn", regexp.MustCompile(`arn:aws:mediatailor`)),
 					testAccAssignEndpoint(resourceName, &firstEndpoint),
 				),
 			},
 			{
 				Taint:  []string{resourceName},
-				Config: testAccPlaybackConfigurationResourceTaint("tf-test-acc-tainted-name"),
+				Config: testAccPlaybackConfigurationResourceTaint("tf_test_acc_tainted_name"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "tf-test-acc-tainted-name"),
+					resource.TestCheckResourceAttr(resourceName, "name", "tf_test_acc_tainted_name"),
 					resource.TestMatchResourceAttr(resourceName, "playback_configuration_arn", regexp.MustCompile(`arn:aws:mediatailor`)),
 					testAccCheckEndpoint(resourceName, &firstEndpoint),
 				),
@@ -114,7 +116,7 @@ func TestAccPlaybackConfigurationResourceTaint(t *testing.T) {
 }
 
 func TestAccPlaybackConfigurationRemoveResourceTag(t *testing.T) {
-	resourceName := "awsmt_playback_configuration.tags-test"
+	resourceName := "awsmt_playback_configuration.tags_test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: ProviderFactories,
@@ -123,7 +125,7 @@ func TestAccPlaybackConfigurationRemoveResourceTag(t *testing.T) {
 			{
 				Config: testAccPlaybackConfigurationResourceTags(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "example-tag-removal"),
+					resource.TestCheckResourceAttr(resourceName, "name", "example_tag_removal"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Type", "Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Organization", "Example"),
@@ -133,7 +135,7 @@ func TestAccPlaybackConfigurationRemoveResourceTag(t *testing.T) {
 			{
 				Config: testAccPlaybackConfigurationResourceRemoveTags(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "example-tag-removal"),
+					resource.TestCheckResourceAttr(resourceName, "name", "example_tag_removal"),
 					resource.TestCheckNoResourceAttr(resourceName, "tags.Environment"),
 					resource.TestCheckNoResourceAttr(resourceName, "tags.Type"),
 					resource.TestCheckNoResourceAttr(resourceName, "tags.Organization"),
@@ -180,7 +182,7 @@ func importPreCheck(t *testing.T, region string) {
 	exampleUrl := "https://exampleurl.com/"
 	mpdLocation := "DISABLED"
 	manifestType := "SINGLE_PERIOD"
-	name := "test-playback-configuration-awsmt"
+	name := "test_playback_configuration_awsmt"
 	env := "dev"
 	input := mediatailor.PutPlaybackConfigurationInput{
 		AdDecisionServerUrl:   &exampleUrl,
@@ -199,7 +201,7 @@ func importPreCheck(t *testing.T, region string) {
 
 func testAccCheckPlaybackConfigurationDestroy(_ *terraform.State) error {
 	c := testAccProvider.Meta().(*mediatailor.MediaTailor)
-	name := "test-playback-configuration-awsmt"
+	name := "test_playback_configuration_awsmt"
 	_, err := c.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: &name})
 	if err != nil {
 		return err
@@ -209,9 +211,9 @@ func testAccCheckPlaybackConfigurationDestroy(_ *terraform.State) error {
 
 func testAccPlaybackConfigurationResourceTags() string {
 	return `
-resource "awsmt_playback_configuration" "tags-test"{
+resource "awsmt_playback_configuration" "tags_test"{
   ad_decision_server_url = "https://exampleurl.com/"
-  name= "example-tag-removal"
+  name= "example_tag_removal"
   dash_configuration {
     mpd_location = "EMT_DEFAULT"
     origin_manifest_type = "MULTI_PERIOD"
@@ -229,9 +231,9 @@ resource "awsmt_playback_configuration" "tags-test"{
 
 func testAccPlaybackConfigurationResourceRemoveTags() string {
 	return `
-resource "awsmt_playback_configuration" "tags-test"{
+resource "awsmt_playback_configuration" "tags_test"{
   ad_decision_server_url = "https://exampleurl.com/"
-  name= "example-tag-removal"
+  name= "example_tag_removal"
   dash_configuration {
     mpd_location = "EMT_DEFAULT"
     origin_manifest_type = "MULTI_PERIOD"
@@ -266,7 +268,7 @@ resource "awsmt_playback_configuration" "r1" {
 	  enabled = true
 	}
   }
-  name = "test-playback-configuration-awsmt"
+  name = "test_playback_configuration_awsmt"
   personalization_threshold_seconds = 2
   slate_ad_url = "https://exampleurl.com/"
   tags = {"Environment": "dev"}
@@ -300,7 +302,7 @@ resource "awsmt_playback_configuration" "r1" {
 	  enabled = true
 	}
   }
-  name = "test-playback-configuration-awsmt"
+  name = "test_playback_configuration_awsmt"
   personalization_threshold_seconds = 2
   slate_ad_url = "https://exampleurl.com/updated"
   tags = {"Environment": "dev"}
@@ -333,7 +335,7 @@ resource "awsmt_playback_configuration" "r1" {
 	  enabled = true
 	}
   }
-  name = "test-playback-configuration-awsmt-changed"
+  name = "test_playback_configuration_awsmt_changed"
   personalization_threshold_seconds = 2
   slate_ad_url = "https://exampleurl.com/updated"
   tags = {"Environment": "dev"}
@@ -365,7 +367,7 @@ resource "awsmt_playback_configuration" "r2" {
 	  enabled = true
 	}
   }
-  name = "test-playback-configuration-awsmt"
+  name = "test_playback_configuration_awsmt"
   personalization_threshold_seconds = 2
   tags = {"Environment": "dev"}
   video_content_source_url = "https://exampleurl.com/"
@@ -375,7 +377,7 @@ resource "awsmt_playback_configuration" "r2" {
 
 func testAccPlaybackConfigurationResourceTaint(rName string) string {
 	return fmt.Sprintf(`
-resource "awsmt_playback_configuration" "taint-test"{
+resource "awsmt_playback_configuration" "taint_test"{
   ad_decision_server_url = "https://exampleurl.com/"
   name = "%[1]s"
   dash_configuration {

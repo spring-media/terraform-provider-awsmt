@@ -25,31 +25,21 @@ func resourceVodSource() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"arn":           &computedString,
 			"creation_time": &computedString,
-			"http_package_configurations": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"path":         &requiredString,
-						"source_group": &requiredString,
-						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"DASH", "HLS"}, false),
-						},
+			"http_package_configurations": createRequiredList(
+				map[string]*schema.Schema{
+					"path":         &requiredString,
+					"source_group": &requiredString,
+					"type": {
+						Type:         schema.TypeString,
+						Required:     true,
+						ValidateFunc: validation.StringInSlice([]string{"DASH", "HLS"}, false),
 					},
 				},
-			},
+			),
 			"last_modified_time":   &computedString,
 			"source_location_name": &requiredString,
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"name": &requiredString,
+			"tags":                 &optionalTags,
+			"name":                 &requiredString,
 		},
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),

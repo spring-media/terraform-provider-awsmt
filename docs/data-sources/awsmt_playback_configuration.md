@@ -12,14 +12,13 @@ data "awsmt_playback_configuration" "conf" {
 ```
 
 ## Arguments Reference
+All the descriptions for the fields are from the [official AWS documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#MediaTailor.PutPlaybackConfiguration).
 
 * `name` - (Required, string). <br/>The name of the desired playback configuration.
 
 ## Attributes Reference
-All the descriptions for the fields are from the [official AWS documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#MediaTailor.PutPlaybackConfiguration).
 
-This data source returns as attributes the name you previously specified and a `configuration` property, 
-which is a structure with the following properties:
+In addition to all arguments above, the following attributes are exported:
 
 - `ad_decision_server_url` - (string) <br/> The URL for the ad decision server (ADS). This includes the specification
    of static parameters and placeholders for dynamic parameters. AWS Elemental

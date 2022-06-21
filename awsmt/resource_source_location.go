@@ -21,30 +21,26 @@ func resourceSourceLocation() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		// @ADR
+		// In the context of developing the source location resource,
+		// facing problems while testing the access configuration using Secrets Manager Access Token Configuration option
+		// (specifically, problems configuring a KMS key that works with the configuration)
+		// we decided for leaving the configuration out to achieve a resource in which each field and configuration block is tested,
+		// accepting that we cannot use the feature at the moment.
 		Schema: map[string]*schema.Schema{
 			"arn":           &computedString,
 			"creation_time": &computedString,
 			"default_segment_delivery_configuration_url": &optionalString,
 			"http_configuration_url":                     &requiredString,
 			"last_modified_time":                         &computedString,
-			"segment_delivery_configurations": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"base_url": &optionalString,
-						"name":     &optionalString,
-					},
+			"segment_delivery_configurations": createOptionalList(
+				map[string]*schema.Schema{
+					"base_url": &optionalString,
+					"name":     &optionalString,
 				},
-			},
+			),
 			"name": &requiredString,
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
+			"tags": &optionalTags,
 		},
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),

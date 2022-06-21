@@ -11,10 +11,39 @@ import (
 	"testing"
 )
 
+func init() {
+	resource.AddTestSweepers("test_vod_source", &resource.Sweeper{
+		Name: "test_vod_source",
+		F: func(region string) error {
+			client, err := sharedClientForRegion(region)
+			if err != nil {
+				return fmt.Errorf("error getting client: %s", err)
+			}
+			conn := client.(*mediatailor.MediaTailor)
+			names := map[string]string{"test_source_location_basic": "vod_source_test_basic", "test_source_location_update": "vod_source_test_basic", "test_source_location_tags": "vod_source_test_basic"}
+			for k, v := range names {
+				_, err = conn.DeleteVodSource(&mediatailor.DeleteVodSourceInput{SourceLocationName: &k, VodSourceName: &v})
+				if err != nil {
+					if !strings.Contains(err.Error(), "NotFound") {
+						return err
+					}
+				}
+				_, err = conn.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: &k})
+				if err != nil {
+					if !strings.Contains(err.Error(), "NotFound") {
+						return err
+					}
+				}
+			}
+			return nil
+		},
+	})
+}
+
 func TestAccVodSourceResource_basic(t *testing.T) {
 	rName := "vod_source_test_basic"
 	resourceName := "awsmt_vod_source.test"
-	SourceLocationName := "test-source-location-basic"
+	SourceLocationName := "test_source_location_basic"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: ProviderFactories,
@@ -42,7 +71,7 @@ func TestAccVodSourceResource_basic(t *testing.T) {
 func TestAccVodSourceResource_update(t *testing.T) {
 	rName := "vod_source_test_basic"
 	resourceName := "awsmt_vod_source.test"
-	SourceLocationName := "test-source-location-update"
+	SourceLocationName := "test_source_location_update"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: ProviderFactories,
@@ -75,7 +104,7 @@ func TestAccVodSourceResource_update(t *testing.T) {
 func TestAccVodSourceResource_tags(t *testing.T) {
 	rName := "vod_source_test_basic"
 	resourceName := "awsmt_vod_source.test"
-	SourceLocationName := "test-source-location-tags"
+	SourceLocationName := "test_source_location_tags"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: ProviderFactories,

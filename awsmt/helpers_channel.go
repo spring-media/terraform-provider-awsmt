@@ -140,32 +140,37 @@ func setFillerState(values *mediatailor.DescribeChannelOutput, d *schema.Resourc
 	return nil
 }
 
+func flattenOutput(o *mediatailor.ResponseOutputItem) map[string]interface{} {
+	temp := map[string]interface{}{}
+	temp["manifest_name"] = o.ManifestName
+	temp["playback_url"] = o.PlaybackUrl
+	temp["source_group"] = o.SourceGroup
+
+	if o.HlsPlaylistSettings != nil && o.HlsPlaylistSettings.ManifestWindowSeconds != nil {
+		temp["hls_manifest_windows_seconds"] = o.HlsPlaylistSettings.ManifestWindowSeconds
+	}
+
+	if o.DashPlaylistSettings != nil && o.DashPlaylistSettings != &(mediatailor.DashPlaylistSettings{}) {
+		if o.DashPlaylistSettings.ManifestWindowSeconds != nil {
+			temp["dash_manifest_windows_seconds"] = o.DashPlaylistSettings.ManifestWindowSeconds
+		}
+		if o.DashPlaylistSettings.MinBufferTimeSeconds != nil {
+			temp["dash_min_buffer_time_seconds"] = o.DashPlaylistSettings.MinBufferTimeSeconds
+		}
+		if o.DashPlaylistSettings.MinUpdatePeriodSeconds != nil {
+			temp["dash_min_update_period_seconds"] = o.DashPlaylistSettings.MinUpdatePeriodSeconds
+		}
+		if o.DashPlaylistSettings.SuggestedPresentationDelaySeconds != nil {
+			temp["dash_suggested_presentation_delay_seconds"] = o.DashPlaylistSettings.SuggestedPresentationDelaySeconds
+		}
+	}
+	return temp
+}
+
 func setOutputs(values *mediatailor.DescribeChannelOutput, d *schema.ResourceData) error {
 	var outputs []map[string]interface{}
 	for _, o := range values.Outputs {
-		temp := map[string]interface{}{}
-		temp["manifest_name"] = o.ManifestName
-		temp["playback_url"] = o.PlaybackUrl
-		temp["source_group"] = o.SourceGroup
-
-		if o.HlsPlaylistSettings != nil && o.HlsPlaylistSettings.ManifestWindowSeconds != nil {
-			temp["hls_manifest_windows_seconds"] = o.HlsPlaylistSettings.ManifestWindowSeconds
-		}
-
-		if o.DashPlaylistSettings != nil && o.DashPlaylistSettings != &(mediatailor.DashPlaylistSettings{}) {
-			if o.DashPlaylistSettings.ManifestWindowSeconds != nil {
-				temp["dash_manifest_windows_seconds"] = o.DashPlaylistSettings.ManifestWindowSeconds
-			}
-			if o.DashPlaylistSettings.MinBufferTimeSeconds != nil {
-				temp["dash_min_buffer_time_seconds"] = o.DashPlaylistSettings.MinBufferTimeSeconds
-			}
-			if o.DashPlaylistSettings.MinUpdatePeriodSeconds != nil {
-				temp["dash_min_update_period_seconds"] = o.DashPlaylistSettings.MinUpdatePeriodSeconds
-			}
-			if o.DashPlaylistSettings.SuggestedPresentationDelaySeconds != nil {
-				temp["dash_suggested_presentation_delay_seconds"] = o.DashPlaylistSettings.SuggestedPresentationDelaySeconds
-			}
-		}
+		temp := flattenOutput(o)
 		outputs = append(outputs, temp)
 	}
 	if err := d.Set("outputs", outputs); err != nil {
@@ -205,6 +210,42 @@ func setChannelPolicy(res *mediatailor.GetChannelPolicyOutput, d *schema.Resourc
 	return nil
 }
 
+func getOutput(output interface{}) *mediatailor.RequestOutputItem {
+	current := output.(map[string]interface{})
+	temp := mediatailor.RequestOutputItem{}
+
+	if str, ok := current["manifest_name"]; ok {
+		temp.ManifestName = aws.String(str.(string))
+	}
+	if str, ok := current["source_group"]; ok {
+		temp.SourceGroup = aws.String(str.(string))
+	}
+
+	if num, ok := current["hls_manifest_windows_seconds"]; ok && num.(int) != 0 {
+		tempHls := mediatailor.HlsPlaylistSettings{}
+		tempHls.ManifestWindowSeconds = aws.Int64(int64(num.(int)))
+		temp.HlsPlaylistSettings = &tempHls
+	}
+
+	tempDash := mediatailor.DashPlaylistSettings{}
+	if num, ok := current["dash_manifest_windows_seconds"]; ok && num.(int) != 0 {
+		tempDash.ManifestWindowSeconds = aws.Int64(int64(num.(int)))
+	}
+	if num, ok := current["dash_min_buffer_time_seconds"]; ok && num.(int) != 0 {
+		tempDash.MinBufferTimeSeconds = aws.Int64(int64(num.(int)))
+	}
+	if num, ok := current["dash_min_update_period_seconds"]; ok && num.(int) != 0 {
+		tempDash.MinUpdatePeriodSeconds = aws.Int64(int64(num.(int)))
+	}
+	if num, ok := current["dash_suggested_presentation_delay_seconds"]; ok && num.(int) != 0 {
+		tempDash.SuggestedPresentationDelaySeconds = aws.Int64(int64(num.(int)))
+	}
+	if tempDash != (mediatailor.DashPlaylistSettings{}) {
+		temp.DashPlaylistSettings = &tempDash
+	}
+	return &temp
+}
+
 func getOutputs(d *schema.ResourceData) []*mediatailor.RequestOutputItem {
 	if v, ok := d.GetOk("outputs"); ok && v.([]interface{})[0] != nil {
 		outputs := v.([]interface{})
@@ -212,71 +253,12 @@ func getOutputs(d *schema.ResourceData) []*mediatailor.RequestOutputItem {
 		var res []*mediatailor.RequestOutputItem
 
 		for _, output := range outputs {
-			current := output.(map[string]interface{})
-			temp := mediatailor.RequestOutputItem{}
 
-			if str, ok := current["manifest_name"]; ok {
-				temp.ManifestName = aws.String(str.(string))
-			}
-			if str, ok := current["source_group"]; ok {
-				temp.SourceGroup = aws.String(str.(string))
-			}
+			var temp = getOutput(output)
 
-			if num, ok := current["hls_manifest_windows_seconds"]; ok && num.(int) != 0 {
-				tempHls := mediatailor.HlsPlaylistSettings{}
-				tempHls.ManifestWindowSeconds = aws.Int64(int64(num.(int)))
-				temp.HlsPlaylistSettings = &tempHls
-			}
-
-			tempDash := mediatailor.DashPlaylistSettings{}
-			if num, ok := current["dash_manifest_windows_seconds"]; ok && num.(int) != 0 {
-				tempDash.ManifestWindowSeconds = aws.Int64(int64(num.(int)))
-			}
-			if num, ok := current["dash_min_buffer_time_seconds"]; ok && num.(int) != 0 {
-				tempDash.MinBufferTimeSeconds = aws.Int64(int64(num.(int)))
-			}
-			if num, ok := current["dash_min_update_period_seconds"]; ok && num.(int) != 0 {
-				tempDash.MinUpdatePeriodSeconds = aws.Int64(int64(num.(int)))
-			}
-			if num, ok := current["dash_suggested_presentation_delay_seconds"]; ok && num.(int) != 0 {
-				tempDash.SuggestedPresentationDelaySeconds = aws.Int64(int64(num.(int)))
-			}
-			if tempDash != (mediatailor.DashPlaylistSettings{}) {
-				temp.DashPlaylistSettings = &tempDash
-			}
-
-			res = append(res, &temp)
+			res = append(res, temp)
 		}
 		return res
-	}
-	return nil
-}
-
-func updateTags(client *mediatailor.MediaTailor, arn *string, oldTagValue, newTagValue interface{}) error {
-
-	var removedTags []string
-	for k := range oldTagValue.(map[string]interface{}) {
-		if _, ok := (newTagValue.(map[string]interface{}))[k]; !ok {
-			removedTags = append(removedTags, k)
-		}
-	}
-
-	err := deleteTags(client, aws.StringValue(arn), removedTags)
-	if err != nil {
-		return fmt.Errorf("%w", err)
-	}
-
-	if newTagValue != nil {
-		var newTags = make(map[string]*string)
-		for k, v := range newTagValue.(map[string]interface{}) {
-			val := v.(string)
-			newTags[k] = &val
-		}
-		tagInput := mediatailor.TagResourceInput{ResourceArn: arn, Tags: newTags}
-		_, err := client.TagResource(&tagInput)
-		if err != nil {
-			return fmt.Errorf("%w", err)
-		}
 	}
 	return nil
 }

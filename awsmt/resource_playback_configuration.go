@@ -69,15 +69,9 @@ func resourcePlaybackConfiguration() *schema.Resource {
 			"playback_endpoint_prefix":               &computedString,
 			"session_initialization_endpoint_prefix": &computedString,
 			"slate_ad_url":                           &optionalString,
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"transcode_profile_name":   &optionalString,
-			"video_content_source_url": &requiredString,
+			"tags":                                   &optionalTags,
+			"transcode_profile_name":                 &optionalString,
+			"video_content_source_url":               &requiredString,
 			"last_updated": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -158,7 +152,7 @@ func resourcePlaybackConfigurationRead(_ context.Context, d *schema.ResourceData
 	}
 
 	output := flattenPlaybackConfiguration((*mediatailor.PlaybackConfiguration)(res))
-	returnPlaybackConfigurationResource(d, output, diags)
+	returnPlaybackConfiguration(d, output, diags)
 	return diags
 }
 

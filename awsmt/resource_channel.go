@@ -23,43 +23,21 @@ func resourceChannel() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"channel_state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creation_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"filler_slate": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"source_location_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"vod_source_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"last_modified_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			"arn":           &computedString,
+			"name":          &requiredString,
+			"channel_state": &computedString,
+			"creation_time": &computedString,
+			"filler_slate": createOptionalList(map[string]*schema.Schema{
+				"source_location_name": &optionalString,
+				"vod_source_name":      &optionalString,
+			}),
+			"last_modified_time": &computedString,
+			// @ADR
+			// In the context of the channel resource,
+			// facing the need to pass a list of output blocks to the resource,
+			// we decided for an output schema that does not include nested blocks
+			// to achieve a configuration which is easier to read and maintain
+			// accepting that it will differ from that of the official SDK
 			"outputs": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -90,18 +68,9 @@ func resourceChannel() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(30, 3600),
 						},
-						"manifest_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"playback_url": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"source_group": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
+						"manifest_name": &requiredString,
+						"playback_url":  &computedString,
+						"source_group":  &requiredString,
 					},
 				},
 			},
@@ -110,6 +79,17 @@ func resourceChannel() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{"LINEAR", "LOOP"}, false),
 			},
+			// @ADR
+			// In the context of developing a specific resource for channel policies,
+			// facing concerns with the fact that such resource does not have an own ARN
+			// we decided for incorporating the resource in the channel
+			// and neglected continuing to develop a standalone resource
+			// to be able to manage channel policies,
+			// accepting the downsides it comes with: mainly the fact that the CRUD functions for the channel resource now
+			// have to perform more than 1 API calls, increasing the chances of error, and the fact that the policy requires
+			// the developer to specify the ARN for the channel it refers to, ignoring the fact that the arn is not known
+			// while declaring the resource and needs to be built by the developer knowing the account ID and resource name,
+			// because we did not want to create a different resource with no arn.
 			"policy": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -118,13 +98,7 @@ func resourceChannel() *schema.Resource {
 					return re.ReplaceAllString(old, "") == re.ReplaceAllString(new, "")
 				},
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
+			"tags": &optionalTags,
 			"tier": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -148,7 +122,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err := createChannelPolicy(client, d); err != nil {
-		return diag.FromErr(fmt.Errorf("%v", err))
+		return diag.FromErr(err)
 	}
 
 	d.SetId(aws.StringValue(channel.Arn))

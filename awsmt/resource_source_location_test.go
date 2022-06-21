@@ -11,6 +11,30 @@ import (
 	"testing"
 )
 
+func init() {
+	resource.AddTestSweepers("test_source_location", &resource.Sweeper{
+		Name: "test_source_location",
+		F: func(region string) error {
+			client, err := sharedClientForRegion(region)
+			if err != nil {
+				return fmt.Errorf("error getting client: %s", err)
+			}
+			conn := client.(*mediatailor.MediaTailor)
+			names := []string{"source_location_test_basic", "source_location_test_recreate", "source_location_test_update", "source_location_test_tags"}
+			for _, n := range names {
+				_, err = conn.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: &n})
+				if err != nil {
+					if !strings.Contains(err.Error(), "NotFound") {
+						return err
+					}
+				}
+
+			}
+			return nil
+		},
+	})
+}
+
 func TestAccSourceLocationResource_basic(t *testing.T) {
 	rName := "source_location_test_basic"
 	resourceName := "awsmt_source_location.test"

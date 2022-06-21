@@ -18,44 +18,25 @@ func dataSourceChannel() *schema.Resource {
 			"name":          &requiredString,
 			"channel_state": &computedString,
 			"creation_time": &computedString,
-			"filler_slate": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"source_location_name": &computedString,
-						"vod_source_name":      &computedString,
-					},
-				},
-			},
+			"filler_slate": createComputedList(map[string]*schema.Schema{
+				"source_location_name": &computedString,
+				"vod_source_name":      &computedString,
+			}),
 			"last_modified_time": &computedString,
-			"outputs": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"dash_manifest_windows_seconds":             &computedInt,
-						"dash_min_buffer_time_seconds":              &computedInt,
-						"dash_min_update_period_seconds":            &computedInt,
-						"dash_suggested_presentation_delay_seconds": &computedInt,
-						"hls_manifest_windows_seconds":              &computedInt,
-						"manifest_name":                             &computedString,
-						"playback_url":                              &computedString,
-						"source_group":                              &computedString,
-					},
-				},
-			},
+			"outputs": createComputedList(map[string]*schema.Schema{
+				"dash_manifest_windows_seconds":             &computedInt,
+				"dash_min_buffer_time_seconds":              &computedInt,
+				"dash_min_update_period_seconds":            &computedInt,
+				"dash_suggested_presentation_delay_seconds": &computedInt,
+				"hls_manifest_windows_seconds":              &computedInt,
+				"manifest_name":                             &computedString,
+				"playback_url":                              &computedString,
+				"source_group":                              &computedString,
+			}),
 			"playback_mode": &computedString,
 			"policy":        &computedString,
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"tier": &computedString,
+			"tags":          &computedTags,
+			"tier":          &computedString,
 		},
 	}
 }

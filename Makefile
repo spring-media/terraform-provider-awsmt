@@ -47,7 +47,7 @@ $(BUILD_DIR):
 %/coverage.html: %/coverage.profile
 	go tool cover -html=$< -o $@
 
-test: $(BUILD_DIR)/coverage.html $(BUILD_DIR)/coverage_func.txt $(BUILD_DIR)/coverage.profile
+test: $(clean) $(BUILD_DIR)/coverage.html $(BUILD_DIR)/coverage_func.txt $(BUILD_DIR)/coverage.profile
 	@echo "finished test"
 
 sweep:

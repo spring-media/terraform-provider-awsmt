@@ -14,6 +14,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+func init() {
+	resource.AddTestSweepers("test_channel", &resource.Sweeper{
+		Name: "test_channel",
+		F: func(region string) error {
+			client, err := sharedClientForRegion(region)
+			if err != nil {
+				return fmt.Errorf("error getting client: %s", err)
+			}
+			conn := client.(*mediatailor.MediaTailor)
+			names := []string{"channel_test_basic", "channel_test_recreate", "channel_test_conflict", "channel_test_validate_tier", "channel_validate_playback_mode", "channel_update", "channel_tags", "linear_channel", "channel_policy"}
+			for _, n := range names {
+				_, err = conn.DeleteChannel(&mediatailor.DeleteChannelInput{ChannelName: &n})
+				if err != nil {
+					if !strings.Contains(err.Error(), "NotFound") {
+						return err
+					}
+				}
+
+			}
+			return nil
+		},
+	})
+}
 func TestAccChannelResource_basic(t *testing.T) {
 	rName := "channel_test_basic"
 	resourceName := "awsmt_channel.test"

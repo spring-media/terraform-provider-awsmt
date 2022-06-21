@@ -9,7 +9,7 @@ import (
 
 func TestAccChannelDataSourceBasic(t *testing.T) {
 	dataSourceName := "data.awsmt_channel.test"
-	rName := "basic-channel"
+	rName := "basic_channel"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: ProviderFactories,
