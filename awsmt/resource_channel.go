@@ -32,6 +32,12 @@ func resourceChannel() *schema.Resource {
 				"vod_source_name":      &optionalString,
 			}),
 			"last_modified_time": &computedString,
+			// @ADR
+			// In the context of the channel resource,
+			// facing the need to pass a list of output blocks to the resource,
+			// we decided for an output schema that does not include nested blocks
+			// to achieve a configuration which is easier to read and maintain
+			// accepting that it will differ from that of the official SDK
 			"outputs": {
 				Type:     schema.TypeList,
 				Required: true,
