@@ -11,7 +11,7 @@ Example configuration (using Terraform 0.13 or newer):
 terraform {
   required_providers {
     awsmt = {
-      version = "1.14.1"
+      version = "1.17.0"
       source  = "spring-media/awsmt"
      }
   }
@@ -25,7 +25,7 @@ provider "awsmt" {
 Terraform 0.12 or earlier:
 ```
 provider "awsmt" {
-  version = "1.10.0"
+  version = "1.17.0"
   region = "eu-central-1"
 }
 ```
@@ -34,8 +34,8 @@ provider "awsmt" {
 
 The AWSMT Provider supports the following argument:
 
-* `region` - (Optional, type string).<br/> AWS region code, defaults to `eu-central-1`. 
+* `region` - (Optional).<br/> AWS region code, defaults to `eu-central-1`. 
 You can learn more about aws regions and the available codes [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html).
 
-* `profile` - (Optional, type string).<br/> AWS configuration profile.
+* `profile` - (Optional).<br/> AWS configuration profile.
   You can find the profile(s) name in '~/.aws/config' (Mac & Linux) or '%USERPROFILE%\.aws\config' (Windows). SSO login will be used if the profile name is specified or if an environmental variable called 'AWS_PROFILE' is found. Please note that the value of the environmental variable is ignored if an explicit declaration is found.
