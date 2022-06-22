@@ -23,7 +23,7 @@ func init() {
 				return fmt.Errorf("error getting client: %s", err)
 			}
 			conn := client.(*mediatailor.MediaTailor)
-			names := []string{"channel_test_basic", "channel_test_recreate", "channel_test_conflict", "channel_test_validate_tier", "channel_validate_playback_mode", "channel_update", "channel_tags", "linear_channel", "channel_policy"}
+			names := []string{"channel_test_basic", "channel_test_recreate", "channel_test_conflict", "channel_test_validate_tier", "channel_validate_playback_mode", "channel_update", "channel_tags", "linear_channel", "channel_policy", "basic_channel"}
 			for _, n := range names {
 				_, err = conn.DeleteChannel(&mediatailor.DeleteChannelInput{ChannelName: &n})
 				if err != nil {

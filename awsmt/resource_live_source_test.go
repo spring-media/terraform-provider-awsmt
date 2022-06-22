@@ -20,7 +20,7 @@ func init() {
 				return fmt.Errorf("error getting client: %s", err)
 			}
 			conn := client.(*mediatailor.MediaTailor)
-			names := map[string]string{"live_source_basic_sl": "live_source_test_basic", "live_source_update_sl": "live_source_test_basic", "live_source_tags_sl": "live_source_test_basic"}
+			names := map[string]string{"live_source_basic_sl": "live_source_test_basic", "live_source_update_sl": "live_source_test_basic", "live_source_tags_sl": "live_source_test_basic", "basic_source_location": "live_source_data_source_test"}
 			for k, v := range names {
 				_, err = conn.DeleteLiveSource(&mediatailor.DeleteLiveSourceInput{SourceLocationName: &k, LiveSourceName: &v})
 				if err != nil {
