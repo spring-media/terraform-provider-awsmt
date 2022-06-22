@@ -22,11 +22,11 @@ func resourceSourceLocation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		// @ADR
-		// In the context of developing the source location resource,
-		// facing problems while testing the access configuration using Secrets Manager Access Token Configuration option
-		// (specifically, problems configuring a KMS key that works with the configuration)
-		// we decided for leaving the configuration out to achieve a resource in which each field and configuration block is tested,
-		// accepting that we cannot use the feature at the moment.
+		// Context: Source locations have an option to set up a Secrets Manager Access Token Configuration to authenticate
+		// to the S3 bucket that contains the media files. It requires an AWS MKN Key and a Secrets Manager Secret but
+		// we didn't manage to properly set them up.
+		// Decision: Since we cannot test the SMATC without the key and the secret, we did not include it in the resource.
+		// Consequences: We cannot use S£ buckets that require authentication.
 		Schema: map[string]*schema.Schema{
 			"arn":           &computedString,
 			"creation_time": &computedString,
