@@ -12,23 +12,21 @@ resource "awsmt_playback_configuration" "conf" {
   }
   bumper {}
   cdn_configuration {
-    ad_segment_url_prefix = "test"
+    ad_segment_url_prefix      = "test"
     content_segment_url_prefix = "test"
   }
   dash_configuration {
-    mpd_location = "EMT_DEFAULT"
+    mpd_location         = "EMT_DEFAULT"
     origin_manifest_type = "MULTI_PERIOD"
   }
   name = "test-playback-configuration-awsmt"
-  live_pre_roll_configuration {}
   manifest_processing_rules {
     ad_marker_passthrough{
       enabled = "false"
     }
   }
-  slate_ad_url = "https://exampleurl.com/"
-  tags = {}
-  transcode_profile_name = "profile_configured_in_your_account"
+  slate_ad_url             = "https://exampleurl.com/"
+  transcode_profile_name    = "profile_configured_in_your_account"
   video_content_source_url = "https://exampleurl.com/"
 }
 ```

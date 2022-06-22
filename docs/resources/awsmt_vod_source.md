@@ -8,12 +8,12 @@ Use this resource to manage a MediaTailor VOD Source.
 ```terraform
 resource "awsmt_vod_source" "example" {
   http_package_configurations {
-    path = "/"
+    path         = "/"
     source_group = "default"
-    type = "HLS"
+    type         = "HLS"
   }
   source_location_name = "existing_source_location"
-  name = "vod_source_example"
+  name                 = "vod_source_example"
 }
 ```
 

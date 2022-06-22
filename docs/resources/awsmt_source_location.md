@@ -9,7 +9,7 @@ Use this resource to manage a MediaTailor Source Location.
 ```terraform
 resource "awsmt_source_location" "example" {
   default_segment_delivery_configuration_url = "https://example.com"
-  http_configuration_url = "https://example.com"
+  http_configuration_url                     = "https://example.com"
   segment_delivery_configurations {
     base_url = "https://example.com",
     name =     "example"

@@ -7,7 +7,7 @@ The following example shows how to get a playback configuration by its name:
 
 ```terraform
 data "awsmt_playback_configuration" "conf" {
-  name="broadcast-staging-live-stream"
+  name = "broadcast-staging-live-stream"
 }
 ```
 

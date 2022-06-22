@@ -8,12 +8,12 @@ Provides an Elemental MediaTailor Channel.
 resource "awsmt_channel" "example" {
   name = "example-channel"
   outputs {
-    manifest_name                             = "default"
-    source_group                              = "default"
-    hls_manifest_windows_seconds              = 30
+    manifest_name                = "default"
+    source_group                 = "default"
+    hls_manifest_windows_seconds = 30
   }
   playback_mode = "LOOP"
-  tier = "BASIC"
+  tier          = "BASIC"
 }
 ```
 
