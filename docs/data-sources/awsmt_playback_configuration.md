@@ -14,7 +14,7 @@ data "awsmt_playback_configuration" "conf" {
 ## Arguments Reference
 All the descriptions for the fields are from the [official AWS documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#MediaTailor.PutPlaybackConfiguration).
 
-* `name` - (Required, string). <br/>The name of the desired playback configuration.
+* `name` - (Required). <br/>The name of the desired playback configuration.
 
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:
@@ -48,5 +48,6 @@ In addition to all arguments above, the following attributes are exported:
 * `playback_endpoint_prefix` - The URL that the player accesses to get a manifest from AWS Elemental MediaTailor.
 * `session_initialization_endpoint_prefix` - The URL that the player uses to initialize a session that uses client-side reporting.
 * `slate_ad_url` - The URL for a high-quality video asset to transcode and use to fill in time that's not used by ads.
+* `tags` - Key-value mapping of resource tags.
 * `transcode_profile_name` - The name that is used to associate this playback configuration with a custom transcode profile.
 * `video_content_source_url` - The URL prefix for the parent manifest for the stream, minus the asset ID.

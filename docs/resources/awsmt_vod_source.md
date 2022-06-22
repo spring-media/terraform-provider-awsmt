@@ -20,16 +20,13 @@ resource "awsmt_vod_source" "example" {
 ## Arguments Reference
 The following arguments are supported:
 
+* `http_package_configurations` - (Required) A list of HTTP package configuration parameters for this VOD source.
+  * `path` - (Required) The relative path to the URL for this VOD source. This is combined with the http_configuration_url specified in the SourceLocation to form a valid URL.
+  * `source_group` - (Required) The name of the source group. This has to match one of the source groups specified in the channel.
+  * `type` - (Required) the streaming protocol for this package configuration. Can be Either 'HLS' or 'DASH'.
 * `source_location_name` - (Required) The name of the Source Location to which the VOD source refers.
 * `tags` - (Optional) Key-value mapping of resource tags.
 * `name` - (Required) The name of the VOD Source.
-
-### `http_package_configurations` - (Required)
-A list of HTTP package configuration parameters for this VOD source.
-
-* `path` - (Required) The relative path to the URL for this VOD source. This is combined with the http_configuration_url specified in the SourceLocation to form a valid URL.
-* `source_group` - (Required) The name of the source group. This has to match one of the source groups specified in the channel.
-* `type` - (Required) the streaming protocol for this package configuration. Can be Either 'HLS' or 'DASH'.
 
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:
