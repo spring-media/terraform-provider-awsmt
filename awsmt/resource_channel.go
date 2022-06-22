@@ -33,11 +33,10 @@ func resourceChannel() *schema.Resource {
 			}),
 			"last_modified_time": &computedString,
 			// @ADR
-			// In the context of the channel resource,
-			// facing the need to pass a list of output blocks to the resource,
-			// we decided for an output schema that does not include nested blocks
-			// to achieve a configuration which is easier to read and maintain
-			// accepting that it will differ from that of the official SDK
+			// Context: The resource needs to support a list of configuration objects called "outputs", that would include
+			// several nested objects.
+			// Decision: We decided not flatten the object so that it does not include nested objects.
+			// Consequences: The schema of the object differs from that of the SDK.
 			"outputs": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -80,16 +79,13 @@ func resourceChannel() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"LINEAR", "LOOP"}, false),
 			},
 			// @ADR
-			// In the context of developing a specific resource for channel policies,
-			// facing concerns with the fact that such resource does not have an own ARN
-			// we decided for incorporating the resource in the channel
-			// and neglected continuing to develop a standalone resource
-			// to be able to manage channel policies,
-			// accepting the downsides it comes with: mainly the fact that the CRUD functions for the channel resource now
-			// have to perform more than 1 API calls, increasing the chances of error, and the fact that the policy requires
-			// the developer to specify the ARN for the channel it refers to, ignoring the fact that the arn is not known
-			// while declaring the resource and needs to be built by the developer knowing the account ID and resource name,
-			// because we did not want to create a different resource with no arn.
+			// Context: The provider needs to support channel policies, but such resources do not have an ARN
+			// Decision: We decided to incorporate the channel policy resource in the channel resource and not to develop
+			// a standalone resource.
+			// Consequences: The CRUD functions for the channel resource now have to perform more than 1 API calls,
+			// increasing the chances of error. Also, and the policy requires the developer to specify the ARN for the channel
+			// it refers to, even if it is not known while declaring the resource, forcing the developer to create the
+			// ARN themselves using the account ID and resource name.
 			"policy": {
 				Type:     schema.TypeString,
 				Optional: true,

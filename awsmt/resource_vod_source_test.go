@@ -20,7 +20,7 @@ func init() {
 				return fmt.Errorf("error getting client: %s", err)
 			}
 			conn := client.(*mediatailor.MediaTailor)
-			names := map[string]string{"test_source_location_basic": "vod_source_test_basic", "test_source_location_update": "vod_source_test_basic", "test_source_location_tags": "vod_source_test_basic"}
+			names := map[string]string{"test_source_location_basic": "vod_source_test_basic", "test_source_location_update": "vod_source_test_basic", "test_source_location_tags": "vod_source_test_basic", "vod_basic_sl": "vod_source_data_source_test"}
 			for k, v := range names {
 				_, err = conn.DeleteVodSource(&mediatailor.DeleteVodSourceInput{SourceLocationName: &k, VodSourceName: &v})
 				if err != nil {

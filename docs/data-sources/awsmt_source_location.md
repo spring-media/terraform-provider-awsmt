@@ -2,7 +2,7 @@
 
 This data source provides information about a MediaTailor Source Location.
 
-~> **NOTE:** The source location data source currently does not support the use of access configuration using Amazon Secrets Manager Access Token.
+~> **NOTE:** The source location data source currently does not support the use of access configuration using Amazon Secrets Manager Access Token Configuration.
 
 ## Example Usage
 
@@ -26,10 +26,7 @@ In addition to all arguments above, the following attributes are exported:
 * `creation_time` - The timestamp of when the channel was created.
 * `http_configuration_url` - The base URL for the source location host server.
 * `last_modified_time` - The timestamp of when the channel was last modified.
+* `segment_delivery_configurations` – (List) A list of the segment delivery configurations associated with this resource.
+  * `base_url` - (Optional) The base URL of the host or path of the segment delivery server that you're using to serve segments.
+  * `name` - (Optional) A unique identifier used to distinguish between multiple segment delivery configurations in a source location.
 * `tags` - Key-value mapping of resource tags.
-
-### `segment_delivery_configurations`
-(List) A list of the segment delivery configurations associated with this resource.
-
-* `base_url` - (Optional) The base URL of the host or path of the segment delivery server that you're using to serve segments.
-* `name` - (Optional) A unique identifier used to distinguish between multiple segment delivery configurations in a source location.

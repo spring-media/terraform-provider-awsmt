@@ -20,7 +20,7 @@ func init() {
 				return fmt.Errorf("error getting client: %s", err)
 			}
 			conn := client.(*mediatailor.MediaTailor)
-			names := []string{"source_location_test_basic", "source_location_test_recreate", "source_location_test_update", "source_location_test_tags"}
+			names := []string{"source_location_test_basic", "source_location_test_recreate", "source_location_test_update", "source_location_test_tags", "basic_source_location"}
 			for _, n := range names {
 				_, err = conn.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: &n})
 				if err != nil {

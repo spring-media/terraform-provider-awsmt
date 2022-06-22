@@ -30,4 +30,4 @@ Make sure to be logged in. To learn more about log in methods, please refer to t
 
 ## Testing
 
-Run `make test` to execute both acceptance and unit tests.
+Run `make test` to execute both acceptance and unit tests. Run `make sweep` to delete resources that might not have been automatically destroyed after the tests were run.
