@@ -170,19 +170,8 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("policy") {
-		_, newValue := d.GetChange("policy")
-		if len(newValue.(string)) > 0 {
-			err := updateChannelPolicy(client, d, &resourceName)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		} else {
-			err := deleteChannelPolicy(client, d, &resourceName)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
+	if err := updatePolicy(client, d, &resourceName); err != nil {
+		return diag.FromErr(err)
 	}
 
 	var params = getUpdateChannelInput(d)

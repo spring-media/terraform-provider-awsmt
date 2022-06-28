@@ -100,6 +100,24 @@ func updateChannelPolicy(client *mediatailor.MediaTailor, d *schema.ResourceData
 	return nil
 }
 
+func updatePolicy(client *mediatailor.MediaTailor, d *schema.ResourceData, channelName *string) error {
+	if d.HasChange("policy") {
+		_, newValue := d.GetChange("policy")
+		if len(newValue.(string)) > 0 {
+			err := updateChannelPolicy(client, d, channelName)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := deleteChannelPolicy(client, d, channelName)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func deleteChannelPolicy(client *mediatailor.MediaTailor, d *schema.ResourceData, channelName *string) error {
 	_, err := client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: channelName})
 	if err != nil {

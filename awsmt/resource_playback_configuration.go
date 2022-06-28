@@ -106,6 +106,11 @@ func resourcePlaybackConfigurationUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	client := m.(*mediatailor.MediaTailor)
 
+	// @ADR
+	// Context: Updating tags using the PutPlaybackConfiguration method does not allow to remove them.
+	// Decision: We decided to check for removed tags and remove them using the UntagResource method, while we still use
+	// the PutPlaybackConfiguration method to add and update tags. We use this approach for every resource in the provider.
+	// Consequences: The Update function logic is now more complicated, but tag removal is supported.
 	if d.HasChange("tags") {
 		oldValue, newValue := d.GetChange("tags")
 		var removedTags []string
