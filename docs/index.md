@@ -1,8 +1,16 @@
 # AWSMT Provider
 
 The AWSMT Provider allows you to interact with AWS Elemental MediaTailor
-using Terraform. You need to export your `AW_ACCESS_KEY_ID` and
-`AWS_SECRET_ACCESS_KEY` as environmental variables in order to use this provider.
+using Terraform. 
+
+# Authentication
+
+This provider offers 3 authentication options, and tries to authenticate you in the following order:
+
+1. Using SSO, using the `profile` from the provider configuration;
+2. Using SSO, using an environmental variable called `AWS_PROFILE`;
+3. Using the `AW_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environmental variables.
+
 
 ## Configuration
 
@@ -11,7 +19,7 @@ Example configuration (using Terraform 0.13 or newer):
 terraform {
   required_providers {
     awsmt = {
-      version = "1.17.0"
+      version = "~> 1.17"
       source  = "spring-media/awsmt"
      }
   }
@@ -25,7 +33,7 @@ provider "awsmt" {
 Terraform 0.12 or earlier:
 ```
 provider "awsmt" {
-  version = "1.17.0"
+  version = "–> 1.17"
   region = "eu-central-1"
 }
 ```
@@ -34,8 +42,8 @@ provider "awsmt" {
 
 The AWSMT Provider supports the following argument:
 
-* `region` - (Optional).<br/> AWS region code, defaults to `eu-central-1`. 
+* `region` - (Optional) AWS region code, defaults to `eu-central-1`. 
 You can learn more about aws regions and the available codes [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html).
 
-* `profile` - (Optional).<br/> AWS configuration profile.
-  You can find the profile(s) name in '~/.aws/config' (Mac & Linux) or '%USERPROFILE%\.aws\config' (Windows). SSO login will be used if the profile name is specified or if an environmental variable called 'AWS_PROFILE' is found. Please note that the value of the environmental variable is ignored if an explicit declaration is found.
+* `profile` - (Optional) AWS configuration profile.
+You can find the profile(s) name in `~/.aws/config` (Mac & Linux) or `%USERPROFILE%\.aws\config` (Windows). 
