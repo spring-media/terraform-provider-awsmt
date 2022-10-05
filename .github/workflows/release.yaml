@@ -14,7 +14,7 @@
 name: Release
 on:
   release:
-    types: [created]
+    types: [published]
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
