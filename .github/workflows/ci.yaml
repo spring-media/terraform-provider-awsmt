@@ -42,23 +42,25 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   snyk:
-    name: Snyk Monitor
-    needs: test
+    name: Snyk Check
     runs-on: ubuntu-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@master
-      - name: Snyk Monitor
-        uses: snyk/actions/golang@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=medium
-          command: monitor
+      - uses: actions/checkout@v3
+      - uses: snyk/actions/setup@master
+      - run: >-
+          snyk test
+          --severity-threshold=high
+          --all-projects
+      - run: >-
+          snyk code test
+          --severity-threshold=high
+          --all-projects
 
   release:
     name: Release
-    needs: snyk
+    needs: [test, snyk]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
