@@ -11,7 +11,7 @@ metadata:
     sonarqube.org/project-key: spring-media_ott-tfprovider-awsmt
     backstage.io/code-coverage: enabled
     snyk.io/org-name: ott-0fm
-    snyk.io/project-ids: 4d94cdc3-b073-4f97-90bc-c578fb9c08bb,64485e38-ced4-4e08-9c82-c3eb3fbf8fbf,bb24fb83-f924-406f-ae78-dc0f91e794ed,c0422cb3-01aa-4c17-a68e-0c82c3974b8b,23c44c31-e6c9-4c50-8a34-10a295b62f7e,0e22eff5-2651-46e9-8f84-9955bdf7ba69
+    snyk.io/project-ids: 3f072d8b-139c-4e65-b72b-df5e7205cb04,f2dd5050-9764-4643-b921-0d5e58bead27
   tags:
     - "aws"
     - "terraform"
