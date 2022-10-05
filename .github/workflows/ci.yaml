@@ -16,8 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2.5.2
+      - uses: actions/setup-python@v3
+      - uses: golangci/golangci-lint-action@v2.5.2
+      - run: |
+          pip install -r requirements.txt
+          mkdocs build -f ../../mkdocs.yaml --strict
+          pip uninstall -r requirements.txt --yes --no-input
+        working-directory: tests/docs
         
   test:
     name: Test
@@ -48,7 +53,10 @@ jobs:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
       - uses: snyk/actions/setup@master
+      - run: pip install -r requirements.txt
+        working-directory: tests/docs
       - run: >-
           snyk test
           --severity-threshold=high

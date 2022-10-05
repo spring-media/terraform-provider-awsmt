@@ -1,0 +1,24 @@
+---
+site_name: 'terraform-provider-awsmt'
+nav:
+  - Home: index.md
+  - data-sources/awsmt_channel.md
+  - data-sources/awsmt_live_source.md
+  - data-sources/awsmt_playback_configuration.md
+  - data-sources/awsmt_source_location.md
+  - data-sources/awsmt_vod_source.md
+  - resources/awsmt_channel.md
+  - resources/awsmt_live_source.md
+  - resources/awsmt_playback_configuration.md
+  - resources/awsmt_source_location.md
+  - resources/awsmt_vod_source.md
+theme:
+  name: mkdocs
+  highlightjs: true
+  hljs_style: atom-one-dark
+  hljs_languages:
+    - yaml
+    - json
+    - text
+plugins:
+  - techdocs-core

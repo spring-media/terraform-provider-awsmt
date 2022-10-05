@@ -72,3 +72,9 @@ terraform
 
 # Snyk
 .dccache
+
+# mkdocs
+site/
+
+# python
+venv/
