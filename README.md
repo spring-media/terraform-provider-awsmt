@@ -41,4 +41,5 @@ export AWS_PROFILE=as-nmt-ott-test
 export AWS_ACCOUNT_ID=319158032161
 ```
 
-Run `make test` to execute both acceptance and unit tests. Run `make sweep` to delete resources that might not have been automatically destroyed after the tests were run.
+Run `make clean sweep test` to execute both acceptance and unit tests.
+Run `make sweep` to delete resources that might not have been automatically destroyed after the tests were run.
