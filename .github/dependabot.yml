@@ -1,0 +1,12 @@
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "02:48"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 0
+    labels:
+      - "golang"
+      - "dependencies"
