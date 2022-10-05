@@ -1,5 +1,5 @@
 ---
-site_name: 'terraform-provider-awsmt'
+site_name: "terraform-provider-awsmt"
 nav:
   - Home: index.md
   - data-sources/awsmt_channel.md

@@ -3,7 +3,9 @@
 Use this resource to manage a MediaTailor playback configuration.
 
 ## Example Usage
+
 You can specify the arguments inside a resource block like this:
+
 ```terraform
 resource "awsmt_playback_configuration" "conf" {
   ad_decision_server_url = "https://exampleurl.com/"
@@ -32,51 +34,55 @@ resource "awsmt_playback_configuration" "conf" {
 ```
 
 ## Arguments Reference
+
 All the descriptions for the fields are from the [official AWS documentation](https://docs.aws.amazon.com/sdk-for-go/api/service/mediatailor/#MediaTailor.PutPlaybackConfiguration).
 
 The following arguments are supported:
-* `ad_decision_server_url` - (Required) The URL for the ad decision server (ADS).
-* `avail_suppression` - (Optional) The configuration for avail suppression, also known as ad suppression.
-  * `mode` - (Optional) The ad suppression mode. Can either be "OFF" or "BEHIND_LIVE_EDGE".
-  * `value` - (Optional) Time value in HH:MM:SS format after which MediaTailor will not fill any ad breaks.
-* `bumper` - (Optional) The configuration for bumpers.
-  * `end_url` - (Optional) The URL for the end bumper asset.
-  * `start_url` - (Optional) The URL for the start bumper asset.
-* `cdn_configuration` - (Optional) The configuration for using a content delivery network (CDN) for content and ad segment management.
-  * `ad_segment_url_prefix` - (Optional) A non-default CDN to serve ads segments.
-  * `content_segment_url_prefix` - (Optional) A CDN to cache content segments.
-* `dash_configuration` - (Required) The configuration for DASH content.
-  * `mpd_location` - (Optional) Controls whether MediaTailor includes the Location tag in Dash manifest files. Can either be "DISABLED" or "EMT_DEFAULT.
-  * `origin_manifest_type` - (Optional) Controls whether MediaTailor handles manifest files as single-period or multi-period manifest files. Can either be "SINGLE_PERIOD" or "MULTI_PERIOD".
-* `live_pre_roll_configuration` - (Optional) The configuration for pre-roll ad insertion.
-  * `ad_decision_server_url` - (Optional) The URL for the ad decision server (ADS) for pre-roll ads.
-  * `max_duration_seconds` - (Optional) The maximum allowed duration for the pre-roll ad avail.
-* `manifest_processing_rules` – (Optional) The configuration for manifest processing rules
-  * `ad_marker_passthrough` – (Optional) For HLS, when set to true, MediaTailor passes through EXT-X-CUE-IN, EXT-X-CUE-OUT, and EXT-X-SPLICEPOINT-SCTE35 ad markers from the origin manifest to the MediaTailor personalized manifest.
-    * `enabled` - (Optional) Enables ad marker passthrough for your configuration.
-* `name` - (Required). <br/>The name of the desired playback configuration.
-* `personalization_threshold_seconds` - (Optional) Defines the maximum duration of underfilled ad time (in seconds) allowed in an ad break.
-* `slate_ad_url` - (Optional) The URL for a high-quality video asset to transcode and use to fill in time that's not used by ads.
-* `tags` - (Optional) Key-value mapping of resource tags.
-* `transcode_profile_name` - (Optional) The name that is used to associate this playback configuration with a custom transcode profile.
-* `video_content_source_url` - (Required) The URL prefix for the parent manifest for the stream, minus the asset ID.
+
+- `ad_decision_server_url` - (Required) The URL for the ad decision server (ADS).
+- `avail_suppression` - (Optional) The configuration for avail suppression, also known as ad suppression.
+  - `mode` - (Optional) The ad suppression mode. Can either be "OFF" or "BEHIND_LIVE_EDGE".
+  - `value` - (Optional) Time value in HH:MM:SS format after which MediaTailor will not fill any ad breaks.
+- `bumper` - (Optional) The configuration for bumpers.
+  - `end_url` - (Optional) The URL for the end bumper asset.
+  - `start_url` - (Optional) The URL for the start bumper asset.
+- `cdn_configuration` - (Optional) The configuration for using a content delivery network (CDN) for content and ad segment management.
+  - `ad_segment_url_prefix` - (Optional) A non-default CDN to serve ads segments.
+  - `content_segment_url_prefix` - (Optional) A CDN to cache content segments.
+- `dash_configuration` - (Required) The configuration for DASH content.
+  - `mpd_location` - (Optional) Controls whether MediaTailor includes the Location tag in Dash manifest files. Can either be "DISABLED" or "EMT_DEFAULT.
+  - `origin_manifest_type` - (Optional) Controls whether MediaTailor handles manifest files as single-period or multi-period manifest files. Can either be "SINGLE_PERIOD" or "MULTI_PERIOD".
+- `live_pre_roll_configuration` - (Optional) The configuration for pre-roll ad insertion.
+  - `ad_decision_server_url` - (Optional) The URL for the ad decision server (ADS) for pre-roll ads.
+  - `max_duration_seconds` - (Optional) The maximum allowed duration for the pre-roll ad avail.
+- `manifest_processing_rules` – (Optional) The configuration for manifest processing rules
+  - `ad_marker_passthrough` – (Optional) For HLS, when set to true, MediaTailor passes through EXT-X-CUE-IN, EXT-X-CUE-OUT, and EXT-X-SPLICEPOINT-SCTE35 ad markers from the origin manifest to the MediaTailor personalized manifest.
+    - `enabled` - (Optional) Enables ad marker passthrough for your configuration.
+- `name` - (Required). <br/>The name of the desired playback configuration.
+- `personalization_threshold_seconds` - (Optional) Defines the maximum duration of underfilled ad time (in seconds) allowed in an ad break.
+- `slate_ad_url` - (Optional) The URL for a high-quality video asset to transcode and use to fill in time that's not used by ads.
+- `tags` - (Optional) Key-value mapping of resource tags.
+- `transcode_profile_name` - (Optional) The name that is used to associate this playback configuration with a custom transcode profile.
+- `video_content_source_url` - (Required) The URL prefix for the parent manifest for the stream, minus the asset ID.
 
 ## Attributes Reference
+
 In addition to all arguments above, the following attributes are exported:
 
-* `dash_configuration` -  The configuration for DASH content.
-  * `manifest_endpoint_prefix` - URL generated by MediaTailor to initiate a playback session.
-* `hls_configuration` – The configuration for HLS content.
-  * `manifest_endpoint_prefix` - URL generated by MediaTailor to initiate a playback session on devices that support Apple HLS.
-* `log_configuration` - The Amazon CloudWatch log settings for a playback configuration.
-  * `percent_enabled` - The percentage of session logs that MediaTailor sends to your Cloudwatch Logs account.
-* `playback_configuration_arn` - The Amazon Resource Name (ARN) for the playback configuration.
-* `playback_endpoint_prefix` - The URL that the player accesses to get a manifest from AWS Elemental MediaTailor.
-* `session_initialization_endpoint_prefix` - The URL that the player uses to initialize a session that uses client-side reporting.
+- `dash_configuration` - The configuration for DASH content.
+  - `manifest_endpoint_prefix` - URL generated by MediaTailor to initiate a playback session.
+- `hls_configuration` – The configuration for HLS content.
+  - `manifest_endpoint_prefix` - URL generated by MediaTailor to initiate a playback session on devices that support Apple HLS.
+- `log_configuration` - The Amazon CloudWatch log settings for a playback configuration.
+  - `percent_enabled` - The percentage of session logs that MediaTailor sends to your Cloudwatch Logs account.
+- `playback_configuration_arn` - The Amazon Resource Name (ARN) for the playback configuration.
+- `playback_endpoint_prefix` - The URL that the player accesses to get a manifest from AWS Elemental MediaTailor.
+- `session_initialization_endpoint_prefix` - The URL that the player uses to initialize a session that uses client-side reporting.
 
 ## Import
 
 `awsmt_playback_configuration` resources can be imported using their name as identifier. For example:
+
 ```sh
   $ terraform import awsmt_playback_configuration.example broadcast-live-stream
 ```

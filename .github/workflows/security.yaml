@@ -3,7 +3,7 @@ name: Security Scans
 on:
   workflow_dispatch: {}
   schedule:
-    - cron: '16 04 * * *'
+    - cron: "16 04 * * *"
 
 jobs:
   snyk:

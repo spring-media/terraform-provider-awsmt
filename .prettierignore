@@ -1,0 +1,7 @@
+build/
+coverage/
+helm-chart/
+node_modules/
+site/
+venv/
+.terraform/
