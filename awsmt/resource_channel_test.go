@@ -292,13 +292,13 @@ func TestAccChannelResource_stopAndDelete(t *testing.T) {
 					resource.TestMatchResourceAttr(rName, "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:channel\/.*$`)),
 				),
 			},
-			//{
-			//	Config: testAccChannelStart(rName),
-			//	Check: resource.ComposeTestCheckFunc(
-			//		resource.TestCheckResourceAttr(resourceName, "name", rName),
-			//		resource.TestCheckResourceAttr(resourceName, "channel_state", "RUNNING"),
-			//	),
-			//},
+			{
+				Config: testAccChannelStart(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "channel_state", "RUNNING"),
+				),
+			},
 		},
 	})
 }
