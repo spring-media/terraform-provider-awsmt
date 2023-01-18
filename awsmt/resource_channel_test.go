@@ -277,6 +277,32 @@ func TestAccChannelResource_policy(t *testing.T) {
 	})
 }
 
+func TestAccChannelResource_stopAndDelete(t *testing.T) {
+	rName := "stop_and_delete"
+	resourceName := "awsmt_channel.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: ProviderFactories,
+		CheckDestroy:      testAccCheckChannelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannelConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestMatchResourceAttr(rName, "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:channel\/.*$`)),
+				),
+			},
+			//{
+			//	Config: testAccChannelStart(rName),
+			//	Check: resource.ComposeTestCheckFunc(
+			//		resource.TestCheckResourceAttr(resourceName, "name", rName),
+			//		resource.TestCheckResourceAttr(resourceName, "channel_state", "RUNNING"),
+			//	),
+			//},
+		},
+	})
+}
+
 func testAccCheckChannelDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*mediatailor.MediaTailor)
 
@@ -310,6 +336,26 @@ func testAccCheckChannelDestroy(s *terraform.State) error {
 		}
 	}
 	return nil
+}
+
+func testAccChannelStart(rName string) string {
+	conn := testAccProvider.Meta().(*mediatailor.MediaTailor)
+	_, err := conn.StartChannel(&mediatailor.StartChannelInput{ChannelName: aws.String(rName)})
+	if err != nil {
+		fmt.Printf("Error starting channel: %s", err)
+	}
+	return fmt.Sprintf(`
+resource "awsmt_channel" "test" {
+  name = "%[1]s"
+  outputs {
+    manifest_name                = "default"
+    source_group                 = "default"
+    hls_manifest_windows_seconds = 30
+  }
+  playback_mode = "LOOP"
+  tier = "BASIC"
+}
+`, rName)
 }
 
 func testAccChannelConfig(rName string) string {
