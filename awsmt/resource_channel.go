@@ -187,7 +187,12 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceChannelDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
 
-	_, err := client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: aws.String(d.Get("name").(string))})
+	_, err := client.StopChannel(&mediatailor.StopChannelInput{ChannelName: aws.String(d.Get("name").(string))})
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error while stopping the channel: %v", err))
+	}
+
+	_, err = client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: aws.String(d.Get("name").(string))})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while deleting the channel policy: %v", err))
 	}
