@@ -134,7 +134,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(fmt.Errorf("error while creating the channel: %v", err))
 	}
 
-	if err := startChannel(client, d); err != nil {
+	if err := checkStatusAndStartChannel(client, d); err != nil {
 		return diag.FromErr(fmt.Errorf("error while starting the channel: %v", err))
 	}
 
@@ -191,16 +191,20 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if _, ok := d.GetOk("channel_state"); ok {
-		oldValue, newValue := d.GetChange("channel_state")
-		if oldValue.(string) != newValue.(string) {
-			if err := startChannel(client, d); err != nil {
-				return diag.FromErr(fmt.Errorf("error while starting the channel: %v", err))
-			}
-			if err := stopChannel(client, d); err != nil {
-				return diag.FromErr(fmt.Errorf("error while starting the channel: %v", err))
-			}
+	res, err := client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: &resourceName})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	previousStatus := res.ChannelState
+	newStatusFromSchema := ""
+	if *previousStatus == "RUNNING" {
+		if err := stopChannel(client, resourceName); err != nil {
+			return diag.FromErr(err)
 		}
+	}
+	if _, ok := d.GetOk("channel_state"); ok {
+		_, newValue := d.GetChange("channel_state")
+		newStatusFromSchema = newValue.(string)
 	}
 
 	if err := updatePolicy(client, d, &resourceName); err != nil {
@@ -212,6 +216,13 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while updating the channel: %v", err))
 	}
+
+	if (*previousStatus == "RUNNING" || newStatusFromSchema == "RUNNING") && newStatusFromSchema != "STOPPED" {
+		if err := startChannel(client, resourceName); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	d.SetId(aws.StringValue(channel.Arn))
 
 	return resourceChannelRead(ctx, d, meta)

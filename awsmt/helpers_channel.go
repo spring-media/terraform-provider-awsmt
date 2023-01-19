@@ -281,28 +281,31 @@ func getOutputs(d *schema.ResourceData) []*mediatailor.RequestOutputItem {
 	return nil
 }
 
-func startChannel(client *mediatailor.MediaTailor, d *schema.ResourceData) error {
-	if v, ok := d.GetOk("channel_state"); ok && v != nil && v.(string) != "" {
-		if v.(string) == "RUNNING" {
-			_, err := client.StartChannel(&mediatailor.StartChannelInput{
-				ChannelName: aws.String(d.Get("name").(string)),
-			})
-			if err != nil {
-				return fmt.Errorf("error while starting the channel: %v", err)
-			}
-		}
+func startChannel(client *mediatailor.MediaTailor, channelName string) error {
+	_, err := client.StartChannel(&mediatailor.StartChannelInput{
+		ChannelName: aws.String(channelName),
+	})
+	if err != nil {
+		return fmt.Errorf("error while starting the channel: %v", err)
 	}
 	return nil
 }
 
-func stopChannel(client *mediatailor.MediaTailor, d *schema.ResourceData) error {
+func stopChannel(client *mediatailor.MediaTailor, channelName string) error {
+	_, err := client.StopChannel(&mediatailor.StopChannelInput{
+		ChannelName: aws.String(channelName),
+	})
+	if err != nil {
+		return fmt.Errorf("error while stopping the channel: %v", err)
+	}
+	return nil
+}
+
+func checkStatusAndStartChannel(client *mediatailor.MediaTailor, d *schema.ResourceData) error {
 	if v, ok := d.GetOk("channel_state"); ok && v != nil && v.(string) != "" {
-		if v.(string) == "STOPPED" {
-			_, err := client.StopChannel(&mediatailor.StopChannelInput{
-				ChannelName: aws.String(d.Get("name").(string)),
-			})
-			if err != nil {
-				return fmt.Errorf("error while stopping the channel: %v", err)
+		if v.(string) == "RUNNING" {
+			if err := startChannel(client, d.Get("name").(string)); err != nil {
+				return err
 			}
 		}
 	}
