@@ -285,9 +285,16 @@ func TestAccChannelResource_stopAndDelete(t *testing.T) {
 		CheckDestroy:      testAccCheckChannelDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccChannelConfig_stopAndDelete(rName, "RUNNING"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
 				Config: testAccChannelConfig_stopAndDelete(rName, "STOPPED"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "channel_state", "STOPPED"),
 				),
 			},
 			{
