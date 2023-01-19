@@ -2,16 +2,15 @@ package awsmt
 
 import (
 	"fmt"
-	"os"
-	"regexp"
-	"strings"
-	"testing"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"os"
+	"regexp"
+	"strings"
+	"testing"
 )
 
 func init() {
@@ -277,14 +276,42 @@ func TestAccChannelResource_policy(t *testing.T) {
 	})
 }
 
+func TestAccChannelResource_stopAndDelete(t *testing.T) {
+	rName := "channel_stop"
+	resourceName := "awsmt_channel.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: ProviderFactories,
+		CheckDestroy:      testAccCheckChannelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannelConfig_stopAndDelete(rName, "RUNNING"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
+				Config: testAccChannelConfig_stopAndDelete(rName, "STOPPED"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "channel_state", "STOPPED"),
+				),
+			},
+			{
+				Config: testAccChannelConfig_stopAndDelete(rName, "RUNNING"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "channel_state", "RUNNING"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckChannelDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*mediatailor.MediaTailor)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "awsmt_channel" {
-			continue
-		}
-
 		var resourceName string
 
 		if arn.IsARN(rs.Primary.ID) {
@@ -325,6 +352,22 @@ resource "awsmt_channel" "test" {
   tier = "BASIC"
 }
 `, rName)
+}
+
+func testAccChannelConfig_stopAndDelete(rName string, status string) string {
+	return fmt.Sprintf(`
+resource "awsmt_channel" "test" {
+  name = "%[1]s"
+  channel_state = "%[2]s"
+  outputs {
+    manifest_name                = "default"
+    source_group                 = "default"
+    hls_manifest_windows_seconds = 30
+  }
+  playback_mode = "LOOP"
+  tier = "BASIC"
+}
+`, rName, status)
 }
 
 func testAccChannelConfig_Conflict(rName string) string {

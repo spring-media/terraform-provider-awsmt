@@ -23,9 +23,23 @@ func resourceChannel() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"arn":           &computedString,
-			"name":          &requiredString,
-			"channel_state": &computedString,
+			"arn":  &computedString,
+			"name": &requiredString,
+			// @ADR
+			// Context: We cannot test the deletion of a running channel if we cannot set the channel_state property
+			// through the provider
+			// Decision: We decided to turn the channel_state property into an optional string and call the SDK to
+			//start/stop the channel accordingly.
+			// Consequences: The schema of the object differs from that of the SDK and we need to make additional
+			// SDK calls.
+			"channel_state": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"RUNNING", "STOPPED"}, false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return len(new) == 0
+				},
+			},
 			"creation_time": &computedString,
 			"filler_slate": createOptionalList(map[string]*schema.Schema{
 				"source_location_name": &optionalString,
@@ -117,6 +131,10 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(fmt.Errorf("error while creating the channel: %v", err))
 	}
 
+	if err := checkStatusAndStartChannel(client, d); err != nil {
+		return diag.FromErr(fmt.Errorf("error while starting the channel: %v", err))
+	}
+
 	if err := createChannelPolicy(client, d); err != nil {
 		return diag.FromErr(err)
 	}
@@ -170,6 +188,22 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
+	res, err := client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: &resourceName})
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	previousStatus := res.ChannelState
+	newStatusFromSchema := ""
+	if *previousStatus == "RUNNING" {
+		if err := stopChannel(client, resourceName); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if _, ok := d.GetOk("channel_state"); ok {
+		_, newValue := d.GetChange("channel_state")
+		newStatusFromSchema = newValue.(string)
+	}
+
 	if err := updatePolicy(client, d, &resourceName); err != nil {
 		return diag.FromErr(err)
 	}
@@ -179,6 +213,13 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while updating the channel: %v", err))
 	}
+
+	if (*previousStatus == "RUNNING" || newStatusFromSchema == "RUNNING") && newStatusFromSchema != "STOPPED" {
+		if err := startChannel(client, resourceName); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	d.SetId(aws.StringValue(channel.Arn))
 
 	return resourceChannelRead(ctx, d, meta)
@@ -187,7 +228,12 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceChannelDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
 
-	_, err := client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: aws.String(d.Get("name").(string))})
+	_, err := client.StopChannel(&mediatailor.StopChannelInput{ChannelName: aws.String(d.Get("name").(string))})
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error while stopping the channel: %v", err))
+	}
+
+	_, err = client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: aws.String(d.Get("name").(string))})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while deleting the channel policy: %v", err))
 	}
