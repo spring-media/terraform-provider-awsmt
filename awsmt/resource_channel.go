@@ -23,9 +23,20 @@ func resourceChannel() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"arn":           &computedString,
-			"name":          &requiredString,
-			"channel_state": &computedString,
+			"arn":  &computedString,
+			"name": &requiredString,
+			// @ADR
+			// Context: We cannot test the deletion of a running channel if we cannot set the channel_state property
+			// through the provider
+			// Decision: We decided to turn the channel_state property into an optional string and call the SDK to
+			//start/stop the channel accordingly.
+			// Consequences: The schema of the object differs from that of the SDK and we need to make additional
+			// SDK calls.
+			"channel_state": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"RUNNING", "STOPPED"}, false),
+			},
 			"creation_time": &computedString,
 			"filler_slate": createOptionalList(map[string]*schema.Schema{
 				"source_location_name": &optionalString,
@@ -117,6 +128,10 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(fmt.Errorf("error while creating the channel: %v", err))
 	}
 
+	if err := startChannel(client, d); err != nil {
+		return diag.FromErr(fmt.Errorf("error while starting the channel: %v", err))
+	}
+
 	if err := createChannelPolicy(client, d); err != nil {
 		return diag.FromErr(err)
 	}
@@ -167,6 +182,18 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 		if err := updateTags(client, res.Arn, oldValue, newValue); err != nil {
 			return diag.FromErr(err)
+		}
+	}
+
+	if _, ok := d.GetOk("channel_state"); ok {
+		oldValue, newValue := d.GetChange("channel_state")
+		if oldValue.(string) != newValue.(string) {
+			if err := startChannel(client, d); err != nil {
+				return diag.FromErr(fmt.Errorf("error while starting the channel: %v", err))
+			}
+			if err := stopChannel(client, d); err != nil {
+				return diag.FromErr(fmt.Errorf("error while starting the channel: %v", err))
+			}
 		}
 	}
 
