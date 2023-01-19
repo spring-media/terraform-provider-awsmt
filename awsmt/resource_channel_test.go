@@ -2,16 +2,15 @@ package awsmt
 
 import (
 	"fmt"
-	"os"
-	"regexp"
-	"strings"
-	"testing"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"os"
+	"regexp"
+	"strings"
+	"testing"
 )
 
 func init() {
@@ -278,7 +277,7 @@ func TestAccChannelResource_policy(t *testing.T) {
 }
 
 func TestAccChannelResource_stopAndDelete(t *testing.T) {
-	rName := "stop_and_delete"
+	rName := "channel_stop"
 	resourceName := "awsmt_channel.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
@@ -286,14 +285,13 @@ func TestAccChannelResource_stopAndDelete(t *testing.T) {
 		CheckDestroy:      testAccCheckChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccChannelConfig(rName),
+				Config: testAccChannelConfig_stopAndDelete(rName, "STOPPED"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestMatchResourceAttr(rName, "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:channel\/.*$`)),
 				),
 			},
 			{
-				Config: testAccChannelStart(rName),
+				Config: testAccChannelConfig_stopAndDelete(rName, "RUNNING"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "channel_state", "RUNNING"),
@@ -307,10 +305,6 @@ func testAccCheckChannelDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*mediatailor.MediaTailor)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "awsmt_channel" {
-			continue
-		}
-
 		var resourceName string
 
 		if arn.IsARN(rs.Primary.ID) {
@@ -338,12 +332,7 @@ func testAccCheckChannelDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccChannelStart(rName string) string {
-	conn := testAccProvider.Meta().(*mediatailor.MediaTailor)
-	_, err := conn.StartChannel(&mediatailor.StartChannelInput{ChannelName: aws.String(rName)})
-	if err != nil {
-		fmt.Printf("Error starting channel: %s", err)
-	}
+func testAccChannelConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "awsmt_channel" "test" {
   name = "%[1]s"
@@ -358,10 +347,11 @@ resource "awsmt_channel" "test" {
 `, rName)
 }
 
-func testAccChannelConfig(rName string) string {
+func testAccChannelConfig_stopAndDelete(rName string, status string) string {
 	return fmt.Sprintf(`
 resource "awsmt_channel" "test" {
   name = "%[1]s"
+  channel_state = "%[2]s"
   outputs {
     manifest_name                = "default"
     source_group                 = "default"
@@ -370,7 +360,7 @@ resource "awsmt_channel" "test" {
   playback_mode = "LOOP"
   tier = "BASIC"
 }
-`, rName)
+`, rName, status)
 }
 
 func testAccChannelConfig_Conflict(rName string) string {
