@@ -37,10 +37,7 @@ func resourceChannel() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"RUNNING", "STOPPED"}, false),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if len(new) == 0 {
-						return true
-					}
-					return false
+					return len(new) == 0
 				},
 			},
 			"creation_time": &computedString,
