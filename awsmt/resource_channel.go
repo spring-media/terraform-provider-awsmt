@@ -34,7 +34,7 @@ func resourceChannel() *schema.Resource {
 			// SDK calls.
 			"channel_state": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"RUNNING", "STOPPED"}, false),
 			},
 			"creation_time": &computedString,
