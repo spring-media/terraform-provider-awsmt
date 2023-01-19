@@ -282,7 +282,7 @@ func getOutputs(d *schema.ResourceData) []*mediatailor.RequestOutputItem {
 }
 
 func startChannel(client *mediatailor.MediaTailor, d *schema.ResourceData) error {
-	if v, ok := d.GetOk("channel_state"); ok {
+	if v, ok := d.GetOk("channel_state"); ok && v != nil && v.(string) != "" {
 		if v.(string) == "RUNNING" {
 			_, err := client.StartChannel(&mediatailor.StartChannelInput{
 				ChannelName: aws.String(d.Get("name").(string)),
@@ -296,7 +296,7 @@ func startChannel(client *mediatailor.MediaTailor, d *schema.ResourceData) error
 }
 
 func stopChannel(client *mediatailor.MediaTailor, d *schema.ResourceData) error {
-	if v, ok := d.GetOk("channel_state"); ok {
+	if v, ok := d.GetOk("channel_state"); ok && v != nil && v.(string) != "" {
 		if v.(string) == "STOPPED" {
 			_, err := client.StopChannel(&mediatailor.StopChannelInput{
 				ChannelName: aws.String(d.Get("name").(string)),

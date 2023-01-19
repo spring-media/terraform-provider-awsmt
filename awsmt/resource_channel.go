@@ -36,6 +36,12 @@ func resourceChannel() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"RUNNING", "STOPPED"}, false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if len(new) == 0 {
+						return true
+					}
+					return false
+				},
 			},
 			"creation_time": &computedString,
 			"filler_slate": createOptionalList(map[string]*schema.Schema{
