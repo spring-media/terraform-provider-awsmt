@@ -125,3 +125,31 @@ func getUpdateSourceLocationInput(d *schema.ResourceData) mediatailor.UpdateSour
 
 	return updateParams
 }
+
+func deleteVodSources(sourceLocationName *string, client *mediatailor.MediaTailor) error {
+	vodSourcesList, err := client.ListVodSources(&mediatailor.ListVodSourcesInput{SourceLocationName: sourceLocationName})
+	if err != nil {
+		return err
+	}
+	for _, vodSource := range vodSourcesList.Items {
+		_, err := client.DeleteVodSource(&mediatailor.DeleteVodSourceInput{VodSourceName: vodSource.VodSourceName, SourceLocationName: sourceLocationName})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func deleteLiveSources(sourceLocationName *string, client *mediatailor.MediaTailor) error {
+	liveSourcesList, err := client.ListLiveSources(&mediatailor.ListLiveSourcesInput{SourceLocationName: sourceLocationName})
+	if err != nil {
+		return err
+	}
+	for _, liveSource := range liveSourcesList.Items {
+		_, err := client.DeleteLiveSource(&mediatailor.DeleteLiveSourceInput{LiveSourceName: liveSource.LiveSourceName, SourceLocationName: sourceLocationName})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

@@ -116,31 +116,17 @@ func resourceSourceLocationUpdate(ctx context.Context, d *schema.ResourceData, m
 func resourceSourceLocationDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
 	sourceLocationName := aws.String(d.Get("name").(string))
-	vodSourcesList, err := client.ListVodSources(&mediatailor.ListVodSourcesInput{SourceLocationName: sourceLocationName})
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while retrieving Vod Sources list: %v", err))
+
+	if err := deleteVodSources(sourceLocationName, client); err != nil {
+		return diag.FromErr(err)
 	}
-	for _, vodSource := range vodSourcesList.Items {
-		_, err = client.DeleteVodSource(&mediatailor.DeleteVodSourceInput{VodSourceName: vodSource.VodSourceName, SourceLocationName: sourceLocationName})
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error while deleting the resource: %v", err))
-		}
+	if err := deleteLiveSources(sourceLocationName, client); err != nil {
+		return diag.FromErr(err)
 	}
 
-	liveSourcesList, err := client.ListLiveSources(&mediatailor.ListLiveSourcesInput{SourceLocationName: sourceLocationName})
+	_, err := client.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: sourceLocationName})
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while retrieving Live Sources list: %v", err))
-	}
-	for _, liveSource := range liveSourcesList.Items {
-		_, err := client.DeleteLiveSource(&mediatailor.DeleteLiveSourceInput{LiveSourceName: liveSource.LiveSourceName, SourceLocationName: sourceLocationName})
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error while deleting the resource: %v", err))
-		}
-	}
-
-	_, err = client.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: sourceLocationName})
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while deleting the resource: %v", err))
+		return diag.FromErr(fmt.Errorf("error while deleting the resource: %w", err))
 	}
 
 	return nil
