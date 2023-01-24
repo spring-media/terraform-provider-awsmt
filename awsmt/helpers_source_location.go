@@ -132,8 +132,7 @@ func deleteVodSources(sourceLocationName *string, client *mediatailor.MediaTailo
 		return err
 	}
 	for _, vodSource := range vodSourcesList.Items {
-		_, err := client.DeleteVodSource(&mediatailor.DeleteVodSourceInput{VodSourceName: vodSource.VodSourceName, SourceLocationName: sourceLocationName})
-		if err != nil {
+		if _, err := client.DeleteVodSource(&mediatailor.DeleteVodSourceInput{VodSourceName: vodSource.VodSourceName, SourceLocationName: sourceLocationName}); err != nil {
 			return err
 		}
 	}
@@ -146,8 +145,7 @@ func deleteLiveSources(sourceLocationName *string, client *mediatailor.MediaTail
 		return err
 	}
 	for _, liveSource := range liveSourcesList.Items {
-		_, err := client.DeleteLiveSource(&mediatailor.DeleteLiveSourceInput{LiveSourceName: liveSource.LiveSourceName, SourceLocationName: sourceLocationName})
-		if err != nil {
+		if _, err := client.DeleteLiveSource(&mediatailor.DeleteLiveSourceInput{LiveSourceName: liveSource.LiveSourceName, SourceLocationName: sourceLocationName}); err != nil {
 			return err
 		}
 	}

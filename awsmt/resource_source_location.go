@@ -126,7 +126,7 @@ func resourceSourceLocationDelete(_ context.Context, d *schema.ResourceData, met
 
 	_, err := client.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: sourceLocationName})
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while deleting the resource: %w", err))
+		return diag.FromErr(fmt.Errorf("error while deleting the resource: %v", err))
 	}
 
 	return nil
