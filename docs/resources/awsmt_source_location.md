@@ -4,6 +4,8 @@ Use this resource to manage a MediaTailor Source Location.
 
 ~> **NOTE:** The source location data source currently does not support the use of access configuration using Amazon Secrets Manager Access Token.
 
+~> **WARNING:** Deleting a Source Location also deletes all the Vod Sources and Live Sources connected to it.
+
 ## Example Usage
 
 ```terraform

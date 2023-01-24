@@ -115,8 +115,16 @@ func resourceSourceLocationUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceSourceLocationDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*mediatailor.MediaTailor)
+	sourceLocationName := aws.String(d.Get("name").(string))
 
-	_, err := client.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: aws.String(d.Get("name").(string))})
+	if err := deleteVodSources(sourceLocationName, client); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := deleteLiveSources(sourceLocationName, client); err != nil {
+		return diag.FromErr(err)
+	}
+
+	_, err := client.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: sourceLocationName})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error while deleting the resource: %v", err))
 	}
