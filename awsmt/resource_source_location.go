@@ -29,7 +29,7 @@ func resourceSourceLocation() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						//may require s3:GetObject
+						// may require s3:GetObject
 						"access_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
