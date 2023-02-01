@@ -1,16 +1,17 @@
 package main
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
-
+	"context"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"terraform-provider-mediatailor/awsmt"
 )
 
 func main() {
-	plugin.Serve(&plugin.ServeOpts{
-		ProviderFunc: func() *schema.Provider {
-			return awsmt.Provider()
-		},
+	err := providerserver.Serve(context.Background(), awsmt.New, providerserver.ServeOpts{
+
+		Address: "registry.terraform.io/spring-media/awsmt",
 	})
+	if err != nil {
+		return
+	}
 }
