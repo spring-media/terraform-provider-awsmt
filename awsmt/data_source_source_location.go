@@ -13,6 +13,19 @@ func dataSourceSourceLocation() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceSourceLocationRead,
 		Schema: map[string]*schema.Schema{
+			"access_configuration": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"access_type": &computedString,
+						// SMATC is short for Secret Manager Access Token Configuration
+						"smatc_header_name":       &computedString,
+						"smatc_secret_arn":        &computedString,
+						"smatc_secret_string_key": &computedString,
+					},
+				},
+			},
 			"arn":           &computedString,
 			"creation_time": &computedString,
 			"default_segment_delivery_configuration_url": &computedString,
