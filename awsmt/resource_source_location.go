@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"strings"
 )
 
@@ -21,13 +22,26 @@ func resourceSourceLocation() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		// @ADR
-		// Context: Source locations have an option to set up a Secrets Manager Access Token Configuration to authenticate
-		// to the S3 bucket that contains the media files. It requires an AWS MKN Key and a Secrets Manager Secret but
-		// we didn't manage to properly set them up.
-		// Decision: Since we cannot test the SMATC without the key and the secret, we did not include it in the resource.
-		// Consequences: We cannot use S£ buckets that require authentication.
 		Schema: map[string]*schema.Schema{
+			"access_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						//may require s3:GetObject
+						"access_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"S3_SIGV4", "SECRETS_MANAGER_ACCESS_TOKEN"}, false),
+						},
+						// SMATC is short for Secrets Manager Access Token Configuration
+						"smatc_header_name":       &optionalString,
+						"smatc_secret_arn":        &optionalString,
+						"smatc_secret_string_key": &optionalString,
+					},
+				},
+			},
 			"arn":           &computedString,
 			"creation_time": &computedString,
 			"default_segment_delivery_configuration_url": &optionalString,
