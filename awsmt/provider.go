@@ -107,9 +107,13 @@ func (p *awsmtProvider) Configure(ctx context.Context, req provider.ConfigureReq
 }
 
 func (p *awsmtProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return nil
+	return []func() datasource.DataSource{
+		DataSourceChannel,
+	}
 }
 
 func (p *awsmtProvider) Resources(_ context.Context) []func() resource.Resource {
-	return nil
+	return []func() resource.Resource{
+		ResourceChannel,
+	}
 }
