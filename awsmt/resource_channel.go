@@ -29,6 +29,7 @@ type resourceChannel struct {
 }
 
 type resourceChannelModel struct {
+	ID               types.String                       `tfsdk:"id"`
 	Arn              types.String                       `tfsdk:"arn"`
 	Name             *string                            `tfsdk:"name"`
 	ChannelState     types.String                       `tfsdk:"channel_state"`
@@ -73,6 +74,9 @@ func (r *resourceChannel) Metadata(_ context.Context, req resource.MetadataReque
 func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed: true,
+			},
 			"arn": schema.StringAttribute{
 				Computed: true,
 			},
@@ -282,6 +286,8 @@ func (r *resourceChannel) Create(ctx context.Context, req resource.CreateRequest
 	plan.PlaybackMode = channel.PlaybackMode
 	plan.Tier = channel.Tier
 	plan.Outputs[0].PlaybackUrl = types.StringValue(*channel.Outputs[0].PlaybackUrl)
+
+	plan.ID = types.StringValue("placeholder")
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)

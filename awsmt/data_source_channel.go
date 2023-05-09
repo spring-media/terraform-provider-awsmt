@@ -24,6 +24,7 @@ type dataSourceChannel struct {
 }
 
 type dataSourceChannelModel struct {
+	ID               types.String               `tfsdk:"id"`
 	Arn              types.String               `tfsdk:"arn"`
 	Name             types.String               `tfsdk:"name"`
 	ChannelState     types.String               `tfsdk:"channel_state"`
@@ -68,7 +69,9 @@ func (d *dataSourceChannel) Metadata(_ context.Context, req datasource.MetadataR
 func (d *dataSourceChannel) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-
+			"id": schema.StringAttribute{
+				Computed: true,
+			},
 			"arn": schema.StringAttribute{
 				Computed: true,
 			},
@@ -251,6 +254,7 @@ func (d *dataSourceChannel) Read(ctx context.Context, req datasource.ReadRequest
 		}
 		data.Outputs = append(data.Outputs, output)
 	}
+	data.ID = types.StringValue("placeholder")
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
