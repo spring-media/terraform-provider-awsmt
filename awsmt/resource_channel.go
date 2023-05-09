@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -14,8 +15,9 @@ import (
 )
 
 var (
-	_ resource.Resource              = &resourceChannel{}
-	_ resource.ResourceWithConfigure = &resourceChannel{}
+	_ resource.Resource                = &resourceChannel{}
+	_ resource.ResourceWithConfigure   = &resourceChannel{}
+	_ resource.ResourceWithImportState = &resourceChannel{}
 )
 
 func ResourceChannel() resource.Resource {
@@ -455,4 +457,8 @@ func (r *resourceChannel) Delete(ctx context.Context, req resource.DeleteRequest
 		)
 		return
 	}
+}
+
+func (r *resourceChannel) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("arn"), req, resp)
 }
