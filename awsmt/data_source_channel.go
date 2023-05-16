@@ -22,18 +22,17 @@ func DataSourceChannel() datasource.DataSource {
 type dataSourceChannel struct {
 	client *mediatailor.MediaTailor
 }
-
 type dataSourceChannelModel struct {
 	ID               types.String               `tfsdk:"id"`
 	Arn              types.String               `tfsdk:"arn"`
-	Name             types.String               `tfsdk:"name"`
+	Name             *string                    `tfsdk:"name"`
 	ChannelState     types.String               `tfsdk:"channel_state"`
 	CreationTime     types.String               `tfsdk:"creation_time"`
 	FillerSlate      []channelFillerSlatesModel `tfsdk:"filler_slate"`
 	LastModifiedTime types.String               `tfsdk:"last_modified_time"`
 	Outputs          []channelOutputsModel      `tfsdk:"outputs"`
 	PlaybackMode     *string                    `tfsdk:"playback_mode"`
-	Policy           *string                    `tfsdk:"policy"`
+	Policy           types.String               `tfsdk:"policy"`
 	Tags             map[string]*string         `tfsdk:"tags"`
 	Tier             *string                    `tfsdk:"tier"`
 }
@@ -52,14 +51,14 @@ type channelOutputsModel struct {
 }
 
 type channelDashPlaylistSettingsModel struct {
-	ManifestWindowsSeconds            types.Int64 `tfsdk:"manifest_windows_seconds"`
-	MinBufferTimeSeconds              types.Int64 `tfsdk:"min_buffer_time_seconds"`
-	MinUpdatePeriodSeconds            types.Int64 `tfsdk:"min_update_period_seconds"`
-	SuggestedPresentationDelaySeconds types.Int64 `tfsdk:"suggested_presentation_delay_seconds"`
+	ManifestWindowsSeconds            *int64 `tfsdk:"manifest_windows_seconds"`
+	MinBufferTimeSeconds              *int64 `tfsdk:"min_buffer_time_seconds"`
+	MinUpdatePeriodSeconds            *int64 `tfsdk:"min_update_period_seconds"`
+	SuggestedPresentationDelaySeconds *int64 `tfsdk:"suggested_presentation_delay_seconds"`
 }
 
 type channelHlsPlaylistSettingsModel struct {
-	ManifestWindowsSeconds types.Int64 `tfsdk:"manifest_windows_seconds"`
+	ManifestWindowsSeconds *int64 `tfsdk:"manifest_windows_seconds"`
 }
 
 func (d *dataSourceChannel) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -178,35 +177,33 @@ func (d *dataSourceChannel) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	channel, err := d.client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: aws.String(data.Name.ValueString())})
+	name := data.Name
+
+	channel, err := d.client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: name})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error describing channel "+err.Error(),
+			"Error while retrieving the channel "+err.Error(),
 			err.Error(),
 		)
 		return
 	}
 
-	policy, err := d.client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: aws.String(data.Name.ValueString())})
+	policy, err := d.client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: name})
 	if err != nil && !strings.Contains(err.Error(), "NotFound") {
 		resp.Diagnostics.AddError(
-			"Error getting channel policy "+err.Error(),
+			"Error while getting the channel policy "+err.Error(),
 			err.Error(),
 		)
 		return
-	} else {
-		if policy.Policy == nil {
-			policy.Policy = aws.String("policy")
-		}
 	}
 
 	data.Arn = types.StringValue(aws.StringValue(channel.Arn))
-	data.Name = types.StringValue(aws.StringValue(channel.ChannelName))
+	data.Name = channel.ChannelName
 	data.ChannelState = types.StringValue(aws.StringValue(channel.ChannelState))
 	data.CreationTime = types.StringValue((aws.TimeValue(channel.CreationTime)).String())
 	data.LastModifiedTime = types.StringValue((aws.TimeValue(channel.LastModifiedTime)).String())
 	data.PlaybackMode = channel.PlaybackMode
-	data.Policy = policy.Policy
+	data.Policy = types.StringValue(*policy.Policy)
 	data.Tags = channel.Tags
 	data.Tier = channel.Tier
 
@@ -219,6 +216,7 @@ func (d *dataSourceChannel) Read(ctx context.Context, req datasource.ReadRequest
 
 	for _, o := range data.Outputs {
 		output := channelOutputsModel{}
+
 		if *o.ManifestName != "" && o.ManifestName != nil {
 			output.ManifestName = o.ManifestName
 		}
@@ -228,33 +226,34 @@ func (d *dataSourceChannel) Read(ctx context.Context, req datasource.ReadRequest
 		}
 
 		if o.PlaybackUrl != types.StringValue("") {
-			output.SourceGroup = o.SourceGroup
+			output.PlaybackUrl = o.PlaybackUrl
 		}
 
-		if o.HlsPlaylistSettings[0].ManifestWindowsSeconds != types.Int64Null() {
-			outputsHls := channelHlsPlaylistSettingsModel{
-				ManifestWindowsSeconds: o.HlsPlaylistSettings[0].ManifestWindowsSeconds,
-			}
-			output.HlsPlaylistSettings[0] = outputsHls
+		if o.HlsPlaylistSettings[0].ManifestWindowsSeconds != nil {
+			var outputsHls []channelHlsPlaylistSettingsModel
+			outputsHls[0].ManifestWindowsSeconds = o.HlsPlaylistSettings[0].ManifestWindowsSeconds
+			output.HlsPlaylistSettings = outputsHls
 		}
 
-		if o.DashPlaylistSettings[0].ManifestWindowsSeconds != types.Int64Null() || o.DashPlaylistSettings[0].MinBufferTimeSeconds != types.Int64Null() || o.DashPlaylistSettings[0].MinUpdatePeriodSeconds != types.Int64Null() || o.DashPlaylistSettings[0].SuggestedPresentationDelaySeconds != types.Int64Null() {
-			manifestWindowSecondsDash := o.DashPlaylistSettings[0].ManifestWindowsSeconds
-			minBufferTimeSeconds := o.DashPlaylistSettings[0].MinBufferTimeSeconds
-			minUpdatePeriodSeconds := o.DashPlaylistSettings[0].MinUpdatePeriodSeconds
-			suggestedPresentationDelaySeconds := o.DashPlaylistSettings[0].SuggestedPresentationDelaySeconds
-			outputsDash := channelDashPlaylistSettingsModel{
-				ManifestWindowsSeconds:            manifestWindowSecondsDash,
-				MinBufferTimeSeconds:              minBufferTimeSeconds,
-				MinUpdatePeriodSeconds:            minUpdatePeriodSeconds,
-				SuggestedPresentationDelaySeconds: suggestedPresentationDelaySeconds,
-			}
-
-			output.DashPlaylistSettings[0] = outputsDash
+		var outputsDash []channelDashPlaylistSettingsModel
+		if o.DashPlaylistSettings[0].ManifestWindowsSeconds != nil {
+			outputsDash[0].ManifestWindowsSeconds = o.DashPlaylistSettings[0].ManifestWindowsSeconds
 		}
+		if o.DashPlaylistSettings[0].MinBufferTimeSeconds != nil {
+			outputsDash[0].MinBufferTimeSeconds = o.DashPlaylistSettings[0].MinBufferTimeSeconds
+		}
+		if o.DashPlaylistSettings[0].MinUpdatePeriodSeconds != nil {
+			outputsDash[0].MinUpdatePeriodSeconds = o.DashPlaylistSettings[0].MinUpdatePeriodSeconds
+		}
+		if o.DashPlaylistSettings[0].SuggestedPresentationDelaySeconds != nil {
+			outputsDash[0].SuggestedPresentationDelaySeconds = o.DashPlaylistSettings[0].SuggestedPresentationDelaySeconds
+		}
+
+		output.DashPlaylistSettings = outputsDash
 		data.Outputs = append(data.Outputs, output)
 	}
-	data.ID = types.StringValue("placeholder")
+
+	data.ID = types.StringValue(aws.StringValue(channel.ChannelName))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
