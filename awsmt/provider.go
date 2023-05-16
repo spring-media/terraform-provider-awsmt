@@ -109,6 +109,7 @@ func (p *awsmtProvider) Configure(ctx context.Context, req provider.ConfigureReq
 func (p *awsmtProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		DataSourceChannel,
+		DataSourceSourceLocation,
 	}
 }
 

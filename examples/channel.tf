@@ -1,6 +1,6 @@
 resource "awsmt_channel" "testing"  {
   name = "testing"
-  channel_state = "RUNNING"
+  channel_state = "STOPPED"
   outputs = [{
     manifest_name                = "default"
     source_group                 = "default"
