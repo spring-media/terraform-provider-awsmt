@@ -2,8 +2,6 @@ package awsmt
 
 import (
 	"context"
-	"os"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
@@ -13,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"os"
 )
 
 var (
@@ -35,6 +34,7 @@ func (p *awsmtProvider) Metadata(_ context.Context, _ provider.MetadataRequest, 
 }
 
 func (p *awsmtProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
+
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"profile": schema.StringAttribute{
@@ -111,10 +111,12 @@ func (p *awsmtProvider) DataSources(_ context.Context) []func() datasource.DataS
 		DataSourceChannel,
 		DataSourceSourceLocation,
 	}
+
 }
 
 func (p *awsmtProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		ResourceChannel,
+		ResourceSourceLocation,
 	}
 }

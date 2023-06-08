@@ -14,3 +14,7 @@ resource "awsmt_channel" "testing"  {
 data "awsmt_channel" "read" {
   name = awsmt_channel.testing.name
 }
+
+output "channel_out" {
+  value = data.awsmt_channel.read
+}
