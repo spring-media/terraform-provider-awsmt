@@ -23,7 +23,7 @@ func DataSourceSourceLocation() datasource.DataSource {
 type dataSourceSourceLocation struct {
 	client *mediatailor.MediaTailor
 }
-type dataSourceSourceLocationlModel struct {
+type dataSourceSourceLocationModel struct {
 	ID                                  types.String                                            `tfsdk:"id"`
 	AccessConfiguration                 *sourceLocationAccessConfigurationModel                 `tfsdk:"access_configuration"`
 	Arn                                 types.String                                            `tfsdk:"arn"`
@@ -37,7 +37,7 @@ type dataSourceSourceLocationlModel struct {
 }
 
 type sourceLocationAccessConfigurationModel struct {
-	AccessType                             *string                                                    `tfsdk:"access_type"`
+	AccessType                             types.String                                               `tfsdk:"access_type"`
 	SecretsManagerAccessTokenConfiguration *sourceLocationSecretsManagerAccessTokenConfigurationModel `tfsdk:"smatc"`
 	// SMATC is short for Secret Manager Access Token Configuration
 }
@@ -166,7 +166,7 @@ func (d *dataSourceSourceLocation) Configure(_ context.Context, req datasource.C
 }
 
 func (d *dataSourceSourceLocation) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data dataSourceSourceLocationlModel
+	var data dataSourceSourceLocationModel
 	diags := req.Config.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -189,14 +189,14 @@ func (d *dataSourceSourceLocation) Read(ctx context.Context, req datasource.Read
 	data.CreationTime = types.StringValue((aws.TimeValue(sourceLocation.CreationTime)).String())
 	data.LastModifiedTime = types.StringValue((aws.TimeValue(sourceLocation.LastModifiedTime)).String())
 
-	data.AccessConfiguration = &sourceLocationAccessConfigurationModel{}
 	if sourceLocation.AccessConfiguration != nil {
+		data.AccessConfiguration = &sourceLocationAccessConfigurationModel{}
 		if sourceLocation.AccessConfiguration.AccessType != nil {
-			data.AccessConfiguration.AccessType = sourceLocation.AccessConfiguration.AccessType
+			data.AccessConfiguration.AccessType = types.StringValue(*sourceLocation.AccessConfiguration.AccessType)
 		}
 	}
-	data.AccessConfiguration.SecretsManagerAccessTokenConfiguration = &sourceLocationSecretsManagerAccessTokenConfigurationModel{}
 	if sourceLocation.AccessConfiguration != nil && sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration != nil {
+		data.AccessConfiguration.SecretsManagerAccessTokenConfiguration = &sourceLocationSecretsManagerAccessTokenConfigurationModel{}
 		if sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != nil {
 			data.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName = sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName
 		}
@@ -208,21 +208,29 @@ func (d *dataSourceSourceLocation) Read(ctx context.Context, req datasource.Read
 		}
 	}
 
-	data.DefaultSegmentDeliveryConfiguration = &sourceLocationDefaultSegmentDeliveryConfigurationModel{}
 	if sourceLocation.DefaultSegmentDeliveryConfiguration != nil {
+		data.DefaultSegmentDeliveryConfiguration = &sourceLocationDefaultSegmentDeliveryConfigurationModel{}
 		if sourceLocation.DefaultSegmentDeliveryConfiguration.BaseUrl != nil {
 			data.DefaultSegmentDeliveryConfiguration.BaseUrl = sourceLocation.DefaultSegmentDeliveryConfiguration.BaseUrl
 		}
 	}
 
-	data.HttpConfiguration = &sourceLocationHttpConfigurationModel{}
 	if sourceLocation.HttpConfiguration != nil {
+		data.HttpConfiguration = &sourceLocationHttpConfigurationModel{}
 		if sourceLocation.HttpConfiguration.BaseUrl != nil {
 			data.HttpConfiguration.BaseUrl = sourceLocation.HttpConfiguration.BaseUrl
 		}
 	}
 
-	data.SegmentDeliveryConfigurations = &[]sourceLocationSegmentDeliveryConfigurationsModel{}
+	if sourceLocation.SegmentDeliveryConfigurations != nil && len(sourceLocation.SegmentDeliveryConfigurations) > 0 {
+		data.SegmentDeliveryConfigurations = &[]sourceLocationSegmentDeliveryConfigurationsModel{}
+		for _, v := range sourceLocation.SegmentDeliveryConfigurations {
+			*data.SegmentDeliveryConfigurations = append(*data.SegmentDeliveryConfigurations, sourceLocationSegmentDeliveryConfigurationsModel{
+				BaseUrl: v.BaseUrl,
+				Name:    v.Name,
+			})
+		}
+	}
 
 	data.ID = types.StringValue(aws.StringValue(sourceLocation.SourceLocationName))
 

@@ -207,7 +207,7 @@ func (r *resourceSourceLocation) Create(ctx context.Context, req resource.Create
 			}
 		}
 	}
-	if plan.Tags != nil {
+	if plan.Tags != nil && len(plan.Tags) > 0 {
 		input.Tags = plan.Tags
 	}
 	input.SourceLocationName = plan.SourceLocationName
@@ -304,14 +304,10 @@ func (r *resourceSourceLocation) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *resourceSourceLocation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceSourceLocationModel
+	var plan resourceSourceLocationModel
 
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -326,6 +322,37 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 			err.Error(),
 		)
 		return
+	}
+
+	oldTags := sourceLocation.Tags
+	newTags := plan.Tags
+	if !reflect.DeepEqual(oldTags, newTags) {
+		if oldTags != nil && len(oldTags) > 0 {
+			var removeTags []*string
+			for k := range oldTags {
+				removeTags = append(removeTags, aws.String(k))
+			}
+			_, err := r.client.UntagResource(&mediatailor.UntagResourceInput{ResourceArn: sourceLocation.Arn, TagKeys: removeTags})
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Error removing tags from source location "+err.Error(),
+					err.Error(),
+				)
+				return
+			}
+		}
+		if newTags != nil {
+			_, err := r.client.TagResource(&mediatailor.TagResourceInput{ResourceArn: sourceLocation.Arn, Tags: newTags})
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Error adding tags to source location "+err.Error(),
+					err.Error(),
+				)
+				return
+			}
+		}
+
+		plan.Tags = newTags
 	}
 
 	var params mediatailor.UpdateSourceLocationInput
@@ -387,43 +414,40 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	state.Arn = types.StringValue(*sourceLocationUpdated.Arn)
-	state.CreationTime = types.StringValue((aws.TimeValue(sourceLocationUpdated.CreationTime)).String())
-	state.LastModifiedTime = types.StringValue((aws.TimeValue(sourceLocationUpdated.LastModifiedTime)).String())
+	plan.Arn = types.StringValue(*sourceLocationUpdated.Arn)
+	plan.CreationTime = types.StringValue((aws.TimeValue(sourceLocationUpdated.CreationTime)).String())
+	plan.LastModifiedTime = types.StringValue((aws.TimeValue(sourceLocationUpdated.LastModifiedTime)).String())
 	if sourceLocationUpdated.AccessConfiguration != nil {
-		state.AccessConfiguration.AccessType = sourceLocationUpdated.AccessConfiguration.AccessType
+		plan.AccessConfiguration.AccessType = sourceLocationUpdated.AccessConfiguration.AccessType
 		if sourceLocationUpdated.AccessConfiguration.SecretsManagerAccessTokenConfiguration != nil {
 			if sourceLocationUpdated.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != nil {
-				state.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName = sourceLocationUpdated.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName
+				plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName = sourceLocationUpdated.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName
 			}
 			if sourceLocationUpdated.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn != nil {
-				state.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn = sourceLocationUpdated.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn
+				plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn = sourceLocationUpdated.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn
 			}
 			if sourceLocationUpdated.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey != nil {
-				state.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey = sourceLocationUpdated.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey
+				plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey = sourceLocationUpdated.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey
 			}
 		}
 	}
 	if sourceLocationUpdated.DefaultSegmentDeliveryConfiguration != nil {
 		if sourceLocationUpdated.DefaultSegmentDeliveryConfiguration.BaseUrl != nil {
-			state.DefaultSegmentDeliveryConfiguration.BaseUrl = sourceLocationUpdated.DefaultSegmentDeliveryConfiguration.BaseUrl
+			plan.DefaultSegmentDeliveryConfiguration.BaseUrl = sourceLocationUpdated.DefaultSegmentDeliveryConfiguration.BaseUrl
 		}
 	}
 	if sourceLocationUpdated.SegmentDeliveryConfigurations != nil {
 		for _, v := range sourceLocationUpdated.SegmentDeliveryConfigurations {
-			*state.SegmentDeliveryConfigurations = append(*state.SegmentDeliveryConfigurations, resourceSourceLocationSegmentDeliveryConfigurationsModel{
+			*plan.SegmentDeliveryConfigurations = append(*plan.SegmentDeliveryConfigurations, resourceSourceLocationSegmentDeliveryConfigurationsModel{
 				BaseUrl: v.BaseUrl,
 				Name:    v.Name,
 			})
 		}
 	}
-	if sourceLocationUpdated.Tags != nil {
-		state.Tags = sourceLocationUpdated.Tags
-	}
-	state.HttpConfiguration.BaseUrl = sourceLocationUpdated.HttpConfiguration.BaseUrl
-	state.ID = types.StringValue(*sourceLocationUpdated.SourceLocationName)
+	plan.HttpConfiguration.BaseUrl = sourceLocationUpdated.HttpConfiguration.BaseUrl
+	plan.ID = types.StringValue(*sourceLocationUpdated.SourceLocationName)
 
-	diags = resp.State.Set(ctx, state)
+	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
