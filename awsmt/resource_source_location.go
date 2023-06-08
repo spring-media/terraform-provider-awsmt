@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -13,8 +14,9 @@ import (
 )
 
 var (
-	_ resource.Resource              = &resourceSourceLocation{}
-	_ resource.ResourceWithConfigure = &resourceSourceLocation{}
+	_ resource.Resource                = &resourceSourceLocation{}
+	_ resource.ResourceWithConfigure   = &resourceSourceLocation{}
+	_ resource.ResourceWithImportState = &resourceSourceLocation{}
 )
 
 func ResourceSourceLocation() resource.Resource {
@@ -31,7 +33,7 @@ type resourceSourceLocationModel struct {
 	Arn                                 types.String                                                    `tfsdk:"arn"`
 	CreationTime                        types.String                                                    `tfsdk:"creation_time"`
 	DefaultSegmentDeliveryConfiguration *resourceSourceLocationDefaultSegmentDeliveryConfigurationModel `tfsdk:"default_segment_delivery_configuration"`
-	HttpConfiguration                   resourceSourceLocationHttpConfigurationModel                    `tfsdk:"http_configuration"`
+	HttpConfiguration                   *resourceSourceLocationHttpConfigurationModel                   `tfsdk:"http_configuration"`
 	LastModifiedTime                    types.String                                                    `tfsdk:"last_modified_time"`
 	SegmentDeliveryConfigurations       *[]resourceSourceLocationSegmentDeliveryConfigurationsModel     `tfsdk:"segment_delivery_configuration"`
 	SourceLocationName                  *string                                                         `tfsdk:"name"`
@@ -245,14 +247,13 @@ func (r *resourceSourceLocation) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	name := state.SourceLocationName
 	// Get refreshed order value from AWS
 	sourceLocation, err := r.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{
-		SourceLocationName: name,
+		SourceLocationName: state.SourceLocationName,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error retrieving source location "+err.Error(),
+			"Error retrieving source location ME! "+err.Error(),
 			err.Error(),
 		)
 		return
@@ -287,7 +288,7 @@ func (r *resourceSourceLocation) Read(ctx context.Context, req resource.ReadRequ
 			})
 		}
 	}
-	if sourceLocation.Tags != nil {
+	if sourceLocation.Tags != nil && len(sourceLocation.Tags) > 0 {
 		state.Tags = sourceLocation.Tags
 	}
 	state.HttpConfiguration.BaseUrl = sourceLocation.HttpConfiguration.BaseUrl
@@ -507,4 +508,8 @@ func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
+}
+
+func (r *resourceSourceLocation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
