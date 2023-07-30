@@ -28,41 +28,40 @@ type resourceSourceLocation struct {
 }
 
 type resourceSourceLocationModel struct {
-	ID                                  types.String                                                    `tfsdk:"id"`
-	AccessConfiguration                 *resourceSourceLocationAccessConfigurationModel                 `tfsdk:"access_configuration"`
-	Arn                                 types.String                                                    `tfsdk:"arn"`
-	CreationTime                        types.String                                                    `tfsdk:"creation_time"`
-	DefaultSegmentDeliveryConfiguration *resourceSourceLocationDefaultSegmentDeliveryConfigurationModel `tfsdk:"default_segment_delivery_configuration"`
-	HttpConfiguration                   *resourceSourceLocationHttpConfigurationModel                   `tfsdk:"http_configuration"`
-	LastModifiedTime                    types.String                                                    `tfsdk:"last_modified_time"`
-	SegmentDeliveryConfigurations       *[]resourceSourceLocationSegmentDeliveryConfigurationsModel     `tfsdk:"segment_delivery_configuration"`
-	SourceLocationName                  *string                                                         `tfsdk:"name"`
-	Tags                                map[string]*string                                              `tfsdk:"tags"`
+	ID                                  types.String                              `tfsdk:"id"`
+	AccessConfiguration                 accessConfigurationRModel                 `tfsdk:"access_configuration"`
+	Arn                                 types.String                              `tfsdk:"arn"`
+	CreationTime                        types.String                              `tfsdk:"creation_time"`
+	DefaultSegmentDeliveryConfiguration defaultSegmentDeliveryConfigurationRModel `tfsdk:"default_segment_delivery_configuration"`
+	HttpConfiguration                   httpConfigurationRModel                   `tfsdk:"http_configuration"`
+	LastModifiedTime                    types.String                              `tfsdk:"last_modified_time"`
+	SegmentDeliveryConfigurations       []segmentDeliveryConfigurationsRModel     `tfsdk:"segment_delivery_configuration"`
+	SourceLocationName                  types.String                              `tfsdk:"source_location_name"`
+	Tags                                map[string]*string                        `tfsdk:"tags"`
 }
 
-type resourceSourceLocationAccessConfigurationModel struct {
-	AccessType                             *string                                                           `tfsdk:"access_type"`
-	SecretsManagerAccessTokenConfiguration resourceSourceLocationSecretsManagerAccessTokenConfigurationModel `tfsdk:"smatc"`
-	// SMATC is short for Secret Manager Access Token Configuration
+type accessConfigurationRModel struct {
+	AccessType                             types.String                                 `tfsdk:"access_type"`
+	SecretsManagerAccessTokenConfiguration secretsManagerAccessTokenConfigurationRModel `tfsdk:"secrets_manager_access_token_configuration"`
 }
 
-type resourceSourceLocationSecretsManagerAccessTokenConfigurationModel struct {
-	HeaderName      *string `tfsdk:"header_name"`
-	SecretArn       *string `tfsdk:"secret_arn"`
-	SecretStringKey *string `tfsdk:"secret_string_key"`
+type secretsManagerAccessTokenConfigurationRModel struct {
+	HeaderName      types.String `tfsdk:"header_name"`
+	SecretArn       types.String `tfsdk:"secret_arn"`
+	SecretStringKey types.String `tfsdk:"secret_string_key"`
 }
 
-type resourceSourceLocationDefaultSegmentDeliveryConfigurationModel struct {
-	BaseUrl *string `tfsdk:"base_url"`
+type defaultSegmentDeliveryConfigurationRModel struct {
+	BaseUrl types.String `tfsdk:"dsdc_base_url"`
 }
 
-type resourceSourceLocationHttpConfigurationModel struct {
-	BaseUrl *string `tfsdk:"base_url"`
+type httpConfigurationRModel struct {
+	BaseUrl types.String `tfsdk:"hc_base_url"`
 }
 
-type resourceSourceLocationSegmentDeliveryConfigurationsModel struct {
-	BaseUrl *string `tfsdk:"base_url"`
-	Name    *string `tfsdk:"name"`
+type segmentDeliveryConfigurationsRModel struct {
+	BaseUrl types.String `tfsdk:"sdc_base_url"`
+	Name    types.String `tfsdk:"name"`
 }
 
 func (r *resourceSourceLocation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -75,34 +74,26 @@ func (r *resourceSourceLocation) Schema(_ context.Context, _ resource.SchemaRequ
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"access_configuration": schema.MapNestedAttribute{
+			"access_configuration": schema.SingleNestedAttribute{
 				Optional: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"access_type": schema.StringAttribute{
-							Optional: true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("S3_SIGV4", "SECRETS_MANAGER_ACCESS_TOKEN"),
-							},
-							CustomType: types.StringType,
+				Attributes: map[string]schema.Attribute{
+					"access_type": schema.StringAttribute{
+						Optional: true,
+						Validators: []validator.String{
+							stringvalidator.OneOf("S3_SIGV4"),
 						},
-						"smatc": schema.MapNestedAttribute{
-							Optional: true,
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"header_name": schema.StringAttribute{
-										Optional:   true,
-										CustomType: types.StringType,
-									},
-									"secret_arn": schema.StringAttribute{
-										Optional:   true,
-										CustomType: types.StringType,
-									},
-									"secret_string_key": schema.StringAttribute{
-										Optional:   true,
-										CustomType: types.StringType,
-									},
-								},
+					},
+					"secrets_manager_access_token_configuration": schema.SingleNestedAttribute{
+						Optional: true,
+						Attributes: map[string]schema.Attribute{
+							"header_name": schema.StringAttribute{
+								Optional: true,
+							},
+							"secret_arn": schema.StringAttribute{
+								Optional: true,
+							},
+							"secret_string_key": schema.StringAttribute{
+								Optional: true,
 							},
 						},
 					},
@@ -117,16 +108,15 @@ func (r *resourceSourceLocation) Schema(_ context.Context, _ resource.SchemaRequ
 			"default_segment_delivery_configuration": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
-					"base_url": schema.StringAttribute{
-						Optional:   true,
-						CustomType: types.StringType,
+					"dsdc_base_url": schema.StringAttribute{
+						Optional: true,
 					},
 				},
 			},
 			"http_configuration": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
-					"base_url": schema.StringAttribute{
+					"hc_base_url": schema.StringAttribute{
 						Required: true,
 					},
 				},
@@ -134,22 +124,20 @@ func (r *resourceSourceLocation) Schema(_ context.Context, _ resource.SchemaRequ
 			"last_modified_time": schema.StringAttribute{
 				Computed: true,
 			},
-			"segment_delivery_configuration": schema.ListNestedAttribute{
+			"segment_delivery_configurations": schema.ListNestedAttribute{
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"base_url": schema.StringAttribute{
-							Optional:   true,
-							CustomType: types.StringType,
+						"sdc_base_url": schema.StringAttribute{
+							Optional: true,
 						},
 						"name": schema.StringAttribute{
-							Optional:   true,
-							CustomType: types.StringType,
+							Optional: true,
 						},
 					},
 				},
 			},
-			"name": schema.StringAttribute{
+			"sourceLocationName": schema.StringAttribute{
 				Required: true,
 			},
 			"tags": schema.MapAttribute{
@@ -177,60 +165,16 @@ func (r *resourceSourceLocation) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	input := mediatailor.CreateSourceLocationInput{}
-	if plan.AccessConfiguration != nil {
-		input.AccessConfiguration = &mediatailor.AccessConfiguration{}
-		if plan.AccessConfiguration.AccessType != nil {
-			input.AccessConfiguration.AccessType = plan.AccessConfiguration.AccessType
-		}
-		if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != nil {
-			input.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName = plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName
-		}
-		if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn != nil {
-			input.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn = plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn
-		}
-		if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey != nil {
-			input.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey = plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey
-		}
-	}
-	if plan.DefaultSegmentDeliveryConfiguration != nil {
-		input.DefaultSegmentDeliveryConfiguration = &mediatailor.DefaultSegmentDeliveryConfiguration{}
-		if plan.DefaultSegmentDeliveryConfiguration.BaseUrl != nil {
-			input.DefaultSegmentDeliveryConfiguration.BaseUrl = plan.DefaultSegmentDeliveryConfiguration.BaseUrl
-		}
-	}
-	if plan.SegmentDeliveryConfigurations != nil {
-		for _, v := range *plan.SegmentDeliveryConfigurations {
-			if v.BaseUrl != nil && v.Name != nil {
-				input.SegmentDeliveryConfigurations = append(input.SegmentDeliveryConfigurations, &mediatailor.SegmentDeliveryConfiguration{
-					BaseUrl: aws.String(*v.BaseUrl),
-					Name:    aws.String(*v.Name),
-				})
-			}
-		}
-	}
-	if plan.Tags != nil && len(plan.Tags) > 0 {
-		input.Tags = plan.Tags
-	}
-	input.SourceLocationName = plan.SourceLocationName
-	input.HttpConfiguration = &mediatailor.HttpConfiguration{
-		BaseUrl: plan.HttpConfiguration.BaseUrl,
-	}
+	params := sourceLocationInput(plan)
 
-	sourceLocation, err := r.client.CreateSourceLocation(&input)
+	// Create Source Location
+	sourceLocation, err := r.client.CreateSourceLocation(&params)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error while creating source location "+err.Error(),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError("Error while creating source location", err.Error())
 		return
 	}
 
-	plan.Arn = types.StringValue(*sourceLocation.Arn)
-	plan.CreationTime = types.StringValue((aws.TimeValue(sourceLocation.CreationTime)).String())
-	plan.LastModifiedTime = types.StringValue((aws.TimeValue(sourceLocation.LastModifiedTime)).String())
-
-	plan.ID = types.StringValue(*sourceLocation.SourceLocationName)
+	plan = readSourceLocationToPlan(plan, *sourceLocation)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -247,56 +191,18 @@ func (r *resourceSourceLocation) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	// Get refreshed order value from AWS
-	sourceLocation, err := r.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{
-		SourceLocationName: state.SourceLocationName,
-	})
+	sourceLocationName := aws.String(state.SourceLocationName.String())
+
+	// Describe Source Location
+
+	sourceLocation, err := r.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: sourceLocationName})
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error retrieving source location ME! "+err.Error(),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError("Error while describing source location", "Could not describe the source location: "+state.SourceLocationName.ValueString()+": "+err.Error())
 		return
 	}
 
-	// Overwrite items with refreshed state
-	state.Arn = types.StringValue(*sourceLocation.Arn)
-	if sourceLocation.AccessConfiguration != nil {
-		state.AccessConfiguration.AccessType = sourceLocation.AccessConfiguration.AccessType
-		if sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration != nil {
-			if sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != nil {
-				state.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName = sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName
-			}
-			if sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn != nil {
-				state.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn = sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn
-			}
-			if sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey != nil {
-				state.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey = sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey
-			}
-		}
-	}
-	if sourceLocation.DefaultSegmentDeliveryConfiguration != nil {
-		if sourceLocation.DefaultSegmentDeliveryConfiguration.BaseUrl != nil {
-			state.DefaultSegmentDeliveryConfiguration.BaseUrl = sourceLocation.DefaultSegmentDeliveryConfiguration.BaseUrl
-		}
-	}
-	if sourceLocation.SegmentDeliveryConfigurations != nil {
-		for _, v := range sourceLocation.SegmentDeliveryConfigurations {
-			*state.SegmentDeliveryConfigurations = append(*state.SegmentDeliveryConfigurations, resourceSourceLocationSegmentDeliveryConfigurationsModel{
-				BaseUrl: v.BaseUrl,
-				Name:    v.Name,
-			})
-		}
-	}
-	if sourceLocation.Tags != nil && len(sourceLocation.Tags) > 0 {
-		state.Tags = sourceLocation.Tags
-	}
-	state.HttpConfiguration.BaseUrl = sourceLocation.HttpConfiguration.BaseUrl
-	state.CreationTime = types.StringValue((aws.TimeValue(sourceLocation.CreationTime)).String())
-	state.LastModifiedTime = types.StringValue((aws.TimeValue(sourceLocation.LastModifiedTime)).String())
+	state = readSourceLocationToState(state, *sourceLocation)
 
-	state.ID = types.StringValue(*sourceLocation.SourceLocationName)
-	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -306,105 +212,61 @@ func (r *resourceSourceLocation) Read(ctx context.Context, req resource.ReadRequ
 
 func (r *resourceSourceLocation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan resourceSourceLocationModel
-
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	name := plan.SourceLocationName
-	sourceLocation, err := r.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{
-		SourceLocationName: name,
-	})
+	name := plan.SourceLocationName.String()
+
+	sourceLocation, err := r.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: aws.String(name)})
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error retrieving source location "+err.Error(),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError("Error while describing source location", "Could not describe the source location: "+name+": "+err.Error())
 		return
 	}
 
 	oldTags := sourceLocation.Tags
 	newTags := plan.Tags
+
+	// Check if tags are different
 	if !reflect.DeepEqual(oldTags, newTags) {
-		if oldTags != nil && len(oldTags) > 0 {
-			var removeTags []*string
-			for k := range oldTags {
-				removeTags = append(removeTags, aws.String(k))
-			}
-			_, err := r.client.UntagResource(&mediatailor.UntagResourceInput{ResourceArn: sourceLocation.Arn, TagKeys: removeTags})
-			if err != nil {
-				resp.Diagnostics.AddError(
-					"Error removing tags from source location "+err.Error(),
-					err.Error(),
-				)
-				return
-			}
+		err = updatesTags(r.client, oldTags, newTags, *sourceLocation.Arn)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error while updating playback configuration tags"+err.Error(),
+				err.Error(),
+			)
 		}
-		if newTags != nil {
-			_, err := r.client.TagResource(&mediatailor.TagResourceInput{ResourceArn: sourceLocation.Arn, Tags: newTags})
-			if err != nil {
-				resp.Diagnostics.AddError(
-					"Error adding tags to source location "+err.Error(),
-					err.Error(),
-				)
-				return
-			}
-		}
-
-		plan.Tags = newTags
 	}
 
-	var params mediatailor.UpdateSourceLocationInput
+	if !reflect.DeepEqual(sourceLocation.AccessConfiguration, plan.AccessConfiguration) {
+		// delete source location
+		name := aws.String(plan.SourceLocationName.String())
+		err = deleteSourceLocation(r.client, name)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error while deleting source location "+err.Error(),
+				err.Error(),
+			)
+			return
+		}
 
-	if plan.AccessConfiguration != nil {
-		params.AccessConfiguration = &mediatailor.AccessConfiguration{}
-		if plan.AccessConfiguration != nil || sourceLocation.AccessConfiguration != nil {
-			if plan.AccessConfiguration.AccessType != nil || sourceLocation.AccessConfiguration.AccessType != nil {
-				if plan.AccessConfiguration.AccessType != sourceLocation.AccessConfiguration.AccessType {
-					params.AccessConfiguration.AccessType = plan.AccessConfiguration.AccessType
-				}
-			}
-			if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != nil || sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != nil {
-				if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName {
-					params.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName = plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName
-				}
-			}
-			if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn != nil || sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn != nil {
-				if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn != sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn {
-					params.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn = plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn
-				}
-			}
-			if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey != nil || sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey != nil {
-				if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey != sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey {
-					params.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey = plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey
-				}
-			}
+		// create source location
+		params := sourceLocationInput(plan)
+		sourceLocation, err := r.client.CreateSourceLocation(&params)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error while creating new source location with new access configuration "+err.Error(),
+				err.Error(),
+			)
+			return
 		}
+
+		plan = readSourceLocationToPlan(plan, *sourceLocation)
 	}
-	if plan.DefaultSegmentDeliveryConfiguration != nil {
-		if plan.DefaultSegmentDeliveryConfiguration.BaseUrl != nil || sourceLocation.DefaultSegmentDeliveryConfiguration.BaseUrl != nil {
-			params.DefaultSegmentDeliveryConfiguration = &mediatailor.DefaultSegmentDeliveryConfiguration{}
-			params.DefaultSegmentDeliveryConfiguration.BaseUrl = plan.DefaultSegmentDeliveryConfiguration.BaseUrl
-		}
-	}
-	if plan.HttpConfiguration.BaseUrl != nil || sourceLocation.HttpConfiguration.BaseUrl != nil {
-		params.HttpConfiguration = &mediatailor.HttpConfiguration{}
-		params.HttpConfiguration.BaseUrl = plan.HttpConfiguration.BaseUrl
-	} else {
-		params.HttpConfiguration.BaseUrl = sourceLocation.HttpConfiguration.BaseUrl
-	}
-	if plan.SegmentDeliveryConfigurations != nil || sourceLocation.SegmentDeliveryConfigurations != nil {
-		params.SegmentDeliveryConfigurations = []*mediatailor.SegmentDeliveryConfiguration{}
-		if !reflect.DeepEqual(plan.SegmentDeliveryConfigurations, sourceLocation.SegmentDeliveryConfigurations) {
-			for i, v := range *plan.SegmentDeliveryConfigurations {
-				params.SegmentDeliveryConfigurations[i].BaseUrl = v.BaseUrl
-				params.SegmentDeliveryConfigurations[i].Name = v.Name
-			}
-		}
-	}
-	params.SourceLocationName = name
+
+	params := updateSourceLocationInput(plan)
 
 	sourceLocationUpdated, err := r.client.UpdateSourceLocation(&params)
 	if err != nil {
@@ -415,38 +277,7 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	plan.Arn = types.StringValue(*sourceLocationUpdated.Arn)
-	plan.CreationTime = types.StringValue((aws.TimeValue(sourceLocationUpdated.CreationTime)).String())
-	plan.LastModifiedTime = types.StringValue((aws.TimeValue(sourceLocationUpdated.LastModifiedTime)).String())
-	if sourceLocationUpdated.AccessConfiguration != nil {
-		plan.AccessConfiguration.AccessType = sourceLocationUpdated.AccessConfiguration.AccessType
-		if sourceLocationUpdated.AccessConfiguration.SecretsManagerAccessTokenConfiguration != nil {
-			if sourceLocationUpdated.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != nil {
-				plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName = sourceLocationUpdated.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName
-			}
-			if sourceLocationUpdated.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn != nil {
-				plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn = sourceLocationUpdated.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn
-			}
-			if sourceLocationUpdated.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey != nil {
-				plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey = sourceLocationUpdated.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey
-			}
-		}
-	}
-	if sourceLocationUpdated.DefaultSegmentDeliveryConfiguration != nil {
-		if sourceLocationUpdated.DefaultSegmentDeliveryConfiguration.BaseUrl != nil {
-			plan.DefaultSegmentDeliveryConfiguration.BaseUrl = sourceLocationUpdated.DefaultSegmentDeliveryConfiguration.BaseUrl
-		}
-	}
-	if sourceLocationUpdated.SegmentDeliveryConfigurations != nil {
-		for _, v := range sourceLocationUpdated.SegmentDeliveryConfigurations {
-			*plan.SegmentDeliveryConfigurations = append(*plan.SegmentDeliveryConfigurations, resourceSourceLocationSegmentDeliveryConfigurationsModel{
-				BaseUrl: v.BaseUrl,
-				Name:    v.Name,
-			})
-		}
-	}
-	plan.HttpConfiguration.BaseUrl = sourceLocationUpdated.HttpConfiguration.BaseUrl
-	plan.ID = types.StringValue(*sourceLocationUpdated.SourceLocationName)
+	plan = readSourceLocationToPlanUpdate(plan, *sourceLocationUpdated)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -463,7 +294,7 @@ func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	name := state.SourceLocationName
+	name := aws.String(state.SourceLocationName.String())
 
 	vodSourcesList, err := r.client.ListVodSources(&mediatailor.ListVodSourcesInput{SourceLocationName: name})
 	if err != nil {
@@ -507,9 +338,8 @@ func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.Delete
 		)
 		return
 	}
-
 }
 
 func (r *resourceSourceLocation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("arn"), req, resp)
 }
