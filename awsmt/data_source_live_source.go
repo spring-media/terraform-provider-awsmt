@@ -27,10 +27,10 @@ type dataSourceLiveSourceModel struct {
 	ID                          types.String                         `tfsdk:"id"`
 	Arn                         types.String                         `tfsdk:"arn"`
 	CreationTime                types.String                         `tfsdk:"creation_time"`
-	HttpPackageConfigurationsLS []httpPackageConfigurationsLSDSModel `tfsdk:"http_package_configuration"`
+	HttpPackageConfigurationsLS []httpPackageConfigurationsLSDSModel `tfsdk:"http_package_configurations"`
 	LastModifiedTime            types.String                         `tfsdk:"last_modified_time"`
-	LiveSourceName              types.String                         `tfsdk:"live_source_name"`
-	SourceLocationName          types.String                         `tfsdk:"source_location_name"`
+	LiveSourceName              *string                              `tfsdk:"live_source_name"`
+	SourceLocationName          *string                              `tfsdk:"source_location_name"`
 	Tags                        map[string]*string                   `tfsdk:"tags"`
 }
 
@@ -41,7 +41,7 @@ type httpPackageConfigurationsLSDSModel struct {
 }
 
 func (d *dataSourceLiveSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_source_location"
+	resp.TypeName = req.ProviderTypeName + "_live_source"
 }
 
 func (d *dataSourceLiveSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -56,7 +56,7 @@ func (d *dataSourceLiveSource) Schema(_ context.Context, _ datasource.SchemaRequ
 			"creation_time": schema.StringAttribute{
 				Computed: true,
 			},
-			"http_package_configuration": schema.ListNestedAttribute{
+			"http_package_configurations": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -108,14 +108,16 @@ func (d *dataSourceLiveSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	sourceLocationName := aws.String(data.SourceLocationName.String())
-	liveSourceName := aws.String(data.LiveSourceName.String())
+	sourceLocationName := data.SourceLocationName
+	liveSourceName := data.LiveSourceName
 
 	liveSource, err := d.client.DescribeLiveSource(&mediatailor.DescribeLiveSourceInput{SourceLocationName: sourceLocationName, LiveSourceName: liveSourceName})
 	if err != nil {
 		resp.Diagnostics.AddError("Error while describing live source", err.Error())
 		return
 	}
+
+	data.ID = types.StringValue(*liveSource.LiveSourceName)
 
 	if liveSource.Arn != nil {
 		data.Arn = types.StringValue(*liveSource.Arn)
@@ -126,6 +128,7 @@ func (d *dataSourceLiveSource) Read(ctx context.Context, req datasource.ReadRequ
 	}
 
 	if liveSource.HttpPackageConfigurations != nil && len(liveSource.HttpPackageConfigurations) > 0 {
+		data.HttpPackageConfigurationsLS = []httpPackageConfigurationsLSDSModel{}
 		for _, httpPackageConfiguration := range liveSource.HttpPackageConfigurations {
 			httpPackageConfigurations := httpPackageConfigurationsLSDSModel{}
 			httpPackageConfigurations.Path = types.StringValue(*httpPackageConfiguration.Path)
@@ -140,7 +143,7 @@ func (d *dataSourceLiveSource) Read(ctx context.Context, req datasource.ReadRequ
 	}
 
 	if liveSource.SourceLocationName != nil && *liveSource.SourceLocationName != "" {
-		data.SourceLocationName = types.StringValue(*liveSource.SourceLocationName)
+		data.SourceLocationName = liveSource.SourceLocationName
 	}
 
 	if liveSource.Tags != nil && len(liveSource.Tags) > 0 {
