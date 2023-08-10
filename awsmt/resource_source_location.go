@@ -2,7 +2,6 @@ package awsmt
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -28,40 +27,40 @@ type resourceSourceLocation struct {
 }
 
 type resourceSourceLocationModel struct {
-	ID                                  types.String                              `tfsdk:"id"`
-	AccessConfiguration                 accessConfigurationRModel                 `tfsdk:"access_configuration"`
-	Arn                                 types.String                              `tfsdk:"arn"`
-	CreationTime                        types.String                              `tfsdk:"creation_time"`
-	DefaultSegmentDeliveryConfiguration defaultSegmentDeliveryConfigurationRModel `tfsdk:"default_segment_delivery_configuration"`
-	HttpConfiguration                   httpConfigurationRModel                   `tfsdk:"http_configuration"`
-	LastModifiedTime                    types.String                              `tfsdk:"last_modified_time"`
-	SegmentDeliveryConfigurations       []segmentDeliveryConfigurationsRModel     `tfsdk:"segment_delivery_configuration"`
-	SourceLocationName                  types.String                              `tfsdk:"source_location_name"`
-	Tags                                map[string]*string                        `tfsdk:"tags"`
+	ID                                  types.String                               `tfsdk:"id"`
+	AccessConfiguration                 *accessConfigurationRModel                 `tfsdk:"access_configuration"`
+	Arn                                 types.String                               `tfsdk:"arn"`
+	CreationTime                        types.String                               `tfsdk:"creation_time"`
+	DefaultSegmentDeliveryConfiguration *defaultSegmentDeliveryConfigurationRModel `tfsdk:"default_segment_delivery_configuration"`
+	HttpConfiguration                   *httpConfigurationRModel                   `tfsdk:"http_configuration"`
+	LastModifiedTime                    types.String                               `tfsdk:"last_modified_time"`
+	SegmentDeliveryConfigurations       []segmentDeliveryConfigurationsRModel      `tfsdk:"segment_delivery_configurations"`
+	SourceLocationName                  *string                                    `tfsdk:"source_location_name"`
+	Tags                                map[string]*string                         `tfsdk:"tags"`
 }
 
 type accessConfigurationRModel struct {
-	AccessType                             types.String                                 `tfsdk:"access_type"`
-	SecretsManagerAccessTokenConfiguration secretsManagerAccessTokenConfigurationRModel `tfsdk:"secrets_manager_access_token_configuration"`
+	AccessType                             *string                                       `tfsdk:"access_type"`
+	SecretsManagerAccessTokenConfiguration *secretsManagerAccessTokenConfigurationRModel `tfsdk:"secrets_manager_access_token_configuration"`
 }
 
 type secretsManagerAccessTokenConfigurationRModel struct {
-	HeaderName      types.String `tfsdk:"header_name"`
-	SecretArn       types.String `tfsdk:"secret_arn"`
-	SecretStringKey types.String `tfsdk:"secret_string_key"`
+	HeaderName      *string `tfsdk:"header_name"`
+	SecretArn       *string `tfsdk:"secret_arn"`
+	SecretStringKey *string `tfsdk:"secret_string_key"`
 }
 
 type defaultSegmentDeliveryConfigurationRModel struct {
-	BaseUrl types.String `tfsdk:"dsdc_base_url"`
+	BaseUrl *string `tfsdk:"dsdc_base_url"`
 }
 
 type httpConfigurationRModel struct {
-	BaseUrl types.String `tfsdk:"hc_base_url"`
+	BaseUrl *string `tfsdk:"hc_base_url"`
 }
 
 type segmentDeliveryConfigurationsRModel struct {
-	BaseUrl types.String `tfsdk:"sdc_base_url"`
-	Name    types.String `tfsdk:"name"`
+	BaseUrl *string `tfsdk:"sdc_base_url"`
+	SDCName *string `tfsdk:"sdc_name"`
 }
 
 func (r *resourceSourceLocation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -131,13 +130,13 @@ func (r *resourceSourceLocation) Schema(_ context.Context, _ resource.SchemaRequ
 						"sdc_base_url": schema.StringAttribute{
 							Optional: true,
 						},
-						"name": schema.StringAttribute{
+						"sdc_name": schema.StringAttribute{
 							Optional: true,
 						},
 					},
 				},
 			},
-			"sourceLocationName": schema.StringAttribute{
+			"source_location_name": schema.StringAttribute{
 				Required: true,
 			},
 			"tags": schema.MapAttribute{
@@ -191,17 +190,15 @@ func (r *resourceSourceLocation) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	sourceLocationName := aws.String(state.SourceLocationName.String())
+	name := state.SourceLocationName
 
-	// Describe Source Location
-
-	sourceLocation, err := r.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: sourceLocationName})
+	sourceLocation, err := r.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: name})
 	if err != nil {
-		resp.Diagnostics.AddError("Error while describing source location", "Could not describe the source location: "+state.SourceLocationName.ValueString()+": "+err.Error())
+		resp.Diagnostics.AddError("Error while describing source location", "Could not describe the source location: "+*name+": "+err.Error())
 		return
 	}
 
-	state = readSourceLocationToState(state, *sourceLocation)
+	state = readSourceLocationToPlan(state, mediatailor.CreateSourceLocationOutput(*sourceLocation))
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -218,11 +215,11 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	name := plan.SourceLocationName.String()
+	name := plan.SourceLocationName
 
-	sourceLocation, err := r.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: aws.String(name)})
+	sourceLocation, err := r.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: name})
 	if err != nil {
-		resp.Diagnostics.AddError("Error while describing source location", "Could not describe the source location: "+name+": "+err.Error())
+		resp.Diagnostics.AddError("Error while describing source location", "Could not describe the source location: "+*name+": "+err.Error())
 		return
 	}
 
@@ -242,8 +239,8 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 
 	if !reflect.DeepEqual(sourceLocation.AccessConfiguration, plan.AccessConfiguration) {
 		// delete source location
-		name := aws.String(plan.SourceLocationName.String())
-		err = deleteSourceLocation(r.client, name)
+		name := plan.SourceLocationName
+		err := deleteSourceLocation(r.client, name)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error while deleting source location "+err.Error(),
@@ -277,7 +274,7 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	plan = readSourceLocationToPlanUpdate(plan, *sourceLocationUpdated)
+	plan = readSourceLocationToPlan(plan, mediatailor.CreateSourceLocationOutput(*sourceLocationUpdated))
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -294,7 +291,7 @@ func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	name := aws.String(state.SourceLocationName.String())
+	name := state.SourceLocationName
 
 	vodSourcesList, err := r.client.ListVodSources(&mediatailor.ListVodSourcesInput{SourceLocationName: name})
 	if err != nil {
@@ -305,7 +302,8 @@ func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 	for _, vodSource := range vodSourcesList.Items {
-		if _, err := r.client.DeleteVodSource(&mediatailor.DeleteVodSourceInput{VodSourceName: vodSource.VodSourceName, SourceLocationName: name}); err != nil {
+		_, err := r.client.DeleteVodSource(&mediatailor.DeleteVodSourceInput{SourceLocationName: name, VodSourceName: vodSource.VodSourceName})
+		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error deleting vod sources "+err.Error(),
 				err.Error(),
@@ -313,6 +311,7 @@ func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.Delete
 			return
 		}
 	}
+
 	liveSourcesList, err := r.client.ListLiveSources(&mediatailor.ListLiveSourcesInput{SourceLocationName: name})
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -330,6 +329,7 @@ func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.Delete
 			return
 		}
 	}
+
 	_, err = r.client.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: name})
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -341,5 +341,5 @@ func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.Delete
 }
 
 func (r *resourceSourceLocation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("arn"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("source_location_name"), req, resp)
 }

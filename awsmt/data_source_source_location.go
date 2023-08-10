@@ -24,21 +24,21 @@ type dataSourceSourceLocation struct {
 	client *mediatailor.MediaTailor
 }
 type dataSourceSourceLocationModel struct {
-	ID                                  types.String                               `tfsdk:"id"`
-	AccessConfiguration                 accessConfigurationDSModel                 `tfsdk:"access_configuration"`
-	Arn                                 types.String                               `tfsdk:"arn"`
-	CreationTime                        types.String                               `tfsdk:"creation_time"`
-	DefaultSegmentDeliveryConfiguration defaultSegmentDeliveryConfigurationDSModel `tfsdk:"default_segment_delivery_configuration"`
-	HttpConfiguration                   httpConfigurationDSModel                   `tfsdk:"http_configuration"`
-	LastModifiedTime                    types.String                               `tfsdk:"last_modified_time"`
-	SegmentDeliveryConfigurations       []segmentDeliveryConfigurationsDSModel     `tfsdk:"segment_delivery_configuration"`
-	SourceLocationName                  types.String                               `tfsdk:"source_location_name"`
-	Tags                                map[string]types.String                    `tfsdk:"tags"`
+	ID                                  types.String                                `tfsdk:"id"`
+	AccessConfiguration                 *accessConfigurationDSModel                 `tfsdk:"access_configuration"`
+	Arn                                 types.String                                `tfsdk:"arn"`
+	CreationTime                        types.String                                `tfsdk:"creation_time"`
+	DefaultSegmentDeliveryConfiguration *defaultSegmentDeliveryConfigurationDSModel `tfsdk:"default_segment_delivery_configuration"`
+	HttpConfiguration                   *httpConfigurationDSModel                   `tfsdk:"http_configuration"`
+	LastModifiedTime                    types.String                                `tfsdk:"last_modified_time"`
+	SegmentDeliveryConfigurations       []segmentDeliveryConfigurationsDSModel      `tfsdk:"segment_delivery_configurations"`
+	SourceLocationName                  *string                                     `tfsdk:"source_location_name"`
+	Tags                                map[string]*string                          `tfsdk:"tags"`
 }
 
 type accessConfigurationDSModel struct {
-	AccessType                             types.String                                  `tfsdk:"access_type"`
-	SecretsManagerAccessTokenConfiguration secretsManagerAccessTokenConfigurationDSModel `tfsdk:"secrets_manager_access_token_configuration"`
+	AccessType                             types.String                                   `tfsdk:"access_type"`
+	SecretsManagerAccessTokenConfiguration *secretsManagerAccessTokenConfigurationDSModel `tfsdk:"secrets_manager_access_token_configuration"`
 }
 
 type secretsManagerAccessTokenConfigurationDSModel struct {
@@ -57,7 +57,7 @@ type httpConfigurationDSModel struct {
 
 type segmentDeliveryConfigurationsDSModel struct {
 	BaseUrl types.String `tfsdk:"sdc_base_url"`
-	Name    types.String `tfsdk:"name"`
+	SDCName types.String `tfsdk:"sdc_name"`
 }
 
 func (d *dataSourceSourceLocation) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -76,7 +76,7 @@ func (d *dataSourceSourceLocation) Schema(_ context.Context, _ datasource.Schema
 					"access_type": schema.StringAttribute{
 						Computed: true,
 						Validators: []validator.String{
-							stringvalidator.OneOf("S3_SIGV4"),
+							stringvalidator.OneOf("S3_SIGV4", "SECRETS_MANAGER_ACCESS_TOKEN"),
 						},
 					},
 					"secrets_manager_access_token_configuration": schema.SingleNestedAttribute{
@@ -93,52 +93,52 @@ func (d *dataSourceSourceLocation) Schema(_ context.Context, _ datasource.Schema
 							},
 						},
 					},
-					"arn": schema.StringAttribute{
+				},
+			},
+			"arn": schema.StringAttribute{
+				Computed: true,
+			},
+			"creation_time": schema.StringAttribute{
+				Computed: true,
+			},
+			"default_segment_delivery_configuration": schema.SingleNestedAttribute{
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"dsdc_base_url": schema.StringAttribute{
 						Computed: true,
-					},
-					"creation_time": schema.StringAttribute{
-						Computed: true,
-					},
-					"default_segment_delivery_configuration": schema.SingleNestedAttribute{
-						Computed: true,
-						Attributes: map[string]schema.Attribute{
-							"dsdc_base_url": schema.StringAttribute{
-								Computed: true,
-							},
-						},
-					},
-					"http_configuration": schema.SingleNestedAttribute{
-						Required: true,
-						Attributes: map[string]schema.Attribute{
-							"hc_base_url": schema.StringAttribute{
-								Required: true,
-							},
-						},
-					},
-					"last_modified_time": schema.StringAttribute{
-						Computed: true,
-					},
-					"segment_delivery_configurations": schema.ListNestedAttribute{
-						Computed: true,
-						NestedObject: schema.NestedAttributeObject{
-							Attributes: map[string]schema.Attribute{
-								"sdc_base_url": schema.StringAttribute{
-									Computed: true,
-								},
-								"name": schema.StringAttribute{
-									Computed: true,
-								},
-							},
-						},
-					},
-					"source_location_name": schema.StringAttribute{
-						Required: true,
-					},
-					"tags": schema.MapAttribute{
-						Computed:    true,
-						ElementType: types.StringType,
 					},
 				},
+			},
+			"http_configuration": schema.SingleNestedAttribute{
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"hc_base_url": schema.StringAttribute{
+						Computed: true,
+					},
+				},
+			},
+			"last_modified_time": schema.StringAttribute{
+				Computed: true,
+			},
+			"segment_delivery_configurations": schema.ListNestedAttribute{
+				Computed: true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"sdc_base_url": schema.StringAttribute{
+							Computed: true,
+						},
+						"sdc_name": schema.StringAttribute{
+							Computed: true,
+						},
+					},
+				},
+			},
+			"source_location_name": schema.StringAttribute{
+				Required: true,
+			},
+			"tags": schema.MapAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
 			},
 		},
 	}
@@ -160,7 +160,7 @@ func (d *dataSourceSourceLocation) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	sourceLocationName := aws.String(data.SourceLocationName.String())
+	sourceLocationName := data.SourceLocationName
 
 	sourceLocation, err := d.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: sourceLocationName})
 	if err != nil {
@@ -170,10 +170,12 @@ func (d *dataSourceSourceLocation) Read(ctx context.Context, req datasource.Read
 
 	data.ID = types.StringValue(*sourceLocation.SourceLocationName)
 	if sourceLocation.AccessConfiguration != nil {
+		data.AccessConfiguration = &accessConfigurationDSModel{}
 		if sourceLocation.AccessConfiguration.AccessType != nil && *sourceLocation.AccessConfiguration.AccessType != "" {
 			data.AccessConfiguration.AccessType = types.StringValue(*sourceLocation.AccessConfiguration.AccessType)
 		}
 		if sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration != nil {
+			data.AccessConfiguration.SecretsManagerAccessTokenConfiguration = &secretsManagerAccessTokenConfigurationDSModel{}
 			if sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != nil && *sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != "" {
 				data.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName = types.StringValue(*sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName)
 			}
@@ -192,11 +194,13 @@ func (d *dataSourceSourceLocation) Read(ctx context.Context, req datasource.Read
 		data.CreationTime = types.StringValue((aws.TimeValue(sourceLocation.CreationTime)).String())
 	}
 	if sourceLocation.DefaultSegmentDeliveryConfiguration != nil {
+		data.DefaultSegmentDeliveryConfiguration = &defaultSegmentDeliveryConfigurationDSModel{}
 		if sourceLocation.DefaultSegmentDeliveryConfiguration.BaseUrl != nil && *sourceLocation.DefaultSegmentDeliveryConfiguration.BaseUrl != "" {
 			data.DefaultSegmentDeliveryConfiguration.BaseUrl = types.StringValue(*sourceLocation.DefaultSegmentDeliveryConfiguration.BaseUrl)
 		}
 	}
 	if sourceLocation.HttpConfiguration != nil {
+		data.HttpConfiguration = &httpConfigurationDSModel{}
 		if sourceLocation.HttpConfiguration.BaseUrl != nil && *sourceLocation.HttpConfiguration.BaseUrl != "" {
 			data.HttpConfiguration.BaseUrl = types.StringValue(*sourceLocation.HttpConfiguration.BaseUrl)
 		}
@@ -206,25 +210,21 @@ func (d *dataSourceSourceLocation) Read(ctx context.Context, req datasource.Read
 	}
 	if sourceLocation.SegmentDeliveryConfigurations != nil && len(sourceLocation.SegmentDeliveryConfigurations) > 0 {
 		for _, segmentDeliveryConfiguration := range sourceLocation.SegmentDeliveryConfigurations {
+			segmentDeliveryConfigurations := segmentDeliveryConfigurationsDSModel{}
 			if segmentDeliveryConfiguration.BaseUrl != nil && *segmentDeliveryConfiguration.BaseUrl != "" {
-				data.SegmentDeliveryConfigurations = append(data.SegmentDeliveryConfigurations, segmentDeliveryConfigurationsDSModel{
-					BaseUrl: types.StringValue(*segmentDeliveryConfiguration.BaseUrl),
-				})
+				segmentDeliveryConfigurations.BaseUrl = types.StringValue(*segmentDeliveryConfiguration.BaseUrl)
 			}
 			if segmentDeliveryConfiguration.Name != nil && *segmentDeliveryConfiguration.Name != "" {
-				data.SegmentDeliveryConfigurations = append(data.SegmentDeliveryConfigurations, segmentDeliveryConfigurationsDSModel{
-					Name: types.StringValue(*segmentDeliveryConfiguration.Name),
-				})
+				segmentDeliveryConfigurations.SDCName = types.StringValue(*segmentDeliveryConfiguration.Name)
 			}
+			data.SegmentDeliveryConfigurations = append(data.SegmentDeliveryConfigurations, segmentDeliveryConfigurations)
 		}
 	}
 	if sourceLocation.SourceLocationName != nil && *sourceLocation.SourceLocationName != "" {
-		data.SourceLocationName = types.StringValue(*sourceLocation.SourceLocationName)
+		data.SourceLocationName = sourceLocation.SourceLocationName
 	}
 	if sourceLocation.Tags != nil && len(sourceLocation.Tags) > 0 {
-		for key, value := range sourceLocation.Tags {
-			data.Tags[key] = types.StringValue(*value)
-		}
+		data.Tags = sourceLocation.Tags
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
