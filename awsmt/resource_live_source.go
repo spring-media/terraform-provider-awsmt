@@ -2,7 +2,7 @@ package awsmt
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/aws"
+	"fmt"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"reflect"
+	"strings"
 )
 
 var (
@@ -33,19 +34,19 @@ type resourceLiveSourceModel struct {
 	CreationTime              types.String                        `tfsdk:"creation_time"`
 	HttpPackageConfigurations []httpPackageConfigurationsLSRModel `tfsdk:"http_package_configurations"`
 	LastModifiedTime          types.String                        `tfsdk:"last_modified_time"`
-	LiveSourceName            types.String                        `tfsdk:"live_source_name"`
-	SourceLocationName        types.String                        `tfsdk:"source_location_name"`
+	LiveSourceName            *string                             `tfsdk:"live_source_name"`
+	SourceLocationName        *string                             `tfsdk:"source_location_name"`
 	Tags                      map[string]*string                  `tfsdk:"tags"`
 }
 
 type httpPackageConfigurationsLSRModel struct {
-	Path        types.String `tfsdk:"path"`
-	SourceGroup types.String `tfsdk:"source_group"`
-	Type        types.String `tfsdk:"type"`
+	Path        *string `tfsdk:"path"`
+	SourceGroup *string `tfsdk:"source_group"`
+	Type        *string `tfsdk:"type"`
 }
 
 func (r *resourceLiveSource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_source_location"
+	resp.TypeName = req.ProviderTypeName + "_live_source"
 }
 
 func (r *resourceLiveSource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -60,7 +61,7 @@ func (r *resourceLiveSource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"creation_time": schema.StringAttribute{
 				Computed: true,
 			},
-			"http_package_configuration": schema.ListNestedAttribute{
+			"http_package_configurations": schema.ListNestedAttribute{
 				Required: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -89,7 +90,7 @@ func (r *resourceLiveSource) Schema(_ context.Context, _ resource.SchemaRequest,
 				Required: true,
 			},
 			"tags": schema.MapAttribute{
-				Computed:    true,
+				Optional:    true,
 				ElementType: types.StringType,
 			},
 		},
@@ -138,9 +139,18 @@ func (r *resourceLiveSource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
+	var sourceLocationName, liveSourceName string
+
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("source_location_name"), &sourceLocationName)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("live_source_name"), &liveSourceName)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	input := &mediatailor.DescribeLiveSourceInput{}
-	input.LiveSourceName = aws.String(state.LiveSourceName.String())
-	input.SourceLocationName = aws.String(state.SourceLocationName.String())
+	input.LiveSourceName = &liveSourceName
+	input.SourceLocationName = &sourceLocationName
 
 	liveSource, err := r.client.DescribeLiveSource(input)
 	if err != nil {
@@ -148,7 +158,7 @@ func (r *resourceLiveSource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	state = readLiveSourceToState(state, *liveSource)
+	state = readLiveSourceToPlan(state, mediatailor.CreateLiveSourceOutput(*liveSource))
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -166,8 +176,8 @@ func (r *resourceLiveSource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	input := &mediatailor.DescribeLiveSourceInput{}
-	input.LiveSourceName = aws.String(plan.LiveSourceName.String())
-	input.SourceLocationName = aws.String(plan.SourceLocationName.String())
+	input.LiveSourceName = plan.LiveSourceName
+	input.SourceLocationName = plan.SourceLocationName
 
 	liveSource, err := r.client.DescribeLiveSource(input)
 	if err != nil {
@@ -198,7 +208,7 @@ func (r *resourceLiveSource) Update(ctx context.Context, req resource.UpdateRequ
 		)
 	}
 
-	plan = readUpdatedLiveSourceToPlan(plan, *updatedLiveSource)
+	plan = readLiveSourceToPlan(plan, mediatailor.CreateLiveSourceOutput(*updatedLiveSource))
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -216,8 +226,8 @@ func (r *resourceLiveSource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	input := &mediatailor.DeleteLiveSourceInput{}
-	input.LiveSourceName = aws.String(state.LiveSourceName.String())
-	input.SourceLocationName = aws.String(state.SourceLocationName.String())
+	input.LiveSourceName = state.LiveSourceName
+	input.SourceLocationName = state.SourceLocationName
 
 	_, err := r.client.DeleteLiveSource(input)
 	if err != nil {
@@ -229,5 +239,17 @@ func (r *resourceLiveSource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func (r *resourceLiveSource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("arn"), req, resp)
+	idParts := strings.Split(req.ID, ",")
+
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		resp.Diagnostics.AddError(
+			"Unexpected Import Identifier",
+			fmt.Sprintf("Expected import identifier with format: source_location_name, live_source_name. Got: %q", req.ID),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("source_location_name"), idParts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("live_source_name"), idParts[1])...)
+
 }
