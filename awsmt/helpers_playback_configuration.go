@@ -1,7 +1,6 @@
 package awsmt
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -13,15 +12,20 @@ func playbackConfigurationInput(plan resourcePlaybackConfigurationModel) mediata
 	input.AdDecisionServerUrl = plan.AdDecisionServerUrl
 
 	if plan.AvailSupression != nil {
+		input.AvailSuppression = &mediatailor.AvailSuppression{}
 		if plan.AvailSupression.Mode != nil {
 			input.AvailSuppression.Mode = plan.AvailSupression.Mode
 		}
 		if plan.AvailSupression.Value != nil {
 			input.AvailSuppression.Value = plan.AvailSupression.Value
 		}
+		if plan.AvailSupression.FillPolicy != nil {
+			input.AvailSuppression.FillPolicy = plan.AvailSupression.FillPolicy
+		}
 	}
 
 	if plan.Bumper != nil {
+		input.Bumper = &mediatailor.Bumper{}
 		if plan.Bumper.EndUrl != nil {
 			input.Bumper.EndUrl = plan.Bumper.EndUrl
 		}
@@ -31,6 +35,7 @@ func playbackConfigurationInput(plan resourcePlaybackConfigurationModel) mediata
 	}
 
 	if plan.CdnConfiguration != nil {
+		input.CdnConfiguration = &mediatailor.CdnConfiguration{}
 		if plan.CdnConfiguration.AdSegmentUrlPrefix != nil {
 			input.CdnConfiguration.AdSegmentUrlPrefix = plan.CdnConfiguration.AdSegmentUrlPrefix
 		}
@@ -44,6 +49,7 @@ func playbackConfigurationInput(plan resourcePlaybackConfigurationModel) mediata
 	}
 
 	if plan.DashConfiguration != nil {
+		input.DashConfiguration = &mediatailor.DashConfigurationForPut{}
 		if plan.DashConfiguration.MpdLocation != nil {
 			input.DashConfiguration.MpdLocation = plan.DashConfiguration.MpdLocation
 		}
@@ -53,6 +59,7 @@ func playbackConfigurationInput(plan resourcePlaybackConfigurationModel) mediata
 	}
 
 	if plan.LivePreRollConfiguration != nil {
+		input.LivePreRollConfiguration = &mediatailor.LivePreRollConfiguration{}
 		if plan.LivePreRollConfiguration.AdDecisionServerUrl != nil {
 			input.LivePreRollConfiguration.AdDecisionServerUrl = plan.LivePreRollConfiguration.AdDecisionServerUrl
 		}
@@ -69,7 +76,7 @@ func playbackConfigurationInput(plan resourcePlaybackConfigurationModel) mediata
 		}
 	}
 
-	input.Name = aws.String(plan.Name.String())
+	input.Name = plan.Name
 
 	if plan.PersonalizationThresholdSeconds != nil {
 		input.PersonalizationThresholdSeconds = plan.PersonalizationThresholdSeconds
@@ -106,9 +113,12 @@ func readPlaybackConfigToPlan(plan resourcePlaybackConfigurationModel, playbackC
 		if playbackConfiguration.AvailSuppression.Value != nil {
 			plan.AvailSupression.Value = playbackConfiguration.AvailSuppression.Value
 		}
+		if playbackConfiguration.AvailSuppression.FillPolicy != nil {
+			plan.AvailSupression.FillPolicy = playbackConfiguration.AvailSuppression.FillPolicy
+		}
 	}
 	// BUMPER
-	if playbackConfiguration.Bumper != nil {
+	if playbackConfiguration.Bumper != nil && (playbackConfiguration.Bumper.EndUrl != nil || playbackConfiguration.Bumper.StartUrl != nil) {
 		plan.Bumper = &resourceBumperModel{}
 		if playbackConfiguration.Bumper.EndUrl != nil {
 			plan.Bumper.EndUrl = playbackConfiguration.Bumper.EndUrl
@@ -133,6 +143,7 @@ func readPlaybackConfigToPlan(plan resourcePlaybackConfigurationModel, playbackC
 	}
 	// DASH CONFIGURATION
 	if playbackConfiguration.DashConfiguration != nil {
+		plan.DashConfiguration = &resourceDashConfigurationModel{}
 		plan.DashConfiguration.ManifestEndpointPrefix = types.StringValue(*playbackConfiguration.DashConfiguration.MpdLocation)
 		if playbackConfiguration.DashConfiguration.MpdLocation != nil {
 			plan.DashConfiguration.MpdLocation = playbackConfiguration.DashConfiguration.MpdLocation
@@ -141,15 +152,21 @@ func readPlaybackConfigToPlan(plan resourcePlaybackConfigurationModel, playbackC
 			plan.DashConfiguration.OriginManifestType = playbackConfiguration.DashConfiguration.OriginManifestType
 		}
 	}
+
 	// HLS CONFIGURATION
-	if playbackConfiguration.HlsConfiguration != nil {
-		plan.HlsConfiguration = &resourceHlsConfigurationModel{}
-		if playbackConfiguration.HlsConfiguration.ManifestEndpointPrefix != nil {
-			plan.HlsConfiguration.ManifestEndpointPrefix = types.StringValue(*playbackConfiguration.HlsConfiguration.ManifestEndpointPrefix)
-		}
+	if playbackConfiguration.HlsConfiguration != nil && playbackConfiguration.HlsConfiguration.ManifestEndpointPrefix != nil {
+		plan.HlsConfigurationManifestEndpointPrefix = types.StringValue(*playbackConfiguration.HlsConfiguration.ManifestEndpointPrefix)
 	}
+
+	// LOG CONFIGURATION
+	if playbackConfiguration.LogConfiguration != nil {
+		plan.LogConfigurationPercentEnabled = types.Int64Value(*playbackConfiguration.LogConfiguration.PercentEnabled)
+	} else {
+		plan.LogConfigurationPercentEnabled = types.Int64Value(0)
+	}
+
 	// LIVE PRE ROLL CONFIGURATION
-	if playbackConfiguration.LivePreRollConfiguration != nil {
+	if playbackConfiguration.LivePreRollConfiguration != nil && (playbackConfiguration.LivePreRollConfiguration.AdDecisionServerUrl != nil || playbackConfiguration.LivePreRollConfiguration.MaxDurationSeconds != nil) {
 		plan.LivePreRollConfiguration = &resourceLivePreRollConfigurationModel{}
 		if playbackConfiguration.LivePreRollConfiguration.AdDecisionServerUrl != nil {
 			plan.LivePreRollConfiguration.AdDecisionServerUrl = playbackConfiguration.LivePreRollConfiguration.AdDecisionServerUrl
@@ -158,13 +175,7 @@ func readPlaybackConfigToPlan(plan resourcePlaybackConfigurationModel, playbackC
 			plan.LivePreRollConfiguration.MaxDurationSeconds = playbackConfiguration.LivePreRollConfiguration.MaxDurationSeconds
 		}
 	}
-	// LOG CONFIGURATION
-	if playbackConfiguration.LogConfiguration != nil {
-		plan.LogConfiguration = &resourceLogConfigurationModel{}
-		if playbackConfiguration.LogConfiguration.PercentEnabled != nil {
-			plan.LogConfiguration.PercentEnabled = types.Int64Value(*playbackConfiguration.LogConfiguration.PercentEnabled)
-		}
-	}
+
 	// MANIFEST PROCESSING RULES
 	if playbackConfiguration.ManifestProcessingRules != nil {
 		plan.ManifestProcessingRules = &resourceManifestProcessingRulesModel{}
@@ -175,7 +186,7 @@ func readPlaybackConfigToPlan(plan resourcePlaybackConfigurationModel, playbackC
 			}
 		}
 	}
-	plan.Name = types.StringValue(*playbackConfiguration.Name)
+	plan.Name = playbackConfiguration.Name
 	// PERSONALIZATION THRESHOLD SECONDS
 	if playbackConfiguration.PersonalizationThresholdSeconds != nil {
 		plan.PersonalizationThresholdSeconds = playbackConfiguration.PersonalizationThresholdSeconds
@@ -204,113 +215,4 @@ func readPlaybackConfigToPlan(plan resourcePlaybackConfigurationModel, playbackC
 	plan.ID = types.StringValue(*playbackConfiguration.Name)
 
 	return plan
-}
-
-func readPlaybackConfigToState(state resourcePlaybackConfigurationModel, playbackConfiguration mediatailor.GetPlaybackConfigurationOutput) resourcePlaybackConfigurationModel {
-	state.Name = types.StringValue(*playbackConfiguration.Name)
-	state.PlaybackConfigurationArn = types.StringValue(*playbackConfiguration.PlaybackConfigurationArn)
-	state.AdDecisionServerUrl = playbackConfiguration.AdDecisionServerUrl
-	// AVAIL SUPRESSION
-	if playbackConfiguration.AvailSuppression != nil {
-		state.AvailSupression = &resourceAvailSupressionModel{}
-		if playbackConfiguration.AvailSuppression.Mode != nil {
-			state.AvailSupression.Mode = playbackConfiguration.AvailSuppression.Mode
-		}
-		if playbackConfiguration.AvailSuppression.Value != nil {
-			state.AvailSupression.Value = playbackConfiguration.AvailSuppression.Value
-		}
-	}
-	// BUMPER
-	if playbackConfiguration.Bumper != nil {
-		state.Bumper = &resourceBumperModel{}
-		if playbackConfiguration.Bumper.EndUrl != nil {
-			state.Bumper.EndUrl = playbackConfiguration.Bumper.EndUrl
-		}
-		if playbackConfiguration.Bumper.StartUrl != nil {
-			state.Bumper.StartUrl = playbackConfiguration.Bumper.StartUrl
-		}
-	}
-	// CDN CONFIGURATION
-	if playbackConfiguration.CdnConfiguration != nil {
-		state.CdnConfiguration = &resourceCdnConfigurationModel{}
-		if playbackConfiguration.CdnConfiguration.AdSegmentUrlPrefix != nil {
-			state.CdnConfiguration.AdSegmentUrlPrefix = playbackConfiguration.CdnConfiguration.AdSegmentUrlPrefix
-		}
-		if playbackConfiguration.CdnConfiguration.ContentSegmentUrlPrefix != nil {
-			state.CdnConfiguration.ContentSegmentUrlPrefix = playbackConfiguration.CdnConfiguration.ContentSegmentUrlPrefix
-		}
-	}
-	// CONFIGURATION ALIASES
-	if playbackConfiguration.ConfigurationAliases != nil {
-		state.ConfigurationAliases = playbackConfiguration.ConfigurationAliases
-	}
-	// DASH CONFIGURATION
-	if playbackConfiguration.DashConfiguration != nil {
-		state.DashConfiguration.ManifestEndpointPrefix = types.StringValue(*playbackConfiguration.DashConfiguration.MpdLocation)
-		if playbackConfiguration.DashConfiguration.MpdLocation != nil {
-			state.DashConfiguration.MpdLocation = playbackConfiguration.DashConfiguration.MpdLocation
-		}
-		if playbackConfiguration.DashConfiguration.OriginManifestType != nil {
-			state.DashConfiguration.OriginManifestType = playbackConfiguration.DashConfiguration.OriginManifestType
-		}
-	}
-	// HLS CONFIGURATION
-	if playbackConfiguration.HlsConfiguration != nil {
-		state.HlsConfiguration = &resourceHlsConfigurationModel{}
-		if playbackConfiguration.HlsConfiguration.ManifestEndpointPrefix != nil {
-			state.HlsConfiguration.ManifestEndpointPrefix = types.StringValue(*playbackConfiguration.HlsConfiguration.ManifestEndpointPrefix)
-		}
-	}
-	// LIVE PRE ROLL CONFIGURATION
-	if playbackConfiguration.LivePreRollConfiguration != nil {
-		state.LivePreRollConfiguration = &resourceLivePreRollConfigurationModel{}
-		if playbackConfiguration.LivePreRollConfiguration.AdDecisionServerUrl != nil {
-			state.LivePreRollConfiguration.AdDecisionServerUrl = playbackConfiguration.LivePreRollConfiguration.AdDecisionServerUrl
-		}
-		if playbackConfiguration.LivePreRollConfiguration.MaxDurationSeconds != nil {
-			state.LivePreRollConfiguration.MaxDurationSeconds = playbackConfiguration.LivePreRollConfiguration.MaxDurationSeconds
-		}
-	}
-	// LOG CONFIGURATION
-	if playbackConfiguration.LogConfiguration != nil {
-		state.LogConfiguration.PercentEnabled = types.Int64Value(*playbackConfiguration.LogConfiguration.PercentEnabled)
-	}
-	// MANIFEST PROCESSING RULES
-	if playbackConfiguration.ManifestProcessingRules != nil {
-		state.ManifestProcessingRules = &resourceManifestProcessingRulesModel{}
-		if playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough != nil {
-			state.ManifestProcessingRules.AdMarkerPassthrough = &resourceAdMarkerPassthroughModel{}
-			if playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough.Enabled != nil {
-				state.ManifestProcessingRules.AdMarkerPassthrough.Enabled = playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough.Enabled
-			}
-		}
-	}
-	// PERSONALIZATION THRESHOLD SECONDS
-	if playbackConfiguration.PersonalizationThresholdSeconds != nil {
-		state.PersonalizationThresholdSeconds = playbackConfiguration.PersonalizationThresholdSeconds
-	}
-	// PLAYBACK ENDPOINT PREFIX
-	state.PlaybackEndpointPrefix = types.StringValue(*playbackConfiguration.PlaybackEndpointPrefix)
-	// SESSION INITIALIZATION ENDPOINT PREFIX
-	state.SessionInitializationEndpointPrefix = types.StringValue(*playbackConfiguration.SessionInitializationEndpointPrefix)
-	// SLATE AD URL
-	if playbackConfiguration.SlateAdUrl != nil {
-		state.SlateAdUrl = playbackConfiguration.SlateAdUrl
-	}
-	// TAGS
-	if playbackConfiguration.Tags != nil {
-		state.Tags = playbackConfiguration.Tags
-	}
-	// TRANSCODE PROFILE NAME
-	if playbackConfiguration.TranscodeProfileName != nil {
-		state.TranscodeProfileName = playbackConfiguration.TranscodeProfileName
-	}
-	// VIDEO CONTENT SOURCE URL
-	if playbackConfiguration.VideoContentSourceUrl != nil {
-		state.VideoContentSourceUrl = playbackConfiguration.VideoContentSourceUrl
-	}
-
-	state.ID = types.StringValue(*playbackConfiguration.Name)
-
-	return state
 }
