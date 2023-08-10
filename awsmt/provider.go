@@ -58,12 +58,10 @@ func (p *awsmtProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		return
 	}
 
-	var region = ""
+	var region = "eu-central-1"
 	var profile = ""
 
-	if config.Region.IsUnknown() || config.Region.IsNull() {
-		region = "eu-central-1"
-	} else {
+	if !config.Region.IsUnknown() || !config.Region.IsNull() {
 		region = config.Region.ValueString()
 	}
 
