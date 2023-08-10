@@ -1,16 +1,25 @@
 package awsmt
 
 import (
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"os"
 	"regexp"
 	"testing"
 )
 
-func testAccPreCheck(t *testing.T) {
+func testAccPreCheck(t *testing.T) string {
 	if a, b, c := os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), os.Getenv("AWS_PROFILE"); (a == "" || b == "") && c == "" {
 		t.Fatal("Either AWS_PROFILE or both AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be set for acceptance tests")
 	}
+	return fmt.Sprintf(
+		`resource "awsmt_source_location" "test_source_location_vod"{
+		source_location_name = "source_location_vod"
+		http_configuration = {
+			hc_base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
+		}
+	}`)
+
 }
 
 func TestAccChannelResourceBasic(t *testing.T) {

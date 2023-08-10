@@ -10,21 +10,22 @@ func vodSourceInput(plan resourceVodSourceModel) mediatailor.CreateVodSourceInpu
 	var input mediatailor.CreateVodSourceInput
 
 	if plan.HttpPackageConfigurations != nil && len(plan.HttpPackageConfigurations) > 0 {
+		input.HttpPackageConfigurations = []*mediatailor.HttpPackageConfiguration{}
 		for _, httpPackageConfiguration := range plan.HttpPackageConfigurations {
 			httpPackageConfigurations := &mediatailor.HttpPackageConfiguration{}
-			httpPackageConfigurations.Path = aws.String(httpPackageConfiguration.Path.String())
-			httpPackageConfigurations.SourceGroup = aws.String(httpPackageConfiguration.SourceGroup.String())
-			httpPackageConfigurations.Type = aws.String(httpPackageConfiguration.Type.String())
+			httpPackageConfigurations.Path = httpPackageConfiguration.Path
+			httpPackageConfigurations.SourceGroup = httpPackageConfiguration.SourceGroup
+			httpPackageConfigurations.Type = httpPackageConfiguration.Type
 			input.HttpPackageConfigurations = append(input.HttpPackageConfigurations, httpPackageConfigurations)
 		}
 	}
 
-	if !plan.VodSourceName.IsUnknown() && !plan.VodSourceName.IsNull() {
-		input.VodSourceName = aws.String(plan.VodSourceName.String())
+	if plan.VodSourceName != nil {
+		input.VodSourceName = plan.VodSourceName
 	}
 
-	if !plan.SourceLocationName.IsUnknown() && !plan.SourceLocationName.IsNull() {
-		input.SourceLocationName = aws.String(plan.SourceLocationName.String())
+	if plan.SourceLocationName != nil {
+		input.SourceLocationName = plan.SourceLocationName
 	}
 
 	if plan.Tags != nil && len(plan.Tags) > 0 {
@@ -35,7 +36,11 @@ func vodSourceInput(plan resourceVodSourceModel) mediatailor.CreateVodSourceInpu
 }
 
 func readVodSourceToPlan(plan resourceVodSourceModel, vodSource mediatailor.CreateVodSourceOutput) resourceVodSourceModel {
-	plan.ID = types.StringValue(*vodSource.Arn)
+	vodSourceName := *vodSource.VodSourceName
+	sourceLocationName := *vodSource.SourceLocationName
+	idNames := sourceLocationName + "," + vodSourceName
+
+	plan.ID = types.StringValue(idNames)
 
 	if vodSource.Arn != nil {
 		plan.Arn = types.StringValue(*vodSource.Arn)
@@ -46,11 +51,12 @@ func readVodSourceToPlan(plan resourceVodSourceModel, vodSource mediatailor.Crea
 	}
 
 	if vodSource.HttpPackageConfigurations != nil && len(vodSource.HttpPackageConfigurations) > 0 {
+		plan.HttpPackageConfigurations = []httpPackageConfigurationsVSRModel{}
 		for _, httpPackageConfiguration := range vodSource.HttpPackageConfigurations {
 			httpPackageConfigurations := httpPackageConfigurationsVSRModel{}
-			httpPackageConfigurations.Path = types.StringValue(*httpPackageConfiguration.Path)
-			httpPackageConfigurations.SourceGroup = types.StringValue(*httpPackageConfiguration.SourceGroup)
-			httpPackageConfigurations.Type = types.StringValue(*httpPackageConfiguration.Type)
+			httpPackageConfigurations.Path = httpPackageConfiguration.Path
+			httpPackageConfigurations.SourceGroup = httpPackageConfiguration.SourceGroup
+			httpPackageConfigurations.Type = httpPackageConfiguration.Type
 			plan.HttpPackageConfigurations = append(plan.HttpPackageConfigurations, httpPackageConfigurations)
 		}
 	}
@@ -60,11 +66,11 @@ func readVodSourceToPlan(plan resourceVodSourceModel, vodSource mediatailor.Crea
 	}
 
 	if vodSource.VodSourceName != nil {
-		plan.VodSourceName = types.StringValue(*vodSource.VodSourceName)
+		plan.VodSourceName = vodSource.VodSourceName
 	}
 
 	if vodSource.SourceLocationName != nil {
-		plan.SourceLocationName = types.StringValue(*vodSource.SourceLocationName)
+		plan.SourceLocationName = vodSource.SourceLocationName
 	}
 
 	if vodSource.Tags != nil && len(vodSource.Tags) > 0 {
@@ -72,108 +78,29 @@ func readVodSourceToPlan(plan resourceVodSourceModel, vodSource mediatailor.Crea
 	}
 
 	return plan
-}
-
-func readVodSourceToState(state resourceVodSourceModel, vodSource mediatailor.DescribeVodSourceOutput) resourceVodSourceModel {
-	state.ID = types.StringValue(*vodSource.Arn)
-
-	if vodSource.Arn != nil {
-		state.Arn = types.StringValue(*vodSource.Arn)
-	}
-
-	if vodSource.CreationTime != nil {
-		state.CreationTime = types.StringValue((aws.TimeValue(vodSource.CreationTime)).String())
-	}
-
-	if vodSource.HttpPackageConfigurations != nil && len(vodSource.HttpPackageConfigurations) > 0 {
-		for _, httpPackageConfiguration := range vodSource.HttpPackageConfigurations {
-			httpPackageConfigurations := httpPackageConfigurationsVSRModel{}
-			httpPackageConfigurations.Path = types.StringValue(*httpPackageConfiguration.Path)
-			httpPackageConfigurations.SourceGroup = types.StringValue(*httpPackageConfiguration.SourceGroup)
-			httpPackageConfigurations.Type = types.StringValue(*httpPackageConfiguration.Type)
-			state.HttpPackageConfigurations = append(state.HttpPackageConfigurations, httpPackageConfigurations)
-		}
-	}
-
-	if vodSource.LastModifiedTime != nil {
-		state.LastModifiedTime = types.StringValue((aws.TimeValue(vodSource.LastModifiedTime)).String())
-	}
-
-	if vodSource.VodSourceName != nil {
-		state.VodSourceName = types.StringValue(*vodSource.VodSourceName)
-	}
-
-	if vodSource.SourceLocationName != nil {
-		state.SourceLocationName = types.StringValue(*vodSource.SourceLocationName)
-	}
-
-	if vodSource.Tags != nil && len(vodSource.Tags) > 0 {
-		state.Tags = vodSource.Tags
-	}
-
-	return state
 }
 
 func vodSourceUpdateInput(plan resourceVodSourceModel) mediatailor.UpdateVodSourceInput {
 	var input mediatailor.UpdateVodSourceInput
 
 	if plan.HttpPackageConfigurations != nil && len(plan.HttpPackageConfigurations) > 0 {
+		input.HttpPackageConfigurations = []*mediatailor.HttpPackageConfiguration{}
 		for _, httpPackageConfiguration := range plan.HttpPackageConfigurations {
 			httpPackageConfigurations := &mediatailor.HttpPackageConfiguration{}
-			httpPackageConfigurations.Path = aws.String(httpPackageConfiguration.Path.String())
-			httpPackageConfigurations.SourceGroup = aws.String(httpPackageConfiguration.SourceGroup.String())
-			httpPackageConfigurations.Type = aws.String(httpPackageConfiguration.Type.String())
+			httpPackageConfigurations.Path = httpPackageConfiguration.Path
+			httpPackageConfigurations.SourceGroup = httpPackageConfiguration.SourceGroup
+			httpPackageConfigurations.Type = httpPackageConfiguration.Type
 			input.HttpPackageConfigurations = append(input.HttpPackageConfigurations, httpPackageConfigurations)
 		}
 	}
 
-	if !plan.VodSourceName.IsUnknown() && !plan.VodSourceName.IsNull() {
-		input.VodSourceName = aws.String(plan.VodSourceName.String())
+	if plan.VodSourceName != nil {
+		input.VodSourceName = plan.VodSourceName
 	}
 
-	if !plan.SourceLocationName.IsUnknown() && !plan.SourceLocationName.IsNull() {
-		input.SourceLocationName = aws.String(plan.SourceLocationName.String())
+	if plan.SourceLocationName != nil {
+		input.SourceLocationName = plan.SourceLocationName
 	}
 
 	return input
-}
-
-func readUpdatedVodSourceToPlan(plan resourceVodSourceModel, vodSource mediatailor.UpdateVodSourceOutput) resourceVodSourceModel {
-	plan.ID = types.StringValue(*vodSource.Arn)
-
-	if vodSource.Arn != nil {
-		plan.Arn = types.StringValue(*vodSource.Arn)
-	}
-
-	if vodSource.CreationTime != nil {
-		plan.CreationTime = types.StringValue((aws.TimeValue(vodSource.CreationTime)).String())
-	}
-
-	if vodSource.HttpPackageConfigurations != nil && len(vodSource.HttpPackageConfigurations) > 0 {
-		for _, httpPackageConfiguration := range vodSource.HttpPackageConfigurations {
-			httpPackageConfigurations := httpPackageConfigurationsVSRModel{}
-			httpPackageConfigurations.Path = types.StringValue(*httpPackageConfiguration.Path)
-			httpPackageConfigurations.SourceGroup = types.StringValue(*httpPackageConfiguration.SourceGroup)
-			httpPackageConfigurations.Type = types.StringValue(*httpPackageConfiguration.Type)
-			plan.HttpPackageConfigurations = append(plan.HttpPackageConfigurations, httpPackageConfigurations)
-		}
-	}
-
-	if vodSource.LastModifiedTime != nil {
-		plan.LastModifiedTime = types.StringValue((aws.TimeValue(vodSource.LastModifiedTime)).String())
-	}
-
-	if vodSource.VodSourceName != nil {
-		plan.VodSourceName = types.StringValue(*vodSource.VodSourceName)
-	}
-
-	if vodSource.SourceLocationName != nil {
-		plan.SourceLocationName = types.StringValue(*vodSource.SourceLocationName)
-	}
-
-	if vodSource.Tags != nil && len(vodSource.Tags) > 0 {
-		plan.Tags = vodSource.Tags
-	}
-
-	return plan
 }

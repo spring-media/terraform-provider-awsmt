@@ -22,7 +22,7 @@ resource "awsmt_playback_configuration" "r1" {
 }
 
 data "awsmt_playback_configuration" "test"{
-  name=awsmt_playback_configuration.r1.name
+  name = awsmt_playback_configuration.r1.name
 }
 
 output "playback_configuration_out" {
