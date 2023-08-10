@@ -2,7 +2,6 @@ package awsmt
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -26,26 +25,30 @@ type resourcePlaybackConfiguration struct {
 }
 
 type resourcePlaybackConfigurationModel struct {
-	ID                                  types.String                           `tfsdk:"id"`
-	AdDecisionServerUrl                 *string                                `tfsdk:"ad_decision_server_url"`
-	AvailSupression                     *resourceAvailSupressionModel          `tfsdk:"avail_supression"`
-	Bumper                              *resourceBumperModel                   `tfsdk:"bumper"`
-	CdnConfiguration                    *resourceCdnConfigurationModel         `tfsdk:"cdn_configuration"`
-	ConfigurationAliases                map[string]map[string]*string          `tfsdk:"configuration_aliases"`
-	DashConfiguration                   *resourceDashConfigurationModel        `tfsdk:"dash_configuration"`
-	HlsConfiguration                    *resourceHlsConfigurationModel         `tfsdk:"hls_configuration"`
-	LivePreRollConfiguration            *resourceLivePreRollConfigurationModel `tfsdk:"live_pre_roll_configuration"`
-	LogConfiguration                    *resourceLogConfigurationModel         `tfsdk:"log_configuration"`
-	ManifestProcessingRules             *resourceManifestProcessingRulesModel  `tfsdk:"manifest_processing_rules"`
-	Name                                types.String                           `tfsdk:"name"`
-	PersonalizationThresholdSeconds     *int64                                 `tfsdk:"personalization_threshold_seconds"`
-	PlaybackConfigurationArn            types.String                           `tfsdk:"playback_configuration_arn"`
-	PlaybackEndpointPrefix              types.String                           `tfsdk:"playback_endpoint_prefix"`
-	SessionInitializationEndpointPrefix types.String                           `tfsdk:"session_initialization_endpoint_prefix"`
-	SlateAdUrl                          *string                                `tfsdk:"slate_ad_url"`
-	Tags                                map[string]*string                     `tfsdk:"tags"`
-	TranscodeProfileName                *string                                `tfsdk:"transcode_profile_name"`
-	VideoContentSourceUrl               *string                                `tfsdk:"video_content_source_url"`
+	ID                   types.String                    `tfsdk:"id"`
+	AdDecisionServerUrl  *string                         `tfsdk:"ad_decision_server_url"`
+	AvailSupression      *resourceAvailSupressionModel   `tfsdk:"avail_supression"`
+	Bumper               *resourceBumperModel            `tfsdk:"bumper"`
+	CdnConfiguration     *resourceCdnConfigurationModel  `tfsdk:"cdn_configuration"`
+	ConfigurationAliases map[string]map[string]*string   `tfsdk:"configuration_aliases"`
+	DashConfiguration    *resourceDashConfigurationModel `tfsdk:"dash_configuration"`
+	// @ADR
+	// Context: The Provider Framework does not allow computed blocks
+	// Decision: We decided to flatten the Log Configuration and the HLS Configuration blocks into the resource.
+	// Consequences: The schema of the object differs from that of the SDK.
+	HlsConfigurationManifestEndpointPrefix types.String                           `tfsdk:"hls_configuration_manifest_endpoint_prefix"`
+	LogConfigurationPercentEnabled         types.Int64                            `tfsdk:"log_configuration_percent_enabled"`
+	LivePreRollConfiguration               *resourceLivePreRollConfigurationModel `tfsdk:"live_pre_roll_configuration"`
+	ManifestProcessingRules                *resourceManifestProcessingRulesModel  `tfsdk:"manifest_processing_rules"`
+	Name                                   *string                                `tfsdk:"name"`
+	PersonalizationThresholdSeconds        *int64                                 `tfsdk:"personalization_threshold_seconds"`
+	PlaybackConfigurationArn               types.String                           `tfsdk:"playback_configuration_arn"`
+	PlaybackEndpointPrefix                 types.String                           `tfsdk:"playback_endpoint_prefix"`
+	SessionInitializationEndpointPrefix    types.String                           `tfsdk:"session_initialization_endpoint_prefix"`
+	SlateAdUrl                             *string                                `tfsdk:"slate_ad_url"`
+	Tags                                   map[string]*string                     `tfsdk:"tags"`
+	TranscodeProfileName                   *string                                `tfsdk:"transcode_profile_name"`
+	VideoContentSourceUrl                  *string                                `tfsdk:"video_content_source_url"`
 }
 
 type resourceAvailSupressionModel struct {
@@ -70,17 +73,9 @@ type resourceDashConfigurationModel struct {
 	OriginManifestType     *string      `tfsdk:"origin_manifest_type"`
 }
 
-type resourceHlsConfigurationModel struct {
-	ManifestEndpointPrefix types.String `tfsdk:"manifest_endpoint_prefix"`
-}
-
 type resourceLivePreRollConfigurationModel struct {
 	AdDecisionServerUrl *string `tfsdk:"ad_decision_server_url"`
 	MaxDurationSeconds  *int64  `tfsdk:"max_duration_seconds"`
-}
-
-type resourceLogConfigurationModel struct {
-	PercentEnabled types.Int64 `tfsdk:"percent_enabled"`
 }
 
 type resourceManifestProcessingRulesModel struct {
@@ -107,35 +102,29 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
 					"fill_policy": schema.StringAttribute{
-						Optional:   true,
-						CustomType: types.StringType,
+						Optional: true,
 					},
 					"mode": schema.StringAttribute{
-						Optional:   true,
-						CustomType: types.StringType,
+						Optional: true,
 					},
 					"value": schema.StringAttribute{
-						Optional:   true,
-						CustomType: types.StringType,
+						Optional: true,
 					},
 				},
 			},
-			"bumper": schema.MapNestedAttribute{
+			"bumper": schema.SingleNestedAttribute{
 				Optional: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"end_url": schema.StringAttribute{
-							Optional: true,
-						},
-						"start_url": schema.StringAttribute{
-							Optional: true,
-						},
+				Attributes: map[string]schema.Attribute{
+					"end_url": schema.StringAttribute{
+						Optional: true,
+					},
+					"start_url": schema.StringAttribute{
+						Optional: true,
 					},
 				},
 			},
 			"cdn_configuration": schema.SingleNestedAttribute{
 				Optional: true,
-
 				Attributes: map[string]schema.Attribute{
 					"ad_segment_url_prefix": schema.StringAttribute{
 						Optional: true,
@@ -145,9 +134,13 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 					},
 				},
 			},
-			"configuration_aliases": schema.ListAttribute{
-				Optional:    true,
-				ElementType: types.StringType,
+			"configuration_aliases": schema.MapAttribute{
+				Optional: true,
+				ElementType: types.MapType{
+					ElemType: types.MapType{
+						ElemType: types.StringType,
+					},
+				},
 			},
 			"dash_configuration": schema.SingleNestedAttribute{
 				Required: true,
@@ -163,14 +156,11 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 					},
 				},
 			},
-			"hls_configuration": schema.SingleNestedAttribute{
+			"hls_configuration_manifest_endpoint_prefix": schema.StringAttribute{
 				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"manifest_endpoint_prefix": schema.StringAttribute{
-						Computed:   true,
-						CustomType: types.StringType,
-					},
-				},
+			},
+			"log_configuration_percent_enabled": schema.Int64Attribute{
+				Computed: true,
 			},
 			"live_pre_roll_configuration": schema.SingleNestedAttribute{
 				Optional: true,
@@ -180,15 +170,6 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 					},
 					"max_duration_seconds": schema.Int64Attribute{
 						Optional: true,
-					},
-				},
-			},
-			"log_configuration": schema.SingleNestedAttribute{
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"percent_enabled": schema.Int64Attribute{
-						Computed:   true,
-						CustomType: types.Int64Type,
 					},
 				},
 			},
@@ -282,7 +263,7 @@ func (r *resourcePlaybackConfiguration) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	name := aws.String(state.Name.String())
+	name := state.Name
 
 	// Get the playback configuration
 	playbackConfiguration, err := r.client.GetPlaybackConfiguration(&mediatailor.GetPlaybackConfigurationInput{Name: name})
@@ -294,7 +275,7 @@ func (r *resourcePlaybackConfiguration) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	state = readPlaybackConfigToState(state, *playbackConfiguration)
+	state = readPlaybackConfigToPlan(state, mediatailor.PutPlaybackConfigurationOutput(*playbackConfiguration))
 
 	// Set refreshed state
 	diags = resp.State.Set(ctx, &state)
@@ -314,7 +295,7 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 	}
 
 	// retrieve the resource playbackConfiguration
-	name := aws.String(plan.Name.String())
+	name := plan.Name
 
 	// Get the playback configuration
 	playbackConfiguration, err := r.client.GetPlaybackConfiguration(&mediatailor.GetPlaybackConfigurationInput{Name: name})
@@ -374,7 +355,7 @@ func (r *resourcePlaybackConfiguration) Delete(ctx context.Context, req resource
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	name := aws.String(state.Name.String())
+	name := state.Name
 	_, err := r.client.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: name})
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -387,5 +368,5 @@ func (r *resourcePlaybackConfiguration) Delete(ctx context.Context, req resource
 }
 
 func (r *resourcePlaybackConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
 }

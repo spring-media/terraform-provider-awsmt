@@ -98,68 +98,64 @@ func (d *dataSourcePlaybackConfiguration) Schema(_ context.Context, _ datasource
 			"ad_decision_server_url": schema.StringAttribute{
 				Computed: true,
 			},
-			"avail_supression": schema.MapNestedAttribute{
+			"avail_supression": schema.SingleNestedAttribute{
 				Computed: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"fill_policy": schema.StringAttribute{
-							Computed:   true,
-							CustomType: types.StringType,
-						},
-						"mode": schema.StringAttribute{
-							Computed:   true,
-							CustomType: types.StringType,
-						},
-						"value": schema.StringAttribute{
-							Computed:   true,
-							CustomType: types.StringType,
-						},
+				Attributes: map[string]schema.Attribute{
+					"fill_policy": schema.StringAttribute{
+						Computed:   true,
+						CustomType: types.StringType,
+					},
+					"mode": schema.StringAttribute{
+						Computed:   true,
+						CustomType: types.StringType,
+					},
+					"value": schema.StringAttribute{
+						Computed:   true,
+						CustomType: types.StringType,
 					},
 				},
 			},
-			"bumper": schema.MapNestedAttribute{
+			"bumper": schema.SingleNestedAttribute{
 				Computed: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"end_url": schema.StringAttribute{
-							Computed: true,
-						},
-						"start_url": schema.StringAttribute{
-							Computed: true,
-						},
+				Attributes: map[string]schema.Attribute{
+					"end_url": schema.StringAttribute{
+						Computed: true,
+					},
+					"start_url": schema.StringAttribute{
+						Computed: true,
 					},
 				},
 			},
-			"cdn_configuration": schema.MapNestedAttribute{
+			"cdn_configuration": schema.SingleNestedAttribute{
 				Computed: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"ad_segment_url_prefix": schema.StringAttribute{
-							Computed: true,
-						},
-						"content_segment_url_prefix": schema.StringAttribute{
-							Computed: true,
-						},
+				Attributes: map[string]schema.Attribute{
+					"ad_segment_url_prefix": schema.StringAttribute{
+						Computed: true,
+					},
+					"content_segment_url_prefix": schema.StringAttribute{
+						Computed: true,
 					},
 				},
 			},
 			"configuration_aliases": schema.ListAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
-			},
-			"dash_configuration": schema.MapNestedAttribute{
 				Computed: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"manifest_endpoint_prefix": schema.StringAttribute{
-							Computed: true,
-						},
-						"mpd_location": schema.StringAttribute{
-							Computed: true,
-						},
-						"origin_manifest_type": schema.StringAttribute{
-							Computed: true,
-						},
+				ElementType: types.MapType{
+					ElemType: types.MapType{
+						ElemType: types.StringType,
+					},
+				},
+			},
+			"dash_configuration": schema.SingleNestedAttribute{
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"manifest_endpoint_prefix": schema.StringAttribute{
+						Computed: true,
+					},
+					"mpd_location": schema.StringAttribute{
+						Computed: true,
+					},
+					"origin_manifest_type": schema.StringAttribute{
+						Computed: true,
 					},
 				},
 			},
@@ -171,16 +167,14 @@ func (d *dataSourcePlaybackConfiguration) Schema(_ context.Context, _ datasource
 					},
 				},
 			},
-			"live_pre_roll_configuration": schema.MapNestedAttribute{
+			"live_pre_roll_configuration": schema.SingleNestedAttribute{
 				Computed: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"ad_decision_server_url": schema.StringAttribute{
-							Computed: true,
-						},
-						"max_duration_seconds": schema.Int64Attribute{
-							Computed: true,
-						},
+				Attributes: map[string]schema.Attribute{
+					"ad_decision_server_url": schema.StringAttribute{
+						Computed: true,
+					},
+					"max_duration_seconds": schema.Int64Attribute{
+						Computed: true,
 					},
 				},
 			},
@@ -192,16 +186,15 @@ func (d *dataSourcePlaybackConfiguration) Schema(_ context.Context, _ datasource
 					},
 				},
 			},
-			"manifest_processing_rules": schema.MapNestedAttribute{
+			"manifest_processing_rules": schema.SingleNestedAttribute{
 				Computed: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"ad_marker_passthrough": schema.SingleNestedAttribute{
-							Computed: true,
-							Attributes: map[string]schema.Attribute{
-								"enabled": schema.BoolAttribute{
-									Computed: true,
-								},
+
+				Attributes: map[string]schema.Attribute{
+					"ad_marker_passthrough": schema.SingleNestedAttribute{
+						Computed: true,
+						Attributes: map[string]schema.Attribute{
+							"enabled": schema.BoolAttribute{
+								Computed: true,
 							},
 						},
 					},
@@ -267,17 +260,24 @@ func (d *dataSourcePlaybackConfiguration) Read(ctx context.Context, req datasour
 	}
 
 	data.AdDecisionServerUrl = playbackConfiguration.AdDecisionServerUrl
-	// AVAIL SUPRESSION data.AvailSupression
+
+	// AVAIL SUPRESSION
 	if playbackConfiguration.AvailSuppression != nil {
+		data.AvailSupression = &availSupressionModel{}
 		if playbackConfiguration.AvailSuppression.Mode != nil {
 			data.AvailSupression.Mode = playbackConfiguration.AvailSuppression.Mode
 		}
 		if playbackConfiguration.AvailSuppression.Value != nil {
 			data.AvailSupression.Value = playbackConfiguration.AvailSuppression.Value
 		}
+		if playbackConfiguration.AvailSuppression.FillPolicy != nil {
+			data.AvailSupression.FillPolicy = playbackConfiguration.AvailSuppression.FillPolicy
+		}
+
 	}
 	// BUMPER
 	if playbackConfiguration.Bumper != nil {
+		data.Bumper = &bumperModel{}
 		if playbackConfiguration.Bumper.EndUrl != nil {
 			data.Bumper.EndUrl = playbackConfiguration.Bumper.EndUrl
 		}
@@ -287,6 +287,7 @@ func (d *dataSourcePlaybackConfiguration) Read(ctx context.Context, req datasour
 	}
 	// CDN CONFIGURATION
 	if playbackConfiguration.CdnConfiguration != nil {
+		data.CdnConfiguration = &cdnConfigurationModel{}
 		if playbackConfiguration.CdnConfiguration.AdSegmentUrlPrefix != nil {
 			data.CdnConfiguration.AdSegmentUrlPrefix = playbackConfiguration.CdnConfiguration.AdSegmentUrlPrefix
 		}
@@ -294,9 +295,13 @@ func (d *dataSourcePlaybackConfiguration) Read(ctx context.Context, req datasour
 			data.CdnConfiguration.ContentSegmentUrlPrefix = playbackConfiguration.CdnConfiguration.ContentSegmentUrlPrefix
 		}
 	}
-	data.ConfigurationAliases = playbackConfiguration.ConfigurationAliases
+
+	if playbackConfiguration.ConfigurationAliases != nil {
+		data.ConfigurationAliases = playbackConfiguration.ConfigurationAliases
+	}
 	// DASH CONFIGURATION
 	if playbackConfiguration.DashConfiguration != nil {
+		data.DashConfiguration = &dashConfigurationModel{}
 		if playbackConfiguration.DashConfiguration.ManifestEndpointPrefix != nil {
 			data.DashConfiguration.ManifestEndpointPrefix = playbackConfiguration.DashConfiguration.ManifestEndpointPrefix
 		}
@@ -309,12 +314,14 @@ func (d *dataSourcePlaybackConfiguration) Read(ctx context.Context, req datasour
 	}
 	// HLS CONFIGURATION
 	if playbackConfiguration.HlsConfiguration != nil {
+		data.HlsConfiguration = &hlsConfigurationModel{}
 		if playbackConfiguration.HlsConfiguration.ManifestEndpointPrefix != nil {
 			data.HlsConfiguration.ManifestEndpointPrefix = playbackConfiguration.HlsConfiguration.ManifestEndpointPrefix
 		}
 	}
 	// LIVE PRE ROLL CONFIGURATION
 	if playbackConfiguration.LivePreRollConfiguration != nil {
+		data.LivePreRollConfiguration = &livePreRollConfigurationModel{}
 		if playbackConfiguration.LivePreRollConfiguration.AdDecisionServerUrl != nil {
 			data.LivePreRollConfiguration.AdDecisionServerUrl = playbackConfiguration.LivePreRollConfiguration.AdDecisionServerUrl
 		}
@@ -324,13 +331,16 @@ func (d *dataSourcePlaybackConfiguration) Read(ctx context.Context, req datasour
 	}
 	// LOG CONFIGURATION
 	if playbackConfiguration.LogConfiguration != nil {
+		data.LogConfiguration = &logConfigurationModel{}
 		if playbackConfiguration.LogConfiguration.PercentEnabled != nil {
 			data.LogConfiguration.PercentEnabled = playbackConfiguration.LogConfiguration.PercentEnabled
 		}
 	}
 	// MANIFEST PROCESSING RULES
 	if playbackConfiguration.ManifestProcessingRules != nil {
+		data.ManifestProcessingRules = &manifestProcessingRulesModel{}
 		if playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough != nil {
+			data.ManifestProcessingRules.AdMarkerPassthrough = &adMarkerPassthroughModel{}
 			if playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough.Enabled != nil {
 				data.ManifestProcessingRules.AdMarkerPassthrough.Enabled = playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough.Enabled
 			}
