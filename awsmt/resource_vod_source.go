@@ -2,7 +2,7 @@ package awsmt
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/aws"
+	"fmt"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"reflect"
+	"strings"
 )
 
 var (
@@ -33,19 +34,19 @@ type resourceVodSourceModel struct {
 	CreationTime              types.String                        `tfsdk:"creation_time"`
 	HttpPackageConfigurations []httpPackageConfigurationsVSRModel `tfsdk:"http_package_configurations"`
 	LastModifiedTime          types.String                        `tfsdk:"last_modified_time"`
-	SourceLocationName        types.String                        `tfsdk:"source_location_name"`
+	SourceLocationName        *string                             `tfsdk:"source_location_name"`
 	Tags                      map[string]*string                  `tfsdk:"tags"`
-	VodSourceName             types.String                        `tfsdk:"vod_source_name"`
+	VodSourceName             *string                             `tfsdk:"vod_source_name"`
 }
 
 type httpPackageConfigurationsVSRModel struct {
-	Path        types.String `tfsdk:"path"`
-	SourceGroup types.String `tfsdk:"source_group"`
-	Type        types.String `tfsdk:"type"`
+	Path        *string `tfsdk:"path"`
+	SourceGroup *string `tfsdk:"source_group"`
+	Type        *string `tfsdk:"type"`
 }
 
 func (r *resourceVodSource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_source_location"
+	resp.TypeName = req.ProviderTypeName + "_vod_source"
 }
 
 func (r *resourceVodSource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -60,7 +61,7 @@ func (r *resourceVodSource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"creation_time": schema.StringAttribute{
 				Computed: true,
 			},
-			"http_package_configuration": schema.ListNestedAttribute{
+			"http_package_configurations": schema.ListNestedAttribute{
 				Required: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
@@ -86,7 +87,7 @@ func (r *resourceVodSource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				Required: true,
 			},
 			"tags": schema.MapAttribute{
-				Computed:    true,
+				Optional:    true,
 				ElementType: types.StringType,
 			},
 			"vod_source_name": schema.StringAttribute{
@@ -138,17 +139,26 @@ func (r *resourceVodSource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	input := &mediatailor.DescribeVodSourceInput{}
-	input.VodSourceName = aws.String(state.VodSourceName.String())
-	input.SourceLocationName = aws.String(state.SourceLocationName.String())
+	var sourceLocationName, vodSourceName string
 
-	vodSource, err := r.client.DescribeVodSource(input)
-	if err != nil {
-		resp.Diagnostics.AddError("Error while describing vod source", err.Error())
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("source_location_name"), &sourceLocationName)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("vod_source_name"), &vodSourceName)...)
+
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	state = readVodSourceToState(state, *vodSource)
+	input := &mediatailor.DescribeVodSourceInput{}
+	input.VodSourceName = &vodSourceName
+	input.SourceLocationName = &sourceLocationName
+
+	vodSource, err := r.client.DescribeVodSource(input)
+	if err != nil {
+		resp.Diagnostics.AddError("Error while describing vod source", "Could not describe the vod source: "+*input.SourceLocationName+" and "+*input.VodSourceName+": "+err.Error())
+		return
+	}
+
+	state = readVodSourceToPlan(state, mediatailor.CreateVodSourceOutput(*vodSource))
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -166,8 +176,8 @@ func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	input := &mediatailor.DescribeVodSourceInput{}
-	input.VodSourceName = aws.String(plan.VodSourceName.String())
-	input.SourceLocationName = aws.String(plan.SourceLocationName.String())
+	input.VodSourceName = plan.VodSourceName
+	input.SourceLocationName = plan.SourceLocationName
 
 	VodSource, err := r.client.DescribeVodSource(input)
 	if err != nil {
@@ -198,7 +208,7 @@ func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateReque
 		)
 	}
 
-	plan = readUpdatedVodSourceToPlan(plan, *updatedVodSource)
+	plan = readVodSourceToPlan(plan, mediatailor.CreateVodSourceOutput(*updatedVodSource))
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -216,8 +226,8 @@ func (r *resourceVodSource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	input := &mediatailor.DeleteVodSourceInput{}
-	input.VodSourceName = aws.String(state.VodSourceName.String())
-	input.SourceLocationName = aws.String(state.SourceLocationName.String())
+	input.VodSourceName = state.VodSourceName
+	input.SourceLocationName = state.SourceLocationName
 
 	_, err := r.client.DeleteVodSource(input)
 	if err != nil {
@@ -229,5 +239,16 @@ func (r *resourceVodSource) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 func (r *resourceVodSource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("arn"), req, resp)
+	idParts := strings.Split(req.ID, ",")
+
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		resp.Diagnostics.AddError(
+			"Unexpected Import Identifier",
+			fmt.Sprintf("Expected import identifier with format: source_location_name, vod_source_name. Got: %q", req.ID),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("source_location_name"), idParts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("vod_source_name"), idParts[1])...)
 }

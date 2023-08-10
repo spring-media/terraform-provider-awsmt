@@ -29,9 +29,9 @@ type dataSourceVodSourceModel struct {
 	CreationTime              types.String                       `tfsdk:"creation_time"`
 	HttpPackageConfigurations []httpPackageConfigurationsDSModel `tfsdk:"http_package_configurations"`
 	LastModifiedTime          types.String                       `tfsdk:"last_modified_time"`
-	SourceLocationName        types.String                       `tfsdk:"source_location_name"`
+	SourceLocationName        *string                            `tfsdk:"source_location_name"`
 	Tags                      map[string]*string                 `tfsdk:"tags"`
-	VodSourceName             types.String                       `tfsdk:"vod_source_name"`
+	VodSourceName             *string                            `tfsdk:"vod_source_name"`
 }
 
 type httpPackageConfigurationsDSModel struct {
@@ -41,7 +41,7 @@ type httpPackageConfigurationsDSModel struct {
 }
 
 func (d *dataSourceVodSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_source_location"
+	resp.TypeName = req.ProviderTypeName + "_vod_source"
 }
 
 func (d *dataSourceVodSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -108,8 +108,8 @@ func (d *dataSourceVodSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	sourceLocationName := aws.String(data.SourceLocationName.String())
-	vodSourceName := aws.String(data.VodSourceName.String())
+	sourceLocationName := data.SourceLocationName
+	vodSourceName := data.VodSourceName
 
 	vodSource, err := d.client.DescribeVodSource(&mediatailor.DescribeVodSourceInput{SourceLocationName: sourceLocationName, VodSourceName: vodSourceName})
 	if err != nil {
@@ -126,6 +126,7 @@ func (d *dataSourceVodSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	if vodSource.HttpPackageConfigurations != nil && len(vodSource.HttpPackageConfigurations) > 0 {
+		data.HttpPackageConfigurations = []httpPackageConfigurationsDSModel{}
 		for _, httpPackageConfiguration := range vodSource.HttpPackageConfigurations {
 			httpPackageConfigurations := httpPackageConfigurationsDSModel{}
 			httpPackageConfigurations.Path = types.StringValue(*httpPackageConfiguration.Path)
@@ -140,7 +141,7 @@ func (d *dataSourceVodSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	if vodSource.SourceLocationName != nil && *vodSource.SourceLocationName != "" {
-		data.SourceLocationName = types.StringValue(*vodSource.SourceLocationName)
+		data.SourceLocationName = vodSource.SourceLocationName
 	}
 
 	if vodSource.Tags != nil && len(vodSource.Tags) > 0 {
@@ -150,8 +151,8 @@ func (d *dataSourceVodSource) Read(ctx context.Context, req datasource.ReadReque
 		}
 	}
 
-	if vodSource.VodSourceName != nil && *vodSource.VodSourceName != "" {
-		data.VodSourceName = types.StringValue(*vodSource.VodSourceName)
+	if vodSource.VodSourceName != nil {
+		data.VodSourceName = vodSource.VodSourceName
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
