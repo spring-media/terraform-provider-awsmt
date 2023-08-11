@@ -179,18 +179,18 @@ func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateReque
 	input.VodSourceName = plan.VodSourceName
 	input.SourceLocationName = plan.SourceLocationName
 
-	VodSource, err := r.client.DescribeVodSource(input)
+	vodSource, err := r.client.DescribeVodSource(input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error while describing Vod source", err.Error())
 		return
 	}
 
-	oldTags := VodSource.Tags
+	oldTags := vodSource.Tags
 	newTags := plan.Tags
 
 	// Check if tags are different
 	if !reflect.DeepEqual(oldTags, newTags) {
-		err = updatesTags(r.client, oldTags, newTags, *VodSource.Arn)
+		err = updatesTags(r.client, oldTags, newTags, *vodSource.Arn)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error while updating vod source tags"+err.Error(),
