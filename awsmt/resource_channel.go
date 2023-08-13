@@ -4,14 +4,15 @@ import (
 	"context"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"reflect"
+	"strings"
 )
 
 var (
@@ -29,42 +30,42 @@ type resourceChannel struct {
 }
 
 type resourceChannelModel struct {
-	ID               types.String                       `tfsdk:"id"`
-	Arn              types.String                       `tfsdk:"arn"`
-	Name             *string                            `tfsdk:"name"`
-	ChannelState     types.String                       `tfsdk:"channel_state"`
-	CreationTime     types.String                       `tfsdk:"creation_time"`
-	FillerSlate      []resourceChannelFillerSlatesModel `tfsdk:"filler_slate"`
-	LastModifiedTime types.String                       `tfsdk:"last_modified_time"`
-	Outputs          []resourceChannelOutputsModel      `tfsdk:"outputs"`
-	PlaybackMode     *string                            `tfsdk:"playback_mode"`
-	Policy           types.String                       `tfsdk:"policy"`
-	Tags             map[string]*string                 `tfsdk:"tags"`
-	Tier             *string                            `tfsdk:"tier"`
+	ID               types.String         `tfsdk:"id"`
+	Arn              types.String         `tfsdk:"arn"`
+	ChannelName      *string              `tfsdk:"channel_name"`
+	ChannelState     *string              `tfsdk:"channel_state"`
+	CreationTime     types.String         `tfsdk:"creation_time"`
+	FillerSlate      *fillerSlateRModel   `tfsdk:"filler_slate"`
+	LastModifiedTime types.String         `tfsdk:"last_modified_time"`
+	Outputs          []outputsRModel      `tfsdk:"outputs"`
+	PlaybackMode     *string              `tfsdk:"playback_mode"`
+	Policy           jsontypes.Normalized `tfsdk:"policy"`
+	Tags             map[string]*string   `tfsdk:"tags"`
+	Tier             *string              `tfsdk:"tier"`
 }
 
-type resourceChannelFillerSlatesModel struct {
+type fillerSlateRModel struct {
 	SourceLocationName *string `tfsdk:"source_location_name"`
 	VodSourceName      *string `tfsdk:"vod_source_name"`
 }
 
-type resourceChannelOutputsModel struct {
-	DashPlaylistSettings []resourceChannelDashPlaylistSettingsModel `tfsdk:"dash_playlist_settings"`
-	HlsPlaylistSettings  []resourceChannelHlsPlaylistSettingsModel  `tfsdk:"hls_playlist_settings"`
-	ManifestName         *string                                    `tfsdk:"manifest_name"`
-	PlaybackUrl          types.String                               `tfsdk:"playback_url"`
-	SourceGroup          *string                                    `tfsdk:"source_group"`
+type outputsRModel struct {
+	DashPlaylistSettings *dashPlaylistSettingsRModel `tfsdk:"dash_playlist_settings"`
+	HlsPlaylistSettings  *hlsPlaylistSettingsRModel  `tfsdk:"hls_playlist_settings"`
+	ManifestName         *string                     `tfsdk:"manifest_name"`
+	PlaybackUrl          types.String                `tfsdk:"playback_url"`
+	SourceGroup          *string                     `tfsdk:"source_group"`
 }
 
-type resourceChannelDashPlaylistSettingsModel struct {
-	ManifestWindowsSeconds            *int64 `tfsdk:"manifest_windows_seconds"`
+type dashPlaylistSettingsRModel struct {
+	ManifestWindowSeconds             *int64 `tfsdk:"manifest_window_seconds"`
 	MinBufferTimeSeconds              *int64 `tfsdk:"min_buffer_time_seconds"`
 	MinUpdatePeriodSeconds            *int64 `tfsdk:"min_update_period_seconds"`
 	SuggestedPresentationDelaySeconds *int64 `tfsdk:"suggested_presentation_delay_seconds"`
 }
-
-type resourceChannelHlsPlaylistSettingsModel struct {
-	ManifestWindowsSeconds *int64 `tfsdk:"manifest_windows_seconds"`
+type hlsPlaylistSettingsRModel struct {
+	AdMarkupType          []*string `tfsdk:"ad_markup_type"`
+	ManifestWindowSeconds *int64    `tfsdk:"manifest_window_seconds"`
 }
 
 func (r *resourceChannel) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -80,14 +81,14 @@ func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"arn": schema.StringAttribute{
 				Computed: true,
 			},
-			"name": schema.StringAttribute{
+			"channel_name": schema.StringAttribute{
 				Required: true,
 			},
 			// @ADR
 			// Context: We cannot test the deletion of a running channel if we cannot set the channel_state property
 			// through the provider
 			// Decision: We decided to turn the channel_state property into an optional string and call the SDK to
-			//start/stop the channel accordingly.
+			// start/stop the channel accordingly.
 			// Consequences: The schema of the object differs from that of the SDK and we need to make additional
 			// SDK calls.
 			"channel_state": schema.StringAttribute{
@@ -119,32 +120,32 @@ func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Required: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"dash_playlist_settings": schema.ListNestedAttribute{
+						"dash_playlist_settings": schema.SingleNestedAttribute{
 							Optional: true,
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"manifest_windows_seconds": schema.Int64Attribute{
-										Optional: true,
-									},
-									"min_buffer_time_seconds": schema.Int64Attribute{
-										Optional: true,
-									},
-									"min_update_period_seconds": schema.Int64Attribute{
-										Optional: true,
-									},
-									"suggested_presentation_delay_seconds": schema.Int64Attribute{
-										Optional: true,
-									},
+							Attributes: map[string]schema.Attribute{
+								"manifest_window_seconds": schema.Int64Attribute{
+									Optional: true,
+								},
+								"min_buffer_time_seconds": schema.Int64Attribute{
+									Optional: true,
+								},
+								"min_update_period_seconds": schema.Int64Attribute{
+									Optional: true,
+								},
+								"suggested_presentation_delay_seconds": schema.Int64Attribute{
+									Optional: true,
 								},
 							},
 						},
-						"hls_playlist_settings": schema.ListNestedAttribute{
+						"hls_playlist_settings": schema.SingleNestedAttribute{
 							Optional: true,
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"manifest_windows_seconds": schema.Int64Attribute{
-										Optional: true,
-									},
+							Attributes: map[string]schema.Attribute{
+								"ad_markup_type": schema.ListAttribute{
+									Optional:    true,
+									ElementType: types.StringType,
+								},
+								"manifest_window_seconds": schema.Int64Attribute{
+									Optional: true,
 								},
 							},
 						},
@@ -175,14 +176,15 @@ func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, re
 			// it refers to, even if it is not known while declaring the resource, forcing the developer to create the
 			// ARN themselves using the account ID and resource name.
 			"policy": schema.StringAttribute{
-				Optional: true,
+				Optional:   true,
+				CustomType: jsontypes.NormalizedType{},
 			},
 			"tags": schema.MapAttribute{
 				Optional:    true,
 				ElementType: types.StringType,
 			},
 			"tier": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("BASIC", "STANDARD"),
 				},
@@ -208,86 +210,33 @@ func (r *resourceChannel) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	var params mediatailor.CreateChannelInput
+	input := channelInput(plan)
 
-	// get channel name
-	var channelName *string
-
-	if *plan.Name != "" {
-		channelName = plan.Name
-	}
-
-	// get filler slate
-
-	fillerSlate := getFillerSlate(ctx, req, *resp)
-	if fillerSlate != nil {
-		params.FillerSlate = fillerSlate
-	}
-
-	// get outputs
-
-	outputs := getOutputs(ctx, req, *resp)
-
-	// get playback mode
-	var playbackMode *string
-
-	if *plan.PlaybackMode != "" {
-		playbackMode = plan.PlaybackMode
-	}
-
-	// get tags
-
-	tags := map[string]*string{}
-	indTag := plan.Tags
-	for k, value := range indTag {
-		temp := *value
-		tags[k] = &temp
-	}
-
-	// get Tier
-	var tier *string
-	if *plan.Tier != "" {
-		tier = plan.Tier
-	}
-
-	params.ChannelName = channelName
-	params.Outputs = outputs
-	params.PlaybackMode = playbackMode
-	params.Tags = tags
-	params.Tier = tier
-
-	// create channel
-	channel, err := r.client.CreateChannel(&params)
-
+	channel, err := r.client.CreateChannel(&input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error while creating channel "+err.Error(),
-			err.Error(),
-		)
-	}
-	if err = createChannelPolicy(ctx, req, r.client); err != nil {
-		resp.Diagnostics.AddError(
-			"Error while creating channel policy "+err.Error(),
-			err.Error(),
-		)
+		if err != nil {
+			resp.Diagnostics.AddError("Error while creating channel "+*input.ChannelName, err.Error())
+			return
+		}
 	}
 
-	if err := checkStatusAndStartChannel(ctx, req, r.client); err != nil {
-		resp.Diagnostics.AddError(
-			"Error while starting channel "+err.Error(),
-			err.Error(),
-		)
+	if *plan.ChannelState == "RUNNING" {
+		_, err := r.client.StartChannel(&mediatailor.StartChannelInput{ChannelName: plan.ChannelName})
+		if err != nil {
+			resp.Diagnostics.AddError("Error while starting the channel "+*channel.ChannelName, err.Error())
+			return
+		}
 	}
 
-	plan.Arn = types.StringValue(aws.StringValue(channel.Arn))
-	plan.Name = channel.ChannelName
-	plan.CreationTime = types.StringValue((aws.TimeValue(channel.CreationTime)).String())
-	plan.LastModifiedTime = types.StringValue((aws.TimeValue(channel.LastModifiedTime)).String())
-	plan.PlaybackMode = channel.PlaybackMode
-	plan.Tier = channel.Tier
-	plan.Outputs[0].PlaybackUrl = types.StringValue(*channel.Outputs[0].PlaybackUrl)
+	if !plan.Policy.IsNull() {
+		policy := plan.Policy.ValueString()
+		if err := createChannelPolicy(plan.ChannelName, &policy, r.client); err != nil {
+			resp.Diagnostics.AddError("Error while creating the channel policy for channel "+*channel.ChannelName, err.Error())
+			return
+		}
+	}
 
-	plan.ID = types.StringValue("placeholder")
+	plan = readChannelToPlan(plan, *channel)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -306,49 +255,32 @@ func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	channel, err := r.client.DescribeChannel(&mediatailor.DescribeChannelInput{
-		ChannelName: state.Name,
-	})
+	channel, err := r.client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: state.ChannelName})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error while reading channel "+err.Error(),
+			"Error while describing channel "+err.Error(),
 			err.Error(),
 		)
 	}
 
-	policy, err := r.client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: state.Name})
-	if err != nil {
+	policy, err := r.client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: state.ChannelName})
+	if err != nil && !strings.Contains(err.Error(), "NotFound") {
 		resp.Diagnostics.AddError(
-			"Error while reading channel policy "+err.Error(),
+			"Error while getting channel policy "+err.Error(),
 			err.Error(),
 		)
 	}
-	if err := setChannelPolicy(policy); err != nil {
-		diag.FromErr(err)
+
+	if policy.Policy != nil {
+		state.Policy = jsontypes.NewNormalizedPointerValue(policy.Policy)
+
+	} else {
+		state.Policy = jsontypes.NewNormalizedNull()
 	}
 
-	state.Arn = types.StringValue(aws.StringValue(channel.Arn))
-	state.Name = channel.ChannelName
-	state.CreationTime = types.StringValue((channel.CreationTime).String())
-	state.LastModifiedTime = types.StringValue((channel.LastModifiedTime).String())
-	state.PlaybackMode = channel.PlaybackMode
-	state.Tier = channel.Tier
-	state.Outputs[0].PlaybackUrl = types.StringValue(*channel.Outputs[0].PlaybackUrl)
+	state = readChannelToState(state, *channel)
 
-	if state.FillerSlate != nil && len(state.FillerSlate) > 0 {
-		state.FillerSlate = append(state.FillerSlate, resourceChannelFillerSlatesModel{
-			SourceLocationName: channel.FillerSlate.SourceLocationName,
-			VodSourceName:      channel.FillerSlate.VodSourceName,
-		})
-	}
-
-	if state.ChannelState != types.StringNull() {
-		state.ChannelState = types.StringValue(*channel.ChannelState)
-	}
-
-	if state.Tags != nil {
-		state.Tags = channel.Tags
-	}
+	state.ChannelState = channel.ChannelState
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -359,71 +291,115 @@ func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceChannelModel
-
+	var plan resourceChannelModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
-	resourceName := plan.Name
+	channelName := plan.ChannelName
 
-	tagsChanged := reflect.DeepEqual(plan.Tags, state.Tags)
-	if tagsChanged {
-		// tags attribute was changed
-		res, err := r.client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: resourceName})
-		if err != nil {
-			return
-		}
-		if err := updateTags(r.client, res.Arn, state.Tags, plan.Tags); err != nil {
-			return
-		}
-	}
-
-	res, err := r.client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: resourceName})
+	channel, err := r.client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: channelName})
 	if err != nil {
-		return
+		resp.Diagnostics.AddError(
+			"Error while describing channel "+err.Error(),
+			err.Error(),
+		)
 	}
 
-	previousState := res.ChannelState
+	oldTags := channel.Tags
+	newTags := plan.Tags
+
+	if !reflect.DeepEqual(oldTags, newTags) {
+		err = updatesTags(r.client, oldTags, newTags, *channel.Arn)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error while updating channel tags"+err.Error(),
+				err.Error(),
+			)
+		}
+	}
+
+	previousState := channel.ChannelState
 	newState := plan.ChannelState
 
 	if *previousState == "RUNNING" {
-		if err := stopChannel(r.client, resourceName); err != nil {
-			return
+		_, err := r.client.StopChannel(&mediatailor.StopChannelInput{ChannelName: channelName})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error while stopping running channel "+*channel.ChannelName+err.Error(),
+				err.Error(),
+			)
 		}
 	}
 
-	var params = getUpdateChannelInput(ctx, req, *resp)
-	channel, err := r.client.UpdateChannel(&params)
+	oldPolicy, err := r.client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: channelName})
 	if err != nil {
-		return
+		resp.Diagnostics.AddError(
+			"Error while getting channel policy "+err.Error(),
+			err.Error(),
+		)
 	}
 
-	if (*previousState == "RUNNING" || newState == types.StringValue("RUNNING")) && newState != types.StringValue("STOPPED") {
-		if err := startChannel(r.client, resourceName); err != nil {
+	newPolicy := plan.Policy
+
+	if !reflect.DeepEqual(oldPolicy, newPolicy) {
+		newPolicy := plan.Policy
+		if !newPolicy.IsNull() {
+			plan.Policy = jsontypes.NewNormalizedPointerValue(aws.String(newPolicy.String()))
+			_, err := r.client.PutChannelPolicy(&mediatailor.PutChannelPolicyInput{ChannelName: channelName, Policy: aws.String(newPolicy.String())})
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Error while updating the channel policy "+err.Error(),
+					err.Error(),
+				)
+			}
+		} else {
+			plan.Policy = jsontypes.NewNormalizedNull()
+			_, err := r.client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: channelName})
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Error while deleting channel policy "+err.Error(),
+					err.Error(),
+				)
+			}
+		}
+	} else {
+		plan.Policy = jsontypes.NewNormalizedPointerValue(oldPolicy.Policy)
+	}
+
+	var params = getUpdateChannelInput(plan)
+	updatedChannel, err := r.client.UpdateChannel(&params)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error while updating channel "+*channel.ChannelName+err.Error(),
+			err.Error(),
+		)
+	}
+
+	if (*previousState == "RUNNING" || *newState == "RUNNING") && *newState != "STOPPED" {
+		_, err := r.client.StartChannel(&mediatailor.StartChannelInput{ChannelName: channelName})
+		if err != nil {
+			resp.Diagnostics.AddError("Error while starting the channel "+*channelName, err.Error())
 			return
 		}
+
 	}
 
-	setStateUpdate(ctx, req, *resp, *channel)
-	state.ChannelState = plan.ChannelState
+	plan.ChannelState = newState
 
-	if state.Policy != plan.Policy {
-		if err := updatePolicy(r.client, resourceName, (state.Policy).String(), (plan.Policy).String()); err != nil {
-			return
-		}
-	}
+	plan = readChannelToPlan(plan, mediatailor.CreateChannelOutput(*updatedChannel))
 
-	// right now policy update is not supported
-	state.Policy = plan.Policy
+	// @ADR
+	// Context: The official AWS Mediatailor Go SDK states that the PlaybackMode is part of the UpdateChannelOutput,
+	// but it is not. As tested, the PlaybackMode is only returned when describing a channel.
+	// Decision: We decided to use the previous API call to describe the channel and get the PlaybackMode from there.
+	// Consequences: The PlaybackMode is not updated when updating the channel.
 
-	diags = resp.State.Set(ctx, state)
+	plan.PlaybackMode = channel.PlaybackMode
+
+	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -438,7 +414,7 @@ func (r *resourceChannel) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	if _, err := r.client.StopChannel(&mediatailor.StopChannelInput{ChannelName: state.Name}); err != nil {
+	if _, err := r.client.StopChannel(&mediatailor.StopChannelInput{ChannelName: state.ChannelName}); err != nil {
 		resp.Diagnostics.AddError(
 			"error while stopping the channel "+err.Error(),
 			err.Error(),
@@ -446,9 +422,7 @@ func (r *resourceChannel) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	if _, err := r.client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{
-		ChannelName: state.Name,
-	}); err != nil {
+	if _, err := r.client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: state.ChannelName}); err != nil {
 		resp.Diagnostics.AddError(
 			"error while deleting the channel policy "+err.Error(),
 			err.Error(),
@@ -456,7 +430,7 @@ func (r *resourceChannel) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	if _, err := r.client.DeleteChannel(&mediatailor.DeleteChannelInput{ChannelName: state.Name}); err != nil {
+	if _, err := r.client.DeleteChannel(&mediatailor.DeleteChannelInput{ChannelName: state.ChannelName}); err != nil {
 		resp.Diagnostics.AddError(
 			"error while deleting the channel "+err.Error(),
 			err.Error(),
@@ -466,5 +440,5 @@ func (r *resourceChannel) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func (r *resourceChannel) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("arn"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("channel_name"), req, resp)
 }

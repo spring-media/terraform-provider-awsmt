@@ -1,30 +1,260 @@
 package awsmt
 
 import (
-	"context"
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"strings"
 )
+
+// CHANNEL
+
+func channelInput(plan resourceChannelModel) mediatailor.CreateChannelInput {
+	var input mediatailor.CreateChannelInput
+
+	input.ChannelName = plan.ChannelName
+
+	if plan.FillerSlate != nil {
+		if plan.FillerSlate.SourceLocationName != nil {
+			input.FillerSlate.SourceLocationName = plan.FillerSlate.SourceLocationName
+		}
+		if plan.FillerSlate.VodSourceName != nil {
+			input.FillerSlate.VodSourceName = plan.FillerSlate.VodSourceName
+		}
+		return input
+	}
+	if plan.Outputs != nil && len(plan.Outputs) > 0 {
+		for _, output := range plan.Outputs {
+			outputs := &mediatailor.RequestOutputItem{}
+			if output.DashPlaylistSettings != nil {
+				outputs.DashPlaylistSettings = &mediatailor.DashPlaylistSettings{}
+				if output.DashPlaylistSettings.ManifestWindowSeconds != nil {
+					outputs.DashPlaylistSettings.ManifestWindowSeconds = output.DashPlaylistSettings.ManifestWindowSeconds
+				}
+				if output.DashPlaylistSettings.MinBufferTimeSeconds != nil {
+					outputs.DashPlaylistSettings.MinBufferTimeSeconds = output.DashPlaylistSettings.MinBufferTimeSeconds
+				}
+				if output.DashPlaylistSettings.MinUpdatePeriodSeconds != nil {
+					outputs.DashPlaylistSettings.MinUpdatePeriodSeconds = output.DashPlaylistSettings.MinUpdatePeriodSeconds
+				}
+				if output.DashPlaylistSettings.SuggestedPresentationDelaySeconds != nil {
+					outputs.DashPlaylistSettings.SuggestedPresentationDelaySeconds = output.DashPlaylistSettings.SuggestedPresentationDelaySeconds
+				}
+			}
+			if output.HlsPlaylistSettings != nil {
+				outputs.HlsPlaylistSettings = &mediatailor.HlsPlaylistSettings{}
+				if output.HlsPlaylistSettings.AdMarkupType != nil && len(output.HlsPlaylistSettings.AdMarkupType) > 0 {
+					outputs.HlsPlaylistSettings.AdMarkupType = output.HlsPlaylistSettings.AdMarkupType
+				}
+				if output.HlsPlaylistSettings.ManifestWindowSeconds != nil {
+					outputs.HlsPlaylistSettings.ManifestWindowSeconds = output.HlsPlaylistSettings.ManifestWindowSeconds
+				}
+			}
+			if output.ManifestName != nil {
+				outputs.ManifestName = output.ManifestName
+			}
+			if output.SourceGroup != nil {
+				outputs.SourceGroup = output.SourceGroup
+			}
+			input.Outputs = append(input.Outputs, outputs)
+		}
+	}
+
+	if plan.PlaybackMode != nil {
+		input.PlaybackMode = plan.PlaybackMode
+	}
+	if plan.Tags != nil {
+		input.Tags = plan.Tags
+	}
+
+	if plan.Tier != nil {
+		input.Tier = plan.Tier
+	}
+
+	return input
+}
+
+func readChannelToPlan(plan resourceChannelModel, channel mediatailor.CreateChannelOutput) resourceChannelModel {
+	plan.ID = types.StringValue(*channel.ChannelName)
+
+	if channel.Arn != nil {
+		plan.Arn = types.StringValue(*channel.Arn)
+	}
+
+	if channel.ChannelName != nil {
+		plan.ChannelName = channel.ChannelName
+	}
+
+	if channel.CreationTime != nil {
+		plan.CreationTime = types.StringValue((aws.TimeValue(channel.CreationTime)).String())
+	}
+
+	if channel.FillerSlate != nil {
+		plan.FillerSlate = &fillerSlateRModel{}
+		if channel.FillerSlate.SourceLocationName != nil {
+			plan.FillerSlate.SourceLocationName = channel.FillerSlate.SourceLocationName
+		}
+		if channel.FillerSlate.VodSourceName != nil {
+			plan.FillerSlate.VodSourceName = channel.FillerSlate.VodSourceName
+		}
+	}
+
+	if channel.LastModifiedTime != nil {
+		plan.LastModifiedTime = types.StringValue((aws.TimeValue(channel.LastModifiedTime)).String())
+	}
+
+	if channel.Outputs != nil {
+		plan.Outputs = []outputsRModel{}
+		for _, output := range channel.Outputs {
+			outputs := outputsRModel{}
+			if output.DashPlaylistSettings != nil {
+				outputs.DashPlaylistSettings = &dashPlaylistSettingsRModel{}
+				if output.DashPlaylistSettings.ManifestWindowSeconds != nil {
+					outputs.DashPlaylistSettings.ManifestWindowSeconds = output.DashPlaylistSettings.ManifestWindowSeconds
+				}
+				if output.DashPlaylistSettings.MinBufferTimeSeconds != nil {
+					outputs.DashPlaylistSettings.MinBufferTimeSeconds = output.DashPlaylistSettings.MinBufferTimeSeconds
+				}
+				if output.DashPlaylistSettings.MinUpdatePeriodSeconds != nil {
+					outputs.DashPlaylistSettings.MinUpdatePeriodSeconds = output.DashPlaylistSettings.MinUpdatePeriodSeconds
+				}
+				if output.DashPlaylistSettings.SuggestedPresentationDelaySeconds != nil {
+					outputs.DashPlaylistSettings.SuggestedPresentationDelaySeconds = output.DashPlaylistSettings.SuggestedPresentationDelaySeconds
+				}
+			}
+			if output.HlsPlaylistSettings != nil {
+				outputs.HlsPlaylistSettings = &hlsPlaylistSettingsRModel{}
+				if output.HlsPlaylistSettings.AdMarkupType != nil && len(output.HlsPlaylistSettings.AdMarkupType) > 0 {
+					for _, value := range output.HlsPlaylistSettings.AdMarkupType {
+						output.HlsPlaylistSettings.AdMarkupType = append(output.HlsPlaylistSettings.AdMarkupType, value)
+					}
+				}
+				if output.HlsPlaylistSettings.ManifestWindowSeconds != nil {
+					outputs.HlsPlaylistSettings.ManifestWindowSeconds = output.HlsPlaylistSettings.ManifestWindowSeconds
+				}
+			}
+			if output.ManifestName != nil {
+				outputs.ManifestName = output.ManifestName
+			}
+			if output.PlaybackUrl != nil {
+				outputs.PlaybackUrl = types.StringValue(*output.PlaybackUrl)
+			}
+			if output.SourceGroup != nil {
+				outputs.SourceGroup = output.SourceGroup
+			}
+			plan.Outputs = append(plan.Outputs, outputs)
+		}
+	}
+
+	if channel.PlaybackMode != nil {
+		plan.PlaybackMode = channel.PlaybackMode
+	}
+
+	if channel.Tags != nil && len(channel.Tags) > 0 {
+		plan.Tags = channel.Tags
+	}
+
+	if channel.Tier != nil {
+		plan.Tier = channel.Tier
+	}
+	plan.ID = types.StringValue(*channel.ChannelName)
+
+	return plan
+}
+
+func readChannelToState(state resourceChannelModel, channel mediatailor.DescribeChannelOutput) resourceChannelModel {
+	state.ID = types.StringValue(*channel.ChannelName)
+
+	if channel.Arn != nil {
+		state.Arn = types.StringValue(*channel.Arn)
+	}
+
+	if channel.ChannelName != nil {
+		state.ChannelName = channel.ChannelName
+	}
+
+	if channel.CreationTime != nil {
+		state.CreationTime = types.StringValue((aws.TimeValue(channel.CreationTime)).String())
+	}
+
+	if channel.FillerSlate != nil {
+		state.FillerSlate = &fillerSlateRModel{}
+		if channel.FillerSlate.SourceLocationName != nil {
+			state.FillerSlate.SourceLocationName = channel.FillerSlate.SourceLocationName
+		}
+		if channel.FillerSlate.VodSourceName != nil {
+			state.FillerSlate.VodSourceName = channel.FillerSlate.VodSourceName
+		}
+	}
+
+	if channel.LastModifiedTime != nil {
+		state.LastModifiedTime = types.StringValue((aws.TimeValue(channel.LastModifiedTime)).String())
+	}
+
+	if channel.Outputs != nil {
+		state.Outputs = []outputsRModel{}
+		for _, output := range channel.Outputs {
+			outputs := outputsRModel{}
+			if output.DashPlaylistSettings != nil {
+				outputs.DashPlaylistSettings = &dashPlaylistSettingsRModel{}
+				if output.DashPlaylistSettings.ManifestWindowSeconds != nil {
+					outputs.DashPlaylistSettings.ManifestWindowSeconds = output.DashPlaylistSettings.ManifestWindowSeconds
+				}
+				if output.DashPlaylistSettings.MinBufferTimeSeconds != nil {
+					outputs.DashPlaylistSettings.MinBufferTimeSeconds = output.DashPlaylistSettings.MinBufferTimeSeconds
+				}
+				if output.DashPlaylistSettings.MinUpdatePeriodSeconds != nil {
+					outputs.DashPlaylistSettings.MinUpdatePeriodSeconds = output.DashPlaylistSettings.MinUpdatePeriodSeconds
+				}
+				if output.DashPlaylistSettings.SuggestedPresentationDelaySeconds != nil {
+					outputs.DashPlaylistSettings.SuggestedPresentationDelaySeconds = output.DashPlaylistSettings.SuggestedPresentationDelaySeconds
+				}
+			}
+			if output.HlsPlaylistSettings != nil {
+				outputs.HlsPlaylistSettings = &hlsPlaylistSettingsRModel{}
+				if output.HlsPlaylistSettings.AdMarkupType != nil && len(output.HlsPlaylistSettings.AdMarkupType) > 0 {
+					for _, value := range output.HlsPlaylistSettings.AdMarkupType {
+						output.HlsPlaylistSettings.AdMarkupType = append(output.HlsPlaylistSettings.AdMarkupType, value)
+					}
+				}
+				if output.HlsPlaylistSettings.ManifestWindowSeconds != nil {
+					outputs.HlsPlaylistSettings.ManifestWindowSeconds = output.HlsPlaylistSettings.ManifestWindowSeconds
+				}
+			}
+			if output.ManifestName != nil {
+				outputs.ManifestName = output.ManifestName
+			}
+			if output.PlaybackUrl != nil {
+				outputs.PlaybackUrl = types.StringValue(*output.PlaybackUrl)
+			}
+			if output.SourceGroup != nil {
+				outputs.SourceGroup = output.SourceGroup
+			}
+			state.Outputs = append(state.Outputs, outputs)
+		}
+	}
+
+	if channel.PlaybackMode != nil {
+		state.PlaybackMode = channel.PlaybackMode
+	}
+
+	if channel.Tags != nil && len(channel.Tags) > 0 {
+		state.Tags = channel.Tags
+	}
+
+	if channel.Tier != nil {
+		state.Tier = channel.Tier
+	}
+
+	return state
+}
 
 // POLICY
 
-func createChannelPolicy(ctx context.Context, req resource.CreateRequest, client *mediatailor.MediaTailor) error {
-
-	var plan resourceChannelModel
-
-	_ = req.Plan.Get(ctx, &plan)
-
-	policy := plan.Policy.ValueString()
-
-	var putChannelPolicyParams = mediatailor.PutChannelPolicyInput{
-		ChannelName: plan.Name,
-		Policy:      aws.String(policy),
+func createChannelPolicy(channelName *string, policy *string, client *mediatailor.MediaTailor) error {
+	putChannelPolicyParams := mediatailor.PutChannelPolicyInput{
+		ChannelName: channelName,
+		Policy:      policy,
 	}
-
 	_, err := client.PutChannelPolicy(&putChannelPolicyParams)
 	if err != nil {
 		return err
@@ -32,366 +262,74 @@ func createChannelPolicy(ctx context.Context, req resource.CreateRequest, client
 	return err
 }
 
-func setChannelPolicy(res *mediatailor.GetChannelPolicyOutput) error {
-	var state resourceChannelModel
-
-	if res.Policy != nil {
-		state.Policy = types.StringValue(aws.StringValue(res.Policy))
-	}
-	return nil
-}
-
-func updatePolicy(client *mediatailor.MediaTailor, channelName *string, oldPolicy string, newPolicy string) error {
-
-	if oldPolicy != newPolicy {
-		if len(newPolicy) > 0 {
-			err := updateChannelPolicy(client, newPolicy, channelName)
-			if err != nil {
-				return fmt.Errorf("error while updating the policy: %v", err)
-			}
-		} else {
-			err := deleteChannelPolicy(client, channelName)
-			if err != nil {
-				return fmt.Errorf("error while deleting the policy: %v", err)
-			}
-		}
-	}
-	return nil
-}
-
-func updateChannelPolicy(client *mediatailor.MediaTailor, newPolicy string, channelName *string) error {
-	_, err := client.PutChannelPolicy(&mediatailor.PutChannelPolicyInput{ChannelName: channelName, Policy: &newPolicy})
-	if err != nil && !strings.Contains(err.Error(), "NotFound") {
-		return fmt.Errorf("error while updating the policy: %v", err)
-	}
-	return nil
-}
-
-func deleteChannelPolicy(client *mediatailor.MediaTailor, channelName *string) error {
-	_, err := client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: channelName})
-	if err != nil {
-		return fmt.Errorf("error while deleting the policy: %v", err)
-	}
-	return nil
-}
-
-// CHANNEL STATE
-
-func startChannel(client *mediatailor.MediaTailor, channelName *string) error {
-
-	_, err := client.StartChannel(&mediatailor.StartChannelInput{
-		ChannelName: channelName,
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func stopChannel(client *mediatailor.MediaTailor, channelName *string) error {
-	_, err := client.StopChannel(&mediatailor.StopChannelInput{
-		ChannelName: channelName,
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func checkStatusAndStartChannel(ctx context.Context, req resource.CreateRequest, client *mediatailor.MediaTailor) error {
-	var plan resourceChannelModel
-
-	_ = req.Plan.Get(ctx, &plan)
-
-	if plan.ChannelState == types.StringValue("RUNNING") {
-		if err := startChannel(client, plan.Name); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // OUTPUTS
 
-func getOutputs(ctx context.Context, req resource.CreateRequest, resp resource.CreateResponse) []*mediatailor.RequestOutputItem {
-	var plan resourceChannelModel
-
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return nil
-	}
-
-	var outputs []*mediatailor.RequestOutputItem
-
-	if plan.Outputs != nil && len(plan.Outputs) > 0 {
-		for _, o := range plan.Outputs {
-
-			output := mediatailor.RequestOutputItem{}
-
-			if *o.ManifestName != "" && o.ManifestName != nil {
-				output.ManifestName = o.ManifestName
+func getOutputs(planOutputs []outputsRModel) []*mediatailor.RequestOutputItem {
+	if planOutputs != nil && len(planOutputs) > 0 {
+		var input []*mediatailor.RequestOutputItem
+		for _, output := range planOutputs {
+			outputs := &mediatailor.RequestOutputItem{}
+			if output.DashPlaylistSettings != nil {
+				outputs.DashPlaylistSettings = &mediatailor.DashPlaylistSettings{}
+				if output.DashPlaylistSettings.ManifestWindowSeconds != nil {
+					outputs.DashPlaylistSettings.ManifestWindowSeconds = output.DashPlaylistSettings.ManifestWindowSeconds
+				}
+				if output.DashPlaylistSettings.MinBufferTimeSeconds != nil {
+					outputs.DashPlaylistSettings.MinBufferTimeSeconds = output.DashPlaylistSettings.MinBufferTimeSeconds
+				}
+				if output.DashPlaylistSettings.MinUpdatePeriodSeconds != nil {
+					outputs.DashPlaylistSettings.MinUpdatePeriodSeconds = output.DashPlaylistSettings.MinUpdatePeriodSeconds
+				}
+				if output.DashPlaylistSettings.SuggestedPresentationDelaySeconds != nil {
+					outputs.DashPlaylistSettings.SuggestedPresentationDelaySeconds = output.DashPlaylistSettings.SuggestedPresentationDelaySeconds
+				}
 			}
-
-			if *o.SourceGroup != "" {
-				output.SourceGroup = o.SourceGroup
+			if output.HlsPlaylistSettings != nil {
+				outputs.HlsPlaylistSettings = &mediatailor.HlsPlaylistSettings{}
+				if output.HlsPlaylistSettings.AdMarkupType != nil && len(output.HlsPlaylistSettings.AdMarkupType) > 0 {
+					outputs.HlsPlaylistSettings.AdMarkupType = output.HlsPlaylistSettings.AdMarkupType
+				}
+				if output.HlsPlaylistSettings.ManifestWindowSeconds != nil {
+					outputs.HlsPlaylistSettings.ManifestWindowSeconds = output.HlsPlaylistSettings.ManifestWindowSeconds
+				}
 			}
-
-			if o.HlsPlaylistSettings != nil && len(o.HlsPlaylistSettings) > 0 {
-				outputsHls := mediatailor.HlsPlaylistSettings{}
-				outputsHls.ManifestWindowSeconds = o.HlsPlaylistSettings[0].ManifestWindowsSeconds
-				output.HlsPlaylistSettings = &outputsHls
+			if output.ManifestName != nil {
+				outputs.ManifestName = output.ManifestName
 			}
-			if o.DashPlaylistSettings != nil && len(o.DashPlaylistSettings) > 0 {
-				manifestWindowSecondsDash := o.DashPlaylistSettings[0].ManifestWindowsSeconds
-				minBufferTimeSeconds := o.DashPlaylistSettings[0].MinBufferTimeSeconds
-				minUpdatePeriodSeconds := o.DashPlaylistSettings[0].MinUpdatePeriodSeconds
-				suggestedPresentationDelaySeconds := o.DashPlaylistSettings[0].SuggestedPresentationDelaySeconds
-				outputsDash := mediatailor.DashPlaylistSettings{}
-				outputsDash.ManifestWindowSeconds = manifestWindowSecondsDash
-				outputsDash.MinBufferTimeSeconds = minBufferTimeSeconds
-				outputsDash.MinUpdatePeriodSeconds = minUpdatePeriodSeconds
-				outputsDash.SuggestedPresentationDelaySeconds = suggestedPresentationDelaySeconds
-				output.DashPlaylistSettings = &outputsDash
+			if output.SourceGroup != nil {
+				outputs.SourceGroup = output.SourceGroup
 			}
-
-			outputs = append(outputs, &output)
-
+			input = append(input, outputs)
 		}
+		return input
 	}
-	return outputs
-}
-
-func getOutputsUpdate(ctx context.Context, req resource.UpdateRequest, resp resource.UpdateResponse) []*mediatailor.RequestOutputItem {
-	var plan resourceChannelModel
-
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return nil
-	}
-
-	var outputs []*mediatailor.RequestOutputItem
-
-	if plan.Outputs != nil && len(plan.Outputs) > 0 {
-		for _, o := range plan.Outputs {
-
-			output := mediatailor.RequestOutputItem{}
-
-			if *o.ManifestName != "" && o.ManifestName != nil {
-				output.ManifestName = o.ManifestName
-			}
-
-			if *o.SourceGroup != "" {
-				output.SourceGroup = o.SourceGroup
-			}
-
-			if o.HlsPlaylistSettings != nil && len(o.HlsPlaylistSettings) > 0 {
-				outputsHls := mediatailor.HlsPlaylistSettings{}
-				outputsHls.ManifestWindowSeconds = o.HlsPlaylistSettings[0].ManifestWindowsSeconds
-				output.HlsPlaylistSettings = &outputsHls
-			}
-			if o.DashPlaylistSettings != nil && len(o.DashPlaylistSettings) > 0 {
-				manifestWindowSecondsDash := o.DashPlaylistSettings[0].ManifestWindowsSeconds
-				minBufferTimeSeconds := o.DashPlaylistSettings[0].MinBufferTimeSeconds
-				minUpdatePeriodSeconds := o.DashPlaylistSettings[0].MinUpdatePeriodSeconds
-				suggestedPresentationDelaySeconds := o.DashPlaylistSettings[0].SuggestedPresentationDelaySeconds
-				outputsDash := mediatailor.DashPlaylistSettings{}
-				outputsDash.ManifestWindowSeconds = manifestWindowSecondsDash
-				outputsDash.MinBufferTimeSeconds = minBufferTimeSeconds
-				outputsDash.MinUpdatePeriodSeconds = minUpdatePeriodSeconds
-				outputsDash.SuggestedPresentationDelaySeconds = suggestedPresentationDelaySeconds
-				output.DashPlaylistSettings = &outputsDash
-			}
-
-			outputs = append(outputs, &output)
-
-		}
-	}
-	return outputs
+	return nil
 }
 
 // FILLER SLATE
 
-func getFillerSlate(ctx context.Context, req resource.CreateRequest, resp resource.CreateResponse) *mediatailor.SlateSource {
-	var plan resourceChannelModel
-
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return nil
-	}
-
-	fillerSlate := mediatailor.SlateSource{}
-
-	if plan.FillerSlate != nil || len(plan.FillerSlate) > 0 {
-		if plan.FillerSlate[0].SourceLocationName != nil {
-			fillerSlate = mediatailor.SlateSource{
-				SourceLocationName: plan.FillerSlate[0].SourceLocationName,
-			}
+func getFillerSlate(planFillerSlate *fillerSlateRModel) *mediatailor.SlateSource {
+	if planFillerSlate != nil {
+		var input *mediatailor.SlateSource
+		if planFillerSlate.SourceLocationName != nil {
+			input.SourceLocationName = planFillerSlate.SourceLocationName
 		}
-		if plan.FillerSlate[0].VodSourceName != nil || len(plan.FillerSlate) > 0 {
-			fillerSlate = mediatailor.SlateSource{
-				VodSourceName: plan.FillerSlate[0].VodSourceName,
-			}
+		if planFillerSlate.VodSourceName != nil {
+			input.VodSourceName = planFillerSlate.VodSourceName
 		}
-		if plan.FillerSlate != nil && plan.FillerSlate[0].VodSourceName != nil || len(plan.FillerSlate) > 0 {
-			fillerSlate = mediatailor.SlateSource{
-				SourceLocationName: plan.FillerSlate[0].SourceLocationName,
-				VodSourceName:      plan.FillerSlate[0].VodSourceName,
-			}
-		}
-		return &fillerSlate
-	}
-	return nil
-}
-
-func getFillerSlateUpdate(ctx context.Context, req resource.UpdateRequest, resp resource.UpdateResponse) *mediatailor.SlateSource {
-	var plan resourceChannelModel
-
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return nil
-	}
-
-	fillerSlate := mediatailor.SlateSource{}
-
-	if plan.FillerSlate != nil || len(plan.FillerSlate) > 0 {
-		if plan.FillerSlate[0].SourceLocationName != nil {
-			fillerSlate = mediatailor.SlateSource{
-				SourceLocationName: plan.FillerSlate[0].SourceLocationName,
-			}
-		}
-		if plan.FillerSlate[0].VodSourceName != nil || len(plan.FillerSlate) > 0 {
-			fillerSlate = mediatailor.SlateSource{
-				VodSourceName: plan.FillerSlate[0].VodSourceName,
-			}
-		}
-		if plan.FillerSlate != nil && plan.FillerSlate[0].VodSourceName != nil || len(plan.FillerSlate) > 0 {
-			fillerSlate = mediatailor.SlateSource{
-				SourceLocationName: plan.FillerSlate[0].SourceLocationName,
-				VodSourceName:      plan.FillerSlate[0].VodSourceName,
-			}
-		}
-		return &fillerSlate
+		return input
 	}
 	return nil
 }
 
 // UPDATE CHANNEL
 
-func updateTags(client *mediatailor.MediaTailor, arn *string, oldTagValue map[string]*string, newTagValue map[string]*string) error {
-	var removedTags []string
-	for k := range oldTagValue {
-		if _, ok := (newTagValue)[k]; !ok {
-			removedTags = append(removedTags, k)
-		}
-	}
+func getUpdateChannelInput(plan resourceChannelModel) mediatailor.UpdateChannelInput {
+	var input mediatailor.UpdateChannelInput
 
-	err := deleteTags(client, aws.StringValue(arn), removedTags)
-	if err != nil {
-		return err
-	}
+	input.ChannelName = plan.ChannelName
+	input.Outputs = getOutputs(plan.Outputs)
+	input.FillerSlate = getFillerSlate(plan.FillerSlate)
 
-	if newTagValue != nil {
-		var newTags = make(map[string]*string)
-		for k, v := range newTagValue {
-			val := v
-			newTags[k] = val
-		}
-		tagInput := mediatailor.TagResourceInput{ResourceArn: arn, Tags: newTags}
-		_, err := client.TagResource(&tagInput)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func deleteTags(client *mediatailor.MediaTailor, resourceArn string, removedTags []string) error {
-	if len(removedTags) != 0 {
-
-		var removedValuesPointer []*string
-		for i := range removedTags {
-			removedValuesPointer = append(removedValuesPointer, &removedTags[i])
-		}
-
-		untagInput := mediatailor.UntagResourceInput{ResourceArn: aws.String(resourceArn), TagKeys: removedValuesPointer}
-		_, err := client.UntagResource(&untagInput)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func getUpdateChannelInput(ctx context.Context, req resource.UpdateRequest, resp resource.UpdateResponse) mediatailor.UpdateChannelInput {
-	var plan resourceChannelModel
-
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return mediatailor.UpdateChannelInput{}
-	}
-
-	var params mediatailor.UpdateChannelInput
-
-	params.ChannelName = plan.Name
-
-	outputs := getOutputsUpdate(ctx, req, resp)
-	if outputs != nil {
-		params.Outputs = outputs
-	}
-	fillerSlate := getFillerSlateUpdate(ctx, req, resp)
-	if fillerSlate != nil {
-		params.FillerSlate = fillerSlate
-	}
-
-	return params
-}
-
-// SET STATE
-
-func setStateUpdate(ctx context.Context, req resource.UpdateRequest, resp resource.UpdateResponse, channel mediatailor.UpdateChannelOutput) {
-	var state resourceChannelModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	state.Arn = types.StringValue(*channel.Arn)
-	state.Name = channel.ChannelName
-	state.CreationTime = types.StringValue((channel.CreationTime).String())
-	if state.FillerSlate != nil && len(state.FillerSlate) > 0 {
-		state.FillerSlate = append(state.FillerSlate, resourceChannelFillerSlatesModel{
-			SourceLocationName: channel.FillerSlate.SourceLocationName,
-			VodSourceName:      channel.FillerSlate.VodSourceName,
-		})
-	}
-	state.LastModifiedTime = types.StringValue((channel.LastModifiedTime).String())
-	state.Outputs[0].PlaybackUrl = types.StringValue(*channel.Outputs[0].PlaybackUrl)
-	if state.Outputs[0].DashPlaylistSettings != nil && len(state.Outputs[0].DashPlaylistSettings) > 0 {
-		state.Outputs[0].DashPlaylistSettings = append(state.Outputs[0].DashPlaylistSettings, resourceChannelDashPlaylistSettingsModel{
-			ManifestWindowsSeconds:            channel.Outputs[0].DashPlaylistSettings.ManifestWindowSeconds,
-			MinBufferTimeSeconds:              channel.Outputs[0].DashPlaylistSettings.MinBufferTimeSeconds,
-			MinUpdatePeriodSeconds:            channel.Outputs[0].DashPlaylistSettings.MinUpdatePeriodSeconds,
-			SuggestedPresentationDelaySeconds: channel.Outputs[0].DashPlaylistSettings.SuggestedPresentationDelaySeconds,
-		})
-	}
-	if state.Outputs[0].HlsPlaylistSettings != nil && len(state.Outputs[0].HlsPlaylistSettings) > 0 {
-		state.Outputs[0].HlsPlaylistSettings = append(state.Outputs[0].HlsPlaylistSettings, resourceChannelHlsPlaylistSettingsModel{
-			ManifestWindowsSeconds: channel.Outputs[0].HlsPlaylistSettings.ManifestWindowSeconds,
-		})
-	}
-	if state.Outputs[0].ManifestName != nil {
-		state.Outputs[0].ManifestName = channel.Outputs[0].ManifestName
-	}
-	if state.Outputs[0].SourceGroup != nil {
-		state.Outputs[0].SourceGroup = channel.Outputs[0].SourceGroup
-	}
-	state.PlaybackMode = channel.PlaybackMode
-	state.Tags = channel.Tags
-	state.Tier = channel.Tier
+	return input
 }
