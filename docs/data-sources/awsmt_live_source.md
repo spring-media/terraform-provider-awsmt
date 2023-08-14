@@ -7,7 +7,7 @@ Use this resource to get information on a MediaTailor Live Source.
 ```terraform
 data "awsmt_live_source" "data_test" {
   source_location_name = awsmt_source_location.example.source_location_name
-  name                 = awsmt_live_source.test.name
+  live_source_name     = awsmt_live_source.test.name
 }
 ```
 
@@ -16,7 +16,7 @@ data "awsmt_live_source" "data_test" {
 The following arguments are supported:
 
 - `source_location_name` - (Required) The name of the Source Location to which the Live Source refers.
-- `name` - (Required) The name of the Live Source.
+- `live_source_name` - (Required) The name of the Live Source.
 
 ## Attributes Reference
 
