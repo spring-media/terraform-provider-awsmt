@@ -14,13 +14,13 @@ func channelInput(plan resourceChannelModel) mediatailor.CreateChannelInput {
 	input.ChannelName = plan.ChannelName
 
 	if plan.FillerSlate != nil {
+		input.FillerSlate = &mediatailor.SlateSource{}
 		if plan.FillerSlate.SourceLocationName != nil {
 			input.FillerSlate.SourceLocationName = plan.FillerSlate.SourceLocationName
 		}
 		if plan.FillerSlate.VodSourceName != nil {
 			input.FillerSlate.VodSourceName = plan.FillerSlate.VodSourceName
 		}
-		return input
 	}
 	if plan.Outputs != nil && len(plan.Outputs) > 0 {
 		for _, output := range plan.Outputs {

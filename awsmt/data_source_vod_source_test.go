@@ -64,3 +64,51 @@ func TestAccVodSourceDataSourceBasic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVodSourceDataSourceErrors(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "awsmt_vod_source" "test" {
+  					http_package_configurations = [{
+						path = "/"
+						source_group = "default"
+    					type = "HLS"
+  					}]
+  					source_location_name = awsmt_source_location.test_source_location.source_location_name
+  					vod_source_name = "vod_source_example"
+					tags = {"Environment": "dev"}
+				}
+
+				data "awsmt_vod_source" "data_test" {
+  					source_location_name = awsmt_source_location.test_source_location.source_location_name
+  					vod_source_name = "testing_errors"
+				}
+
+				output "vod_source_out" {
+  					value = data.awsmt_vod_source.data_test
+				}
+				resource "awsmt_source_location" "test_source_location"{
+  					source_location_name = "test_source_location"
+  					http_configuration = {
+    					hc_base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
+  					}
+  					default_segment_delivery_configuration = {
+    					dsdc_base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
+  					}
+				}
+				data "awsmt_source_location" "test" {
+  					source_location_name = awsmt_source_location.test_source_location.source_location_name
+				}
+				output "awsmt_source_location" {
+  					value = data.awsmt_source_location.test
+				}
+				`,
+				ExpectError: regexp.MustCompile("Error while describing vod source"),
+			},
+		},
+	})
+}

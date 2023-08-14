@@ -100,16 +100,14 @@ func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"creation_time": schema.StringAttribute{
 				Computed: true,
 			},
-			"filler_slate": schema.ListNestedAttribute{
+			"filler_slate": schema.SingleNestedAttribute{
 				Optional: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"source_location_name": schema.StringAttribute{
-							Optional: true,
-						},
-						"vod_source_name": schema.StringAttribute{
-							Optional: true,
-						},
+				Attributes: map[string]schema.Attribute{
+					"source_location_name": schema.StringAttribute{
+						Optional: true,
+					},
+					"vod_source_name": schema.StringAttribute{
+						Optional: true,
 					},
 				},
 			},
@@ -214,10 +212,8 @@ func (r *resourceChannel) Create(ctx context.Context, req resource.CreateRequest
 
 	channel, err := r.client.CreateChannel(&input)
 	if err != nil {
-		if err != nil {
-			resp.Diagnostics.AddError("Error while creating channel "+*input.ChannelName, err.Error())
-			return
-		}
+		resp.Diagnostics.AddError("Error while creating channel "+*input.ChannelName, err.Error())
+		return
 	}
 
 	if *plan.ChannelState == "RUNNING" {

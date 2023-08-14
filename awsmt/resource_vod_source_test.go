@@ -61,11 +61,6 @@ func TestAccVodSourceResourceBasic(t *testing.T) {
 					resource.TestCheckResourceAttr("awsmt_vod_source.test", "tags.Environment", "dev"),
 				),
 			},
-			// ImportState testing
-			/*{
-				ResourceName:      "awsmt_vod_source.test",
-				ImportState:       true,
-			},*/
 			{
 				Config: `
 				resource "awsmt_vod_source" "test" {

@@ -131,7 +131,6 @@ func TestAccSourceLocationDeleteVodResource(t *testing.T) {
 					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "source_location_name", "test_source_location"),
 				),
 			},
-			// Delete testing automatically occurs in TestCase
 		},
 	})
 }

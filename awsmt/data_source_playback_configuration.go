@@ -2,6 +2,7 @@ package awsmt
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -335,6 +336,9 @@ func (d *dataSourcePlaybackConfiguration) Read(ctx context.Context, req datasour
 		if playbackConfiguration.LogConfiguration.PercentEnabled != nil {
 			data.LogConfiguration.PercentEnabled = playbackConfiguration.LogConfiguration.PercentEnabled
 		}
+	} else {
+		data.LogConfiguration = &logConfigurationModel{}
+		data.LogConfiguration.PercentEnabled = aws.Int64(0)
 	}
 	// MANIFEST PROCESSING RULES
 	if playbackConfiguration.ManifestProcessingRules != nil {

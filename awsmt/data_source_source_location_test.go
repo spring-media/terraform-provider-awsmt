@@ -47,3 +47,36 @@ func TestAccSourceLocationDataSourceBasic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSourceLocationDataSourceErrors(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `resource "awsmt_source_location" "test_source_location"{
+  							source_location_name = "test_source_location"
+  							http_configuration = {
+    							hc_base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
+  							}
+  							default_segment_delivery_configuration = {
+    							dsdc_base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
+  							}
+							segment_delivery_configurations = [{
+    							sdc_base_url = "https://example.com/"
+								sdc_name = "default"
+  							}]
+							tags = {"Environment": "dev"}
+						}
+						data "awsmt_source_location" "read" {
+  							source_location_name = "testing_errors"
+						}
+						output "awsmt_source_location" {
+  							value = data.awsmt_source_location.read
+						}
+`,
+				ExpectError: regexp.MustCompile("Error while describing source location"),
+			},
+		},
+	})
+}

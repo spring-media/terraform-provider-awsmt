@@ -137,9 +137,7 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 			"configuration_aliases": schema.MapAttribute{
 				Optional: true,
 				ElementType: types.MapType{
-					ElemType: types.MapType{
-						ElemType: types.StringType,
-					},
+					ElemType: types.StringType,
 				},
 			},
 			"dash_configuration": schema.SingleNestedAttribute{
@@ -318,7 +316,7 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 
 	// Check if tags are different
 	if !reflect.DeepEqual(oldTags, newTags) {
-		err = untagResource(r.client, oldTags, newTags, *playbackConfiguration.PlaybackConfigurationArn)
+		err = untagResource(r.client, oldTags, *playbackConfiguration.PlaybackConfigurationArn)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error while untaging playback configuration tags"+err.Error(),

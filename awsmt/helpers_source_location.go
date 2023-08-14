@@ -19,21 +19,7 @@ func sourceLocationInput(plan resourceSourceLocationModel) mediatailor.CreateSou
 		}
 		if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration != nil {
 			params.AccessConfiguration.SecretsManagerAccessTokenConfiguration = &mediatailor.SecretsManagerAccessTokenConfiguration{}
-			if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != nil && plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != &emptyString {
-				params.AccessConfiguration.SecretsManagerAccessTokenConfiguration = &mediatailor.SecretsManagerAccessTokenConfiguration{
-					HeaderName: plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName,
-				}
-			}
-			if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn != nil && plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn != &emptyString {
-				params.AccessConfiguration.SecretsManagerAccessTokenConfiguration = &mediatailor.SecretsManagerAccessTokenConfiguration{
-					SecretArn: plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn,
-				}
-			}
-			if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey != nil && plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey != &emptyString {
-				params.AccessConfiguration.SecretsManagerAccessTokenConfiguration = &mediatailor.SecretsManagerAccessTokenConfiguration{
-					SecretStringKey: plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey,
-				}
-			}
+			params.AccessConfiguration.SecretsManagerAccessTokenConfiguration = getSMATC(*plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration)
 		}
 	}
 
@@ -93,20 +79,9 @@ func updateSourceLocationInput(plan resourceSourceLocationModel) mediatailor.Upd
 		}
 		if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration != nil {
 			params.AccessConfiguration.SecretsManagerAccessTokenConfiguration = &mediatailor.SecretsManagerAccessTokenConfiguration{}
-			if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != nil && plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != &emptyString {
-				params.AccessConfiguration.SecretsManagerAccessTokenConfiguration = &mediatailor.SecretsManagerAccessTokenConfiguration{
-					HeaderName: plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName,
-				}
-			}
-			if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn != nil && plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn != &emptyString {
-				params.AccessConfiguration.SecretsManagerAccessTokenConfiguration = &mediatailor.SecretsManagerAccessTokenConfiguration{
-					SecretArn: plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn,
-				}
-			}
-			if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey != nil && plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey != &emptyString {
-				params.AccessConfiguration.SecretsManagerAccessTokenConfiguration = &mediatailor.SecretsManagerAccessTokenConfiguration{
-					SecretStringKey: plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey,
-				}
+			if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration != nil {
+				params.AccessConfiguration.SecretsManagerAccessTokenConfiguration = &mediatailor.SecretsManagerAccessTokenConfiguration{}
+				params.AccessConfiguration.SecretsManagerAccessTokenConfiguration = getSMATC(*plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration)
 			}
 		}
 	}
@@ -240,4 +215,18 @@ func deleteSourceLocation(client *mediatailor.MediaTailor, name *string) error {
 	}
 
 	return nil
+}
+
+func getSMATC(plan secretsManagerAccessTokenConfigurationRModel) *mediatailor.SecretsManagerAccessTokenConfiguration {
+	params := &mediatailor.SecretsManagerAccessTokenConfiguration{}
+	if plan.HeaderName != nil && *plan.HeaderName != "" {
+		params.HeaderName = plan.HeaderName
+	}
+	if plan.SecretArn != nil && *plan.SecretArn != "" {
+		params.SecretArn = plan.SecretArn
+	}
+	if plan.SecretStringKey != nil && *plan.SecretStringKey != "" {
+		params.SecretStringKey = plan.SecretStringKey
+	}
+	return params
 }
