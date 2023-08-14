@@ -124,9 +124,7 @@ func readChannelToPlan(plan resourceChannelModel, channel mediatailor.CreateChan
 			if output.HlsPlaylistSettings != nil {
 				outputs.HlsPlaylistSettings = &hlsPlaylistSettingsRModel{}
 				if output.HlsPlaylistSettings.AdMarkupType != nil && len(output.HlsPlaylistSettings.AdMarkupType) > 0 {
-					for _, value := range output.HlsPlaylistSettings.AdMarkupType {
-						output.HlsPlaylistSettings.AdMarkupType = append(output.HlsPlaylistSettings.AdMarkupType, value)
-					}
+					output.HlsPlaylistSettings.AdMarkupType = append(output.HlsPlaylistSettings.AdMarkupType, output.HlsPlaylistSettings.AdMarkupType...)
 				}
 				if output.HlsPlaylistSettings.ManifestWindowSeconds != nil {
 					outputs.HlsPlaylistSettings.ManifestWindowSeconds = output.HlsPlaylistSettings.ManifestWindowSeconds
@@ -212,9 +210,7 @@ func readChannelToState(state resourceChannelModel, channel mediatailor.Describe
 			if output.HlsPlaylistSettings != nil {
 				outputs.HlsPlaylistSettings = &hlsPlaylistSettingsRModel{}
 				if output.HlsPlaylistSettings.AdMarkupType != nil && len(output.HlsPlaylistSettings.AdMarkupType) > 0 {
-					for _, value := range output.HlsPlaylistSettings.AdMarkupType {
-						output.HlsPlaylistSettings.AdMarkupType = append(output.HlsPlaylistSettings.AdMarkupType, value)
-					}
+					output.HlsPlaylistSettings.AdMarkupType = append(output.HlsPlaylistSettings.AdMarkupType, output.HlsPlaylistSettings.AdMarkupType...)
 				}
 				if output.HlsPlaylistSettings.ManifestWindowSeconds != nil {
 					outputs.HlsPlaylistSettings.ManifestWindowSeconds = output.HlsPlaylistSettings.ManifestWindowSeconds
@@ -262,12 +258,14 @@ func createChannelPolicy(channelName *string, policy *string, client *mediatailo
 	return err
 }
 
-// OUTPUTS
+// UPDATE CHANNEL
 
-func getOutputs(planOutputs []outputsRModel) []*mediatailor.RequestOutputItem {
-	if planOutputs != nil && len(planOutputs) > 0 {
-		var input []*mediatailor.RequestOutputItem
-		for _, output := range planOutputs {
+func getUpdateChannelInput(plan resourceChannelModel) mediatailor.UpdateChannelInput {
+	var input mediatailor.UpdateChannelInput
+
+	input.ChannelName = plan.ChannelName
+	if plan.Outputs != nil && len(plan.Outputs) > 0 {
+		for _, output := range plan.Outputs {
 			outputs := &mediatailor.RequestOutputItem{}
 			if output.DashPlaylistSettings != nil {
 				outputs.DashPlaylistSettings = &mediatailor.DashPlaylistSettings{}
@@ -299,37 +297,18 @@ func getOutputs(planOutputs []outputsRModel) []*mediatailor.RequestOutputItem {
 			if output.SourceGroup != nil {
 				outputs.SourceGroup = output.SourceGroup
 			}
-			input = append(input, outputs)
+			input.Outputs = append(input.Outputs, outputs)
 		}
-		return input
 	}
-	return nil
-}
-
-// FILLER SLATE
-
-func getFillerSlate(planFillerSlate *fillerSlateRModel) *mediatailor.SlateSource {
-	if planFillerSlate != nil {
-		var input *mediatailor.SlateSource
-		if planFillerSlate.SourceLocationName != nil {
-			input.SourceLocationName = planFillerSlate.SourceLocationName
+	if plan.FillerSlate != nil {
+		input.FillerSlate = &mediatailor.SlateSource{}
+		if plan.FillerSlate.SourceLocationName != nil {
+			input.FillerSlate.SourceLocationName = plan.FillerSlate.SourceLocationName
 		}
-		if planFillerSlate.VodSourceName != nil {
-			input.VodSourceName = planFillerSlate.VodSourceName
+		if plan.FillerSlate.VodSourceName != nil {
+			input.FillerSlate.VodSourceName = plan.FillerSlate.VodSourceName
 		}
-		return input
 	}
-	return nil
-}
-
-// UPDATE CHANNEL
-
-func getUpdateChannelInput(plan resourceChannelModel) mediatailor.UpdateChannelInput {
-	var input mediatailor.UpdateChannelInput
-
-	input.ChannelName = plan.ChannelName
-	input.Outputs = getOutputs(plan.Outputs)
-	input.FillerSlate = getFillerSlate(plan.FillerSlate)
 
 	return input
 }

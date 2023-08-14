@@ -246,9 +246,7 @@ func (d *dataSourceChannel) Read(ctx context.Context, req datasource.ReadRequest
 				outputs.HlsPlaylistSettings = &hlsPlaylistSettingsDSModel{}
 				if output.HlsPlaylistSettings.AdMarkupType != nil && len(output.HlsPlaylistSettings.AdMarkupType) > 0 {
 					outputs.HlsPlaylistSettings.AdMarkupType = []types.String{}
-					for _, value := range output.HlsPlaylistSettings.AdMarkupType {
-						output.HlsPlaylistSettings.AdMarkupType = append(output.HlsPlaylistSettings.AdMarkupType, value)
-					}
+					output.HlsPlaylistSettings.AdMarkupType = append(output.HlsPlaylistSettings.AdMarkupType, output.HlsPlaylistSettings.AdMarkupType...)
 				}
 				if output.HlsPlaylistSettings.ManifestWindowSeconds != nil {
 					outputs.HlsPlaylistSettings.ManifestWindowSeconds = types.Int64Value(*output.HlsPlaylistSettings.ManifestWindowSeconds)

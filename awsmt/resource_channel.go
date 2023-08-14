@@ -331,7 +331,7 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	oldPolicy, err := r.client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: channelName})
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "NotFound") {
 		resp.Diagnostics.AddError(
 			"Error while getting channel policy "+err.Error(),
 			err.Error(),
