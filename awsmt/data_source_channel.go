@@ -2,7 +2,6 @@ package awsmt
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -192,97 +191,11 @@ func (d *dataSourceChannel) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	data.ID = types.StringValue(*channel.ChannelName)
-	if channel.Arn != nil {
-		data.Arn = types.StringValue(*channel.Arn)
-	}
-
-	if channel.ChannelName != nil {
-		data.ChannelName = channel.ChannelName
-	}
-
-	if channel.ChannelState != nil {
-		data.ChannelState = types.StringValue(*channel.ChannelState)
-	}
-
-	if channel.CreationTime != nil {
-		data.CreationTime = types.StringValue((aws.TimeValue(channel.CreationTime)).String())
-	}
-
-	if channel.FillerSlate != nil {
-		data.FillerSlate = &fillerSlateDSModel{}
-		if channel.FillerSlate.SourceLocationName != nil {
-			data.FillerSlate.SourceLocationName = types.StringValue(*channel.FillerSlate.SourceLocationName)
-		}
-		if channel.FillerSlate.VodSourceName != nil {
-			data.FillerSlate.VodSourceName = types.StringValue(*channel.FillerSlate.VodSourceName)
-		}
-	}
-
-	if channel.LastModifiedTime != nil {
-		data.LastModifiedTime = types.StringValue((aws.TimeValue(channel.LastModifiedTime)).String())
-	}
-
-	if channel.Outputs != nil {
-		data.Outputs = []outputsDSModel{}
-		for _, output := range channel.Outputs {
-			outputs := outputsDSModel{}
-			if output.DashPlaylistSettings != nil {
-				outputs.DashPlaylistSettings = &dashPlaylistSettingsDSModel{}
-				if output.DashPlaylistSettings.ManifestWindowSeconds != nil {
-					outputs.DashPlaylistSettings.ManifestWindowSeconds = types.Int64Value(*output.DashPlaylistSettings.ManifestWindowSeconds)
-				}
-				if output.DashPlaylistSettings.MinBufferTimeSeconds != nil {
-					outputs.DashPlaylistSettings.MinBufferTimeSeconds = types.Int64Value(*output.DashPlaylistSettings.MinBufferTimeSeconds)
-				}
-				if output.DashPlaylistSettings.MinUpdatePeriodSeconds != nil {
-					outputs.DashPlaylistSettings.MinUpdatePeriodSeconds = types.Int64Value(*output.DashPlaylistSettings.MinUpdatePeriodSeconds)
-				}
-				if output.DashPlaylistSettings.SuggestedPresentationDelaySeconds != nil {
-					outputs.DashPlaylistSettings.SuggestedPresentationDelaySeconds = types.Int64Value(*output.DashPlaylistSettings.SuggestedPresentationDelaySeconds)
-				}
-			}
-			if output.HlsPlaylistSettings != nil {
-				outputs.HlsPlaylistSettings = &hlsPlaylistSettingsDSModel{}
-				if output.HlsPlaylistSettings.AdMarkupType != nil && len(output.HlsPlaylistSettings.AdMarkupType) > 0 {
-					outputs.HlsPlaylistSettings.AdMarkupType = []types.String{}
-					output.HlsPlaylistSettings.AdMarkupType = append(output.HlsPlaylistSettings.AdMarkupType, output.HlsPlaylistSettings.AdMarkupType...)
-				}
-				if output.HlsPlaylistSettings.ManifestWindowSeconds != nil {
-					outputs.HlsPlaylistSettings.ManifestWindowSeconds = types.Int64Value(*output.HlsPlaylistSettings.ManifestWindowSeconds)
-				}
-			}
-			if output.ManifestName != nil {
-				outputs.ManifestName = types.StringValue(*output.ManifestName)
-			}
-			if output.PlaybackUrl != nil {
-				outputs.PlaybackUrl = types.StringValue(*output.PlaybackUrl)
-			}
-			if output.SourceGroup != nil {
-				outputs.SourceGroup = types.StringValue(*output.SourceGroup)
-			}
-			data.Outputs = append(data.Outputs, outputs)
-		}
-	}
-
-	if channel.PlaybackMode != nil {
-		data.PlaybackMode = types.StringValue(*channel.PlaybackMode)
-	}
-
 	if policy.Policy != nil {
 		data.Policy = types.StringValue(*policy.Policy)
 	}
 
-	if channel.Tags != nil && len(channel.Tags) > 0 {
-		data.Tags = make(map[string]*string)
-		for key, value := range channel.Tags {
-			data.Tags[key] = value
-		}
-	}
-
-	if channel.Tier != nil {
-		data.Tier = types.StringValue(*channel.Tier)
-	}
+	data = readChannelToData(data, *channel)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
