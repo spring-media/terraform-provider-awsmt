@@ -123,7 +123,7 @@ func readChannelToData(data dataSourceChannelModel, channel mediatailor.Describe
 		data.PlaybackMode = types.StringValue(*channel.PlaybackMode)
 	}
 
-	if channel.Tags != nil && len(channel.Tags) > 0 {
+	if len(channel.Tags) > 0 {
 		data.Tags = make(map[string]*string)
 		for key, value := range channel.Tags {
 			data.Tags[key] = value
