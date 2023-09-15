@@ -3,6 +3,7 @@ package awsmt
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"reflect"
 )
 
 func untagResource(client *mediatailor.MediaTailor, oldTags map[string]*string, resourceArn string) error {
@@ -26,11 +27,13 @@ func tagResource(client *mediatailor.MediaTailor, newTags map[string]*string, re
 }
 
 func updatesTags(client *mediatailor.MediaTailor, oldTags map[string]*string, newTags map[string]*string, resourceArn string) error {
-	if err := untagResource(client, oldTags, resourceArn); err != nil {
-		return err
-	}
-	if err := tagResource(client, newTags, resourceArn); err != nil {
-		return err
+	if !reflect.DeepEqual(oldTags, newTags) {
+		if err := untagResource(client, oldTags, resourceArn); err != nil {
+			return err
+		}
+		if err := tagResource(client, newTags, resourceArn); err != nil {
+			return err
+		}
 	}
 	return nil
 }

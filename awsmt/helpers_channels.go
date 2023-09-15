@@ -220,10 +220,26 @@ func readOutputsToPlan(plan resourceChannelModel, channel []*mediatailor.Respons
 			if output.SourceGroup != nil {
 				outputs.SourceGroup = output.SourceGroup
 			}
+			outputs.ManifestName, outputs.PlaybackUrl, outputs.SourceGroup = readRMPS(output.ManifestName, output.PlaybackUrl, output.SourceGroup)
+
 			plan.Outputs = append(plan.Outputs, outputs)
 		}
 	}
 	return plan
+}
+
+func readRMPS(manifestName *string, playbackUrl *string, sourceGroup *string) (*string, types.String, *string) {
+	outputs := outputsRModel{}
+	if manifestName != nil {
+		outputs.ManifestName = manifestName
+	}
+	if playbackUrl != nil {
+		outputs.PlaybackUrl = types.StringValue(*playbackUrl)
+	}
+	if sourceGroup != nil {
+		outputs.SourceGroup = sourceGroup
+	}
+	return outputs.ManifestName, outputs.PlaybackUrl, outputs.SourceGroup
 }
 
 func readDashPlaylistConfigurationsToPlan(output *mediatailor.ResponseOutputItem) *dashPlaylistSettingsRModel {
@@ -404,4 +420,14 @@ func readHlsPlaylistConfigurationsToData(output *mediatailor.ResponseOutputItem)
 		outputs.ManifestWindowSeconds = types.Int64Value(*output.HlsPlaylistSettings.ManifestWindowSeconds)
 	}
 	return outputs
+}
+
+func stopChannel(state *string, channelName *string, client *mediatailor.MediaTailor) error {
+	if *state == "RUNNING" {
+		_, err := client.StopChannel(&mediatailor.StopChannelInput{ChannelName: channelName})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

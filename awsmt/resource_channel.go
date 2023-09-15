@@ -304,30 +304,23 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 		)
 	}
 
-	oldTags := channel.Tags
-	newTags := plan.Tags
-
-	if !reflect.DeepEqual(oldTags, newTags) {
-		err = updatesTags(r.client, oldTags, newTags, *channel.Arn)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error while updating channel tags"+err.Error(),
-				err.Error(),
-			)
-		}
+	err = updatesTags(r.client, channel.Tags, plan.Tags, *channel.Arn)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error while updating channel tags"+err.Error(),
+			err.Error(),
+		)
 	}
 
 	previousState := channel.ChannelState
 	newState := plan.ChannelState
 
-	if *previousState == "RUNNING" {
-		_, err := r.client.StopChannel(&mediatailor.StopChannelInput{ChannelName: channelName})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error while stopping running channel "+*channel.ChannelName+err.Error(),
-				err.Error(),
-			)
-		}
+	err = stopChannel(previousState, channelName, r.client)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error while stopping running channel "+*channelName+err.Error(),
+			err.Error(),
+		)
 	}
 
 	oldPolicy, err := r.client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: channelName})
@@ -380,7 +373,6 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 			resp.Diagnostics.AddError("Error while starting the channel "+*channelName, err.Error())
 			return
 		}
-
 	}
 
 	plan.ChannelState = newState
