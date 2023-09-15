@@ -253,3 +253,100 @@ func deleteSourceLocation(client *mediatailor.MediaTailor, name *string) error {
 
 	return nil
 }
+
+func readSourceLocationToData(data dataSourceSourceLocationModel, sourceLocation mediatailor.DescribeSourceLocationOutput) dataSourceSourceLocationModel {
+	data.ID = types.StringValue(*sourceLocation.SourceLocationName)
+	if sourceLocation.AccessConfiguration != nil {
+		data = readAccessConfigurationToData(data, sourceLocation)
+	}
+	if sourceLocation.Arn != nil && *sourceLocation.Arn != "" {
+		data.Arn = types.StringValue(*sourceLocation.Arn)
+	}
+	if sourceLocation.CreationTime != nil {
+		data.CreationTime = types.StringValue((aws.TimeValue(sourceLocation.CreationTime)).String())
+	}
+	if sourceLocation.DefaultSegmentDeliveryConfiguration != nil {
+		data = readDefaultSegmentDeliveryConfigurationToData(data, sourceLocation)
+	}
+	if sourceLocation.HttpConfiguration != nil {
+		data = readHttpConfigurationToData(data, sourceLocation)
+	}
+	if sourceLocation.LastModifiedTime != nil {
+		data.LastModifiedTime = types.StringValue((aws.TimeValue(sourceLocation.LastModifiedTime)).String())
+	}
+	if sourceLocation.SegmentDeliveryConfigurations != nil && len(sourceLocation.SegmentDeliveryConfigurations) > 0 {
+		data = readSegmentDeliveryConfigurationsToData(data, sourceLocation)
+	}
+	if sourceLocation.SourceLocationName != nil && *sourceLocation.SourceLocationName != "" {
+		data.SourceLocationName = sourceLocation.SourceLocationName
+	}
+	if sourceLocation.Tags != nil && len(sourceLocation.Tags) > 0 {
+		data.Tags = sourceLocation.Tags
+	}
+
+	return data
+}
+func readAccessConfigurationToData(data dataSourceSourceLocationModel, sourceLocation mediatailor.DescribeSourceLocationOutput) dataSourceSourceLocationModel {
+	if sourceLocation.AccessConfiguration != nil {
+		data.AccessConfiguration = &accessConfigurationDSModel{}
+		if sourceLocation.AccessConfiguration.AccessType != nil && *sourceLocation.AccessConfiguration.AccessType != "" {
+			data.AccessConfiguration.AccessType = types.StringValue(*sourceLocation.AccessConfiguration.AccessType)
+		}
+		if sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration != nil {
+			data = readSMATConfigurationToData(data, sourceLocation)
+		}
+	}
+	return data
+}
+
+func readSMATConfigurationToData(data dataSourceSourceLocationModel, sourceLocation mediatailor.DescribeSourceLocationOutput) dataSourceSourceLocationModel {
+	if sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration != nil {
+		data.AccessConfiguration.SecretsManagerAccessTokenConfiguration = &secretsManagerAccessTokenConfigurationDSModel{}
+		if sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != nil && *sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != "" {
+			data.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName = types.StringValue(*sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName)
+		}
+		if sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn != nil && *sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn != "" {
+			data.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn = types.StringValue(*sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn)
+		}
+		if sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey != nil && *sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey != "" {
+			data.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey = types.StringValue(*sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey)
+		}
+	}
+	return data
+}
+
+func readDefaultSegmentDeliveryConfigurationToData(data dataSourceSourceLocationModel, sourceLocation mediatailor.DescribeSourceLocationOutput) dataSourceSourceLocationModel {
+	if sourceLocation.DefaultSegmentDeliveryConfiguration != nil {
+		data.DefaultSegmentDeliveryConfiguration = &defaultSegmentDeliveryConfigurationDSModel{}
+		if sourceLocation.DefaultSegmentDeliveryConfiguration.BaseUrl != nil && *sourceLocation.DefaultSegmentDeliveryConfiguration.BaseUrl != "" {
+			data.DefaultSegmentDeliveryConfiguration.BaseUrl = types.StringValue(*sourceLocation.DefaultSegmentDeliveryConfiguration.BaseUrl)
+		}
+	}
+	return data
+}
+func readSegmentDeliveryConfigurationsToData(data dataSourceSourceLocationModel, sourceLocation mediatailor.DescribeSourceLocationOutput) dataSourceSourceLocationModel {
+	if sourceLocation.SegmentDeliveryConfigurations != nil && len(sourceLocation.SegmentDeliveryConfigurations) > 0 {
+		data.SegmentDeliveryConfigurations = []segmentDeliveryConfigurationsDSModel{}
+		for _, segmentDeliveryConfiguration := range sourceLocation.SegmentDeliveryConfigurations {
+			segmentDeliveryConfigurations := segmentDeliveryConfigurationsDSModel{}
+			if segmentDeliveryConfiguration.BaseUrl != nil && *segmentDeliveryConfiguration.BaseUrl != "" {
+				segmentDeliveryConfigurations.BaseUrl = types.StringValue(*segmentDeliveryConfiguration.BaseUrl)
+			}
+			if segmentDeliveryConfiguration.Name != nil && *segmentDeliveryConfiguration.Name != "" {
+				segmentDeliveryConfigurations.SDCName = types.StringValue(*segmentDeliveryConfiguration.Name)
+			}
+			data.SegmentDeliveryConfigurations = append(data.SegmentDeliveryConfigurations, segmentDeliveryConfigurations)
+		}
+	}
+	return data
+}
+
+func readHttpConfigurationToData(data dataSourceSourceLocationModel, sourceLocation mediatailor.DescribeSourceLocationOutput) dataSourceSourceLocationModel {
+	if sourceLocation.HttpConfiguration != nil {
+		data.HttpConfiguration = &httpConfigurationDSModel{}
+		if sourceLocation.HttpConfiguration.BaseUrl != nil && *sourceLocation.HttpConfiguration.BaseUrl != "" {
+			data.HttpConfiguration.BaseUrl = types.StringValue(*sourceLocation.HttpConfiguration.BaseUrl)
+		}
+	}
+	return data
+}

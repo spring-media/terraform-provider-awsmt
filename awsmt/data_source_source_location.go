@@ -2,7 +2,6 @@ package awsmt
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -168,64 +167,7 @@ func (d *dataSourceSourceLocation) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	data.ID = types.StringValue(*sourceLocation.SourceLocationName)
-	if sourceLocation.AccessConfiguration != nil {
-		data.AccessConfiguration = &accessConfigurationDSModel{}
-		if sourceLocation.AccessConfiguration.AccessType != nil && *sourceLocation.AccessConfiguration.AccessType != "" {
-			data.AccessConfiguration.AccessType = types.StringValue(*sourceLocation.AccessConfiguration.AccessType)
-		}
-		if sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration != nil {
-			data.AccessConfiguration.SecretsManagerAccessTokenConfiguration = &secretsManagerAccessTokenConfigurationDSModel{}
-			if sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != nil && *sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName != "" {
-				data.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName = types.StringValue(*sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.HeaderName)
-			}
-			if sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn != nil && *sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn != "" {
-				data.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn = types.StringValue(*sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretArn)
-			}
-			if sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey != nil && *sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey != "" {
-				data.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey = types.StringValue(*sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration.SecretStringKey)
-			}
-		}
-	}
-	if sourceLocation.Arn != nil && *sourceLocation.Arn != "" {
-		data.Arn = types.StringValue(*sourceLocation.Arn)
-	}
-	if sourceLocation.CreationTime != nil {
-		data.CreationTime = types.StringValue((aws.TimeValue(sourceLocation.CreationTime)).String())
-	}
-	if sourceLocation.DefaultSegmentDeliveryConfiguration != nil {
-		data.DefaultSegmentDeliveryConfiguration = &defaultSegmentDeliveryConfigurationDSModel{}
-		if sourceLocation.DefaultSegmentDeliveryConfiguration.BaseUrl != nil && *sourceLocation.DefaultSegmentDeliveryConfiguration.BaseUrl != "" {
-			data.DefaultSegmentDeliveryConfiguration.BaseUrl = types.StringValue(*sourceLocation.DefaultSegmentDeliveryConfiguration.BaseUrl)
-		}
-	}
-	if sourceLocation.HttpConfiguration != nil {
-		data.HttpConfiguration = &httpConfigurationDSModel{}
-		if sourceLocation.HttpConfiguration.BaseUrl != nil && *sourceLocation.HttpConfiguration.BaseUrl != "" {
-			data.HttpConfiguration.BaseUrl = types.StringValue(*sourceLocation.HttpConfiguration.BaseUrl)
-		}
-	}
-	if sourceLocation.LastModifiedTime != nil {
-		data.LastModifiedTime = types.StringValue((aws.TimeValue(sourceLocation.LastModifiedTime)).String())
-	}
-	if sourceLocation.SegmentDeliveryConfigurations != nil && len(sourceLocation.SegmentDeliveryConfigurations) > 0 {
-		for _, segmentDeliveryConfiguration := range sourceLocation.SegmentDeliveryConfigurations {
-			segmentDeliveryConfigurations := segmentDeliveryConfigurationsDSModel{}
-			if segmentDeliveryConfiguration.BaseUrl != nil && *segmentDeliveryConfiguration.BaseUrl != "" {
-				segmentDeliveryConfigurations.BaseUrl = types.StringValue(*segmentDeliveryConfiguration.BaseUrl)
-			}
-			if segmentDeliveryConfiguration.Name != nil && *segmentDeliveryConfiguration.Name != "" {
-				segmentDeliveryConfigurations.SDCName = types.StringValue(*segmentDeliveryConfiguration.Name)
-			}
-			data.SegmentDeliveryConfigurations = append(data.SegmentDeliveryConfigurations, segmentDeliveryConfigurations)
-		}
-	}
-	if sourceLocation.SourceLocationName != nil && *sourceLocation.SourceLocationName != "" {
-		data.SourceLocationName = sourceLocation.SourceLocationName
-	}
-	if sourceLocation.Tags != nil && len(sourceLocation.Tags) > 0 {
-		data.Tags = sourceLocation.Tags
-	}
+	data = readSourceLocationToData(data, *sourceLocation)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
