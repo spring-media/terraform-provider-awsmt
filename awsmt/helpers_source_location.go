@@ -6,17 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func getSegmentDeliveryConfigurationsInput(segmentDeliveryConfigurations []segmentDeliveryConfigurationsRModel) []*mediatailor.SegmentDeliveryConfiguration {
-	var params []*mediatailor.SegmentDeliveryConfiguration
-	for _, segmentDeliveryConfiguration := range segmentDeliveryConfigurations {
-		segmentDeliveryConfigurations := &mediatailor.SegmentDeliveryConfiguration{}
-		segmentDeliveryConfigurations.BaseUrl = segmentDeliveryConfiguration.BaseUrl
-		segmentDeliveryConfigurations.Name = segmentDeliveryConfiguration.SDCName
-		params = append(params, segmentDeliveryConfigurations)
-	}
-	return params
-}
-
 func sourceLocationInput(plan resourceSourceLocationModel) mediatailor.CreateSourceLocationInput {
 	var params mediatailor.CreateSourceLocationInput
 
@@ -64,6 +53,20 @@ func getAccessConfigurationInput(accessConfiguration *accessConfigurationRModel)
 	return params
 }
 
+func getSMATC(plan secretsManagerAccessTokenConfigurationRModel) *mediatailor.SecretsManagerAccessTokenConfiguration {
+	params := &mediatailor.SecretsManagerAccessTokenConfiguration{}
+	if plan.HeaderName != nil && *plan.HeaderName != "" {
+		params.HeaderName = plan.HeaderName
+	}
+	if plan.SecretArn != nil && *plan.SecretArn != "" {
+		params.SecretArn = plan.SecretArn
+	}
+	if plan.SecretStringKey != nil && *plan.SecretStringKey != "" {
+		params.SecretStringKey = plan.SecretStringKey
+	}
+	return params
+}
+
 func getDefaultSegmentDeliveryConfigurationInput(defaultSegmentDeliveryConfiguration *defaultSegmentDeliveryConfigurationRModel) *mediatailor.DefaultSegmentDeliveryConfiguration {
 	params := &mediatailor.DefaultSegmentDeliveryConfiguration{}
 	if defaultSegmentDeliveryConfiguration.BaseUrl != nil && *defaultSegmentDeliveryConfiguration.BaseUrl != "" {
@@ -82,55 +85,37 @@ func getHttpConfigurationInput(httpConfiguration *httpConfigurationRModel) *medi
 	return params
 }
 
+func getSegmentDeliveryConfigurationsInput(segmentDeliveryConfigurations []segmentDeliveryConfigurationsRModel) []*mediatailor.SegmentDeliveryConfiguration {
+	var params []*mediatailor.SegmentDeliveryConfiguration
+	for _, segmentDeliveryConfiguration := range segmentDeliveryConfigurations {
+		segmentDeliveryConfigurations := &mediatailor.SegmentDeliveryConfiguration{}
+		segmentDeliveryConfigurations.BaseUrl = segmentDeliveryConfiguration.BaseUrl
+		segmentDeliveryConfigurations.Name = segmentDeliveryConfiguration.SDCName
+		params = append(params, segmentDeliveryConfigurations)
+	}
+	return params
+}
+
 func updateSourceLocationInput(plan resourceSourceLocationModel) mediatailor.UpdateSourceLocationInput {
 	var params mediatailor.UpdateSourceLocationInput
 
-	emptyString := ""
-
 	// Access Configuration
 	if plan.AccessConfiguration != nil {
-		params.AccessConfiguration = &mediatailor.AccessConfiguration{}
-		if plan.AccessConfiguration.AccessType != nil && plan.AccessConfiguration.AccessType != &emptyString {
-			params.AccessConfiguration = &mediatailor.AccessConfiguration{
-				AccessType: plan.AccessConfiguration.AccessType,
-			}
-		}
-		if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration != nil {
-			params.AccessConfiguration.SecretsManagerAccessTokenConfiguration = &mediatailor.SecretsManagerAccessTokenConfiguration{}
-			if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration != nil {
-				params.AccessConfiguration.SecretsManagerAccessTokenConfiguration = &mediatailor.SecretsManagerAccessTokenConfiguration{}
-				params.AccessConfiguration.SecretsManagerAccessTokenConfiguration = getSMATC(*plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration)
-			}
-		}
+		params.AccessConfiguration = getAccessConfigurationInput(plan.AccessConfiguration)
 	}
-
 	// Default Segment Delivery Configuration
 	if plan.DefaultSegmentDeliveryConfiguration != nil {
-		params.DefaultSegmentDeliveryConfiguration = &mediatailor.DefaultSegmentDeliveryConfiguration{}
-		if plan.DefaultSegmentDeliveryConfiguration.BaseUrl != nil && plan.DefaultSegmentDeliveryConfiguration.BaseUrl != &emptyString {
-			params.DefaultSegmentDeliveryConfiguration = &mediatailor.DefaultSegmentDeliveryConfiguration{
-				BaseUrl: plan.DefaultSegmentDeliveryConfiguration.BaseUrl,
-			}
-		}
+		params.DefaultSegmentDeliveryConfiguration = getDefaultSegmentDeliveryConfigurationInput(plan.DefaultSegmentDeliveryConfiguration)
 	}
 
 	// HTTP Configuration
 	if plan.HttpConfiguration != nil {
-		params.HttpConfiguration = &mediatailor.HttpConfiguration{}
-		if plan.HttpConfiguration.BaseUrl != nil {
-			params.HttpConfiguration.BaseUrl = plan.HttpConfiguration.BaseUrl
-		}
+		params.HttpConfiguration = getHttpConfigurationInput(plan.HttpConfiguration)
 	}
 
 	// Segment Delivery Configurations
 	if len(plan.SegmentDeliveryConfigurations) > 0 && plan.SegmentDeliveryConfigurations != nil {
-		params.SegmentDeliveryConfigurations = []*mediatailor.SegmentDeliveryConfiguration{}
-		for _, segmentDeliveryConfiguration := range plan.SegmentDeliveryConfigurations {
-			segmentDeliveryConfigurations := &mediatailor.SegmentDeliveryConfiguration{}
-			segmentDeliveryConfigurations.BaseUrl = segmentDeliveryConfiguration.BaseUrl
-			segmentDeliveryConfigurations.Name = segmentDeliveryConfiguration.SDCName
-			params.SegmentDeliveryConfigurations = append(params.SegmentDeliveryConfigurations, segmentDeliveryConfigurations)
-		}
+		params.SegmentDeliveryConfigurations = getSegmentDeliveryConfigurationsInput(plan.SegmentDeliveryConfigurations)
 	}
 
 	// Source Location Name
@@ -142,6 +127,39 @@ func updateSourceLocationInput(plan resourceSourceLocationModel) mediatailor.Upd
 func readSourceLocationToPlan(plan resourceSourceLocationModel, sourceLocation mediatailor.CreateSourceLocationOutput) resourceSourceLocationModel {
 	// Set state
 	plan.ID = types.StringValue(*sourceLocation.SourceLocationName)
+	if sourceLocation.AccessConfiguration != nil {
+		plan = readAccessConfiguration(plan, sourceLocation)
+	}
+	if sourceLocation.Arn != nil && *sourceLocation.Arn != "" {
+		plan.Arn = types.StringValue(*sourceLocation.Arn)
+	}
+	if sourceLocation.CreationTime != nil {
+		plan.CreationTime = types.StringValue((aws.TimeValue(sourceLocation.CreationTime)).String())
+	}
+	if sourceLocation.DefaultSegmentDeliveryConfiguration != nil {
+		plan = readDefaultSegmentDeliveryConfiguration(plan, sourceLocation)
+	}
+	if sourceLocation.HttpConfiguration != nil {
+		plan = readHttpConfiguration(plan, sourceLocation)
+	}
+	if sourceLocation.LastModifiedTime != nil {
+		plan.LastModifiedTime = types.StringValue((aws.TimeValue(sourceLocation.LastModifiedTime)).String())
+	}
+	if sourceLocation.SegmentDeliveryConfigurations != nil && len(sourceLocation.SegmentDeliveryConfigurations) > 0 {
+		plan = readSegmentDeliveryConfigurations(plan, sourceLocation)
+	}
+
+	if sourceLocation.SourceLocationName != nil && *sourceLocation.SourceLocationName != "" {
+		plan.SourceLocationName = sourceLocation.SourceLocationName
+	}
+	if sourceLocation.Tags != nil && len(sourceLocation.Tags) > 0 {
+		plan.Tags = sourceLocation.Tags
+	}
+
+	return plan
+}
+
+func readAccessConfiguration(plan resourceSourceLocationModel, sourceLocation mediatailor.CreateSourceLocationOutput) resourceSourceLocationModel {
 	if sourceLocation.AccessConfiguration != nil {
 		plan.AccessConfiguration = &accessConfigurationRModel{}
 		if sourceLocation.AccessConfiguration.AccessType != nil && *sourceLocation.AccessConfiguration.AccessType != "" {
@@ -160,27 +178,19 @@ func readSourceLocationToPlan(plan resourceSourceLocationModel, sourceLocation m
 			}
 		}
 	}
-	if sourceLocation.Arn != nil && *sourceLocation.Arn != "" {
-		plan.Arn = types.StringValue(*sourceLocation.Arn)
-	}
-	if sourceLocation.CreationTime != nil {
-		plan.CreationTime = types.StringValue((aws.TimeValue(sourceLocation.CreationTime)).String())
-	}
+	return plan
+}
+
+func readDefaultSegmentDeliveryConfiguration(plan resourceSourceLocationModel, sourceLocation mediatailor.CreateSourceLocationOutput) resourceSourceLocationModel {
 	if sourceLocation.DefaultSegmentDeliveryConfiguration != nil {
 		plan.DefaultSegmentDeliveryConfiguration = &defaultSegmentDeliveryConfigurationRModel{}
 		if sourceLocation.DefaultSegmentDeliveryConfiguration.BaseUrl != nil && *sourceLocation.DefaultSegmentDeliveryConfiguration.BaseUrl != "" {
 			plan.DefaultSegmentDeliveryConfiguration.BaseUrl = sourceLocation.DefaultSegmentDeliveryConfiguration.BaseUrl
 		}
 	}
-	if sourceLocation.HttpConfiguration != nil {
-		plan.HttpConfiguration = &httpConfigurationRModel{}
-		if sourceLocation.HttpConfiguration.BaseUrl != nil && *sourceLocation.HttpConfiguration.BaseUrl != "" {
-			plan.HttpConfiguration.BaseUrl = sourceLocation.HttpConfiguration.BaseUrl
-		}
-	}
-	if sourceLocation.LastModifiedTime != nil {
-		plan.LastModifiedTime = types.StringValue((aws.TimeValue(sourceLocation.LastModifiedTime)).String())
-	}
+	return plan
+}
+func readSegmentDeliveryConfigurations(plan resourceSourceLocationModel, sourceLocation mediatailor.CreateSourceLocationOutput) resourceSourceLocationModel {
 	if sourceLocation.SegmentDeliveryConfigurations != nil && len(sourceLocation.SegmentDeliveryConfigurations) > 0 {
 		plan.SegmentDeliveryConfigurations = []segmentDeliveryConfigurationsRModel{}
 		for _, segmentDeliveryConfiguration := range sourceLocation.SegmentDeliveryConfigurations {
@@ -194,14 +204,16 @@ func readSourceLocationToPlan(plan resourceSourceLocationModel, sourceLocation m
 			plan.SegmentDeliveryConfigurations = append(plan.SegmentDeliveryConfigurations, segmentDeliveryConfigurations)
 		}
 	}
+	return plan
+}
 
-	if sourceLocation.SourceLocationName != nil && *sourceLocation.SourceLocationName != "" {
-		plan.SourceLocationName = sourceLocation.SourceLocationName
+func readHttpConfiguration(plan resourceSourceLocationModel, sourceLocation mediatailor.CreateSourceLocationOutput) resourceSourceLocationModel {
+	if sourceLocation.HttpConfiguration != nil {
+		plan.HttpConfiguration = &httpConfigurationRModel{}
+		if sourceLocation.HttpConfiguration.BaseUrl != nil && *sourceLocation.HttpConfiguration.BaseUrl != "" {
+			plan.HttpConfiguration.BaseUrl = sourceLocation.HttpConfiguration.BaseUrl
+		}
 	}
-	if sourceLocation.Tags != nil && len(sourceLocation.Tags) > 0 {
-		plan.Tags = sourceLocation.Tags
-	}
-
 	return plan
 }
 
@@ -233,18 +245,4 @@ func deleteSourceLocation(client *mediatailor.MediaTailor, name *string) error {
 	}
 
 	return nil
-}
-
-func getSMATC(plan secretsManagerAccessTokenConfigurationRModel) *mediatailor.SecretsManagerAccessTokenConfiguration {
-	params := &mediatailor.SecretsManagerAccessTokenConfiguration{}
-	if plan.HeaderName != nil && *plan.HeaderName != "" {
-		params.HeaderName = plan.HeaderName
-	}
-	if plan.SecretArn != nil && *plan.SecretArn != "" {
-		params.SecretArn = plan.SecretArn
-	}
-	if plan.SecretStringKey != nil && *plan.SecretStringKey != "" {
-		params.SecretStringKey = plan.SecretStringKey
-	}
-	return params
 }
