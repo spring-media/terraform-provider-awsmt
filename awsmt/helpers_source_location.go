@@ -6,40 +6,32 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+func getSegmentDeliveryConfigurationsInput(segmentDeliveryConfigurations []segmentDeliveryConfigurationsRModel) []*mediatailor.SegmentDeliveryConfiguration {
+	var params []*mediatailor.SegmentDeliveryConfiguration
+	for _, segmentDeliveryConfiguration := range segmentDeliveryConfigurations {
+		segmentDeliveryConfigurations := &mediatailor.SegmentDeliveryConfiguration{}
+		segmentDeliveryConfigurations.BaseUrl = segmentDeliveryConfiguration.BaseUrl
+		segmentDeliveryConfigurations.Name = segmentDeliveryConfiguration.SDCName
+		params = append(params, segmentDeliveryConfigurations)
+	}
+	return params
+}
+
 func sourceLocationInput(plan resourceSourceLocationModel) mediatailor.CreateSourceLocationInput {
 	var params mediatailor.CreateSourceLocationInput
 
-	emptyString := ""
-
 	// Access Configuration
 	if plan.AccessConfiguration != nil {
-		params.AccessConfiguration = &mediatailor.AccessConfiguration{}
-		if plan.AccessConfiguration.AccessType != nil && plan.AccessConfiguration.AccessType != &emptyString {
-			params.AccessConfiguration.AccessType = plan.AccessConfiguration.AccessType
-		}
-		if plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration != nil {
-			params.AccessConfiguration.SecretsManagerAccessTokenConfiguration = &mediatailor.SecretsManagerAccessTokenConfiguration{}
-			params.AccessConfiguration.SecretsManagerAccessTokenConfiguration = getSMATC(*plan.AccessConfiguration.SecretsManagerAccessTokenConfiguration)
-		}
+		params.AccessConfiguration = getAccessConfigurationInput(plan.AccessConfiguration)
 	}
-
 	// Default Segment Delivery Configuration
 	if plan.DefaultSegmentDeliveryConfiguration != nil {
-		params.DefaultSegmentDeliveryConfiguration = &mediatailor.DefaultSegmentDeliveryConfiguration{}
-		if plan.DefaultSegmentDeliveryConfiguration.BaseUrl != nil && plan.DefaultSegmentDeliveryConfiguration.BaseUrl != &emptyString {
-			params.DefaultSegmentDeliveryConfiguration = &mediatailor.DefaultSegmentDeliveryConfiguration{
-				BaseUrl: plan.DefaultSegmentDeliveryConfiguration.BaseUrl,
-			}
-		}
+		params.DefaultSegmentDeliveryConfiguration = getDefaultSegmentDeliveryConfigurationInput(plan.DefaultSegmentDeliveryConfiguration)
 	}
 
 	// HTTP Configuration
 	if plan.HttpConfiguration != nil {
-		params.HttpConfiguration = &mediatailor.HttpConfiguration{}
-		if plan.HttpConfiguration.BaseUrl != nil && plan.HttpConfiguration.BaseUrl != &emptyString {
-			params.HttpConfiguration.BaseUrl = plan.HttpConfiguration.BaseUrl
-		}
-
+		params.HttpConfiguration = getHttpConfigurationInput(plan.HttpConfiguration)
 	}
 
 	// Source Location Name
@@ -47,13 +39,7 @@ func sourceLocationInput(plan resourceSourceLocationModel) mediatailor.CreateSou
 
 	// Segment Delivery Configurations
 	if len(plan.SegmentDeliveryConfigurations) > 0 && plan.SegmentDeliveryConfigurations != nil {
-		params.SegmentDeliveryConfigurations = []*mediatailor.SegmentDeliveryConfiguration{}
-		for _, segmentDeliveryConfiguration := range plan.SegmentDeliveryConfigurations {
-			segmentDeliveryConfigurations := &mediatailor.SegmentDeliveryConfiguration{}
-			segmentDeliveryConfigurations.BaseUrl = segmentDeliveryConfiguration.BaseUrl
-			segmentDeliveryConfigurations.Name = segmentDeliveryConfiguration.SDCName
-			params.SegmentDeliveryConfigurations = append(params.SegmentDeliveryConfigurations, segmentDeliveryConfigurations)
-		}
+		params.SegmentDeliveryConfigurations = getSegmentDeliveryConfigurationsInput(plan.SegmentDeliveryConfigurations)
 	}
 
 	// Tags
@@ -61,6 +47,38 @@ func sourceLocationInput(plan resourceSourceLocationModel) mediatailor.CreateSou
 		params.Tags = plan.Tags
 	}
 
+	return params
+}
+
+func getAccessConfigurationInput(accessConfiguration *accessConfigurationRModel) *mediatailor.AccessConfiguration {
+	params := &mediatailor.AccessConfiguration{}
+	if accessConfiguration != nil {
+		if accessConfiguration.AccessType != nil && *accessConfiguration.AccessType != "" {
+			params.AccessType = accessConfiguration.AccessType
+		}
+		if accessConfiguration.SecretsManagerAccessTokenConfiguration != nil {
+			params.SecretsManagerAccessTokenConfiguration = &mediatailor.SecretsManagerAccessTokenConfiguration{}
+			params.SecretsManagerAccessTokenConfiguration = getSMATC(*accessConfiguration.SecretsManagerAccessTokenConfiguration)
+		}
+	}
+	return params
+}
+
+func getDefaultSegmentDeliveryConfigurationInput(defaultSegmentDeliveryConfiguration *defaultSegmentDeliveryConfigurationRModel) *mediatailor.DefaultSegmentDeliveryConfiguration {
+	params := &mediatailor.DefaultSegmentDeliveryConfiguration{}
+	if defaultSegmentDeliveryConfiguration.BaseUrl != nil && *defaultSegmentDeliveryConfiguration.BaseUrl != "" {
+		params.BaseUrl = defaultSegmentDeliveryConfiguration.BaseUrl
+	}
+	return params
+}
+
+func getHttpConfigurationInput(httpConfiguration *httpConfigurationRModel) *mediatailor.HttpConfiguration {
+	params := &mediatailor.HttpConfiguration{}
+	if httpConfiguration != nil {
+		if httpConfiguration.BaseUrl != nil && *httpConfiguration.BaseUrl != "" {
+			params.BaseUrl = httpConfiguration.BaseUrl
+		}
+	}
 	return params
 }
 
