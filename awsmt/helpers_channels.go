@@ -211,15 +211,6 @@ func readOutputsToPlan(plan resourceChannelModel, channel []*mediatailor.Respons
 				outputs.HlsPlaylistSettings = hlsPlaylistSettings
 
 			}
-			if output.ManifestName != nil {
-				outputs.ManifestName = output.ManifestName
-			}
-			if output.PlaybackUrl != nil {
-				outputs.PlaybackUrl = types.StringValue(*output.PlaybackUrl)
-			}
-			if output.SourceGroup != nil {
-				outputs.SourceGroup = output.SourceGroup
-			}
 			outputs.ManifestName, outputs.PlaybackUrl, outputs.SourceGroup = readRMPS(output.ManifestName, output.PlaybackUrl, output.SourceGroup)
 
 			plan.Outputs = append(plan.Outputs, outputs)
