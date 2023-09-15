@@ -279,7 +279,7 @@ func readChannelToData(data dataSourceChannelModel, channel mediatailor.Describe
 
 	data = readComputedValuesToData(data, channel)
 	data = readFillerSlateToData(data, channel)
-	data = readOutputsToData(data, channel)
+	data = readOutputsToData(data, channel.Outputs)
 
 	return data
 }
@@ -337,37 +337,22 @@ func readFillerSlateToData(data dataSourceChannelModel, channel mediatailor.Desc
 	return data
 }
 
-func readOutputsToData(data dataSourceChannelModel, channel mediatailor.DescribeChannelOutput) dataSourceChannelModel {
-	if channel.Outputs != nil {
+func readOutputsToData(data dataSourceChannelModel, channel []*mediatailor.ResponseOutputItem) dataSourceChannelModel {
+	if channel != nil {
 		data.Outputs = []outputsDSModel{}
-		for _, output := range channel.Outputs {
+		for _, output := range channel {
 			outputs := outputsDSModel{}
 			if output.DashPlaylistSettings != nil {
 				outputs.DashPlaylistSettings = &dashPlaylistSettingsDSModel{}
-				if output.DashPlaylistSettings.ManifestWindowSeconds != nil {
-					outputs.DashPlaylistSettings.ManifestWindowSeconds = types.Int64Value(*output.DashPlaylistSettings.ManifestWindowSeconds)
-				}
-				if output.DashPlaylistSettings.MinBufferTimeSeconds != nil {
-					outputs.DashPlaylistSettings.MinBufferTimeSeconds = types.Int64Value(*output.DashPlaylistSettings.MinBufferTimeSeconds)
-				}
-				if output.DashPlaylistSettings.MinUpdatePeriodSeconds != nil {
-					outputs.DashPlaylistSettings.MinUpdatePeriodSeconds = types.Int64Value(*output.DashPlaylistSettings.MinUpdatePeriodSeconds)
-				}
-				if output.DashPlaylistSettings.SuggestedPresentationDelaySeconds != nil {
-					outputs.DashPlaylistSettings.SuggestedPresentationDelaySeconds = types.Int64Value(*output.DashPlaylistSettings.SuggestedPresentationDelaySeconds)
-				}
+				dashPlaylistSettings := readDashPlaylistConfigurationsToData(output)
+				outputs.DashPlaylistSettings = dashPlaylistSettings
+
 			}
 			if output.HlsPlaylistSettings != nil {
 				outputs.HlsPlaylistSettings = &hlsPlaylistSettingsDSModel{}
-				if output.HlsPlaylistSettings.AdMarkupType != nil && len(output.HlsPlaylistSettings.AdMarkupType) > 0 {
-					for _, value := range output.HlsPlaylistSettings.AdMarkupType {
-						temp := value
-						output.HlsPlaylistSettings.AdMarkupType = append(output.HlsPlaylistSettings.AdMarkupType, temp)
-					}
-				}
-				if output.HlsPlaylistSettings.ManifestWindowSeconds != nil {
-					outputs.HlsPlaylistSettings.ManifestWindowSeconds = types.Int64Value(*output.HlsPlaylistSettings.ManifestWindowSeconds)
-				}
+				hlsPlaylistSettings := readHlsPlaylistConfigurationsToData(output)
+				outputs.HlsPlaylistSettings = hlsPlaylistSettings
+
 			}
 			if output.ManifestName != nil {
 				outputs.ManifestName = types.StringValue(*output.ManifestName)
@@ -382,4 +367,35 @@ func readOutputsToData(data dataSourceChannelModel, channel mediatailor.Describe
 		}
 	}
 	return data
+}
+
+func readDashPlaylistConfigurationsToData(output *mediatailor.ResponseOutputItem) *dashPlaylistSettingsDSModel {
+	outputs := &dashPlaylistSettingsDSModel{}
+	if output.DashPlaylistSettings.ManifestWindowSeconds != nil {
+		outputs.ManifestWindowSeconds = types.Int64Value(*output.DashPlaylistSettings.ManifestWindowSeconds)
+	}
+	if output.DashPlaylistSettings.MinBufferTimeSeconds != nil {
+		outputs.MinBufferTimeSeconds = types.Int64Value(*output.DashPlaylistSettings.MinBufferTimeSeconds)
+	}
+	if output.DashPlaylistSettings.MinUpdatePeriodSeconds != nil {
+		outputs.MinUpdatePeriodSeconds = types.Int64Value(*output.DashPlaylistSettings.MinUpdatePeriodSeconds)
+	}
+	if output.DashPlaylistSettings.SuggestedPresentationDelaySeconds != nil {
+		outputs.SuggestedPresentationDelaySeconds = types.Int64Value(*output.DashPlaylistSettings.SuggestedPresentationDelaySeconds)
+	}
+	return outputs
+}
+
+func readHlsPlaylistConfigurationsToData(output *mediatailor.ResponseOutputItem) *hlsPlaylistSettingsDSModel {
+	outputs := &hlsPlaylistSettingsDSModel{}
+	if output.HlsPlaylistSettings.AdMarkupType != nil && len(output.HlsPlaylistSettings.AdMarkupType) > 0 {
+		for _, value := range output.HlsPlaylistSettings.AdMarkupType {
+			temp := value
+			outputs.AdMarkupType = append(outputs.AdMarkupType, types.StringValue(*temp))
+		}
+	}
+	if output.HlsPlaylistSettings.ManifestWindowSeconds != nil {
+		outputs.ManifestWindowSeconds = types.Int64Value(*output.HlsPlaylistSettings.ManifestWindowSeconds)
+	}
+	return outputs
 }
