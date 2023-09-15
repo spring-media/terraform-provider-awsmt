@@ -183,19 +183,14 @@ func readPlaybackConfigToPlan(plan resourcePlaybackConfigurationModel, playbackC
 		plan = readManifestProcessingRules(plan, playbackConfiguration)
 	}
 
-	plan.Name, plan.PersonalizationThresholdSeconds, plan.PlaybackEndpointPrefix, plan.SessionInitializationEndpointPrefix, plan.SlateAdUrl, plan.TranscodeProfileName, plan.VideoContentSourceUrl = readPlaybackConfigurationTemps(plan, playbackConfiguration)
-
-	// TAGS
-	if playbackConfiguration.Tags != nil {
-		plan.Tags = playbackConfiguration.Tags
-	}
+	plan.Name, plan.PersonalizationThresholdSeconds, plan.PlaybackEndpointPrefix, plan.SessionInitializationEndpointPrefix, plan.SlateAdUrl, plan.TranscodeProfileName, plan.VideoContentSourceUrl, plan.Tags = readPlaybackConfigurationTemps(plan, playbackConfiguration)
 
 	plan.ID = types.StringValue(*playbackConfiguration.Name)
 
 	return plan
 }
 
-func readPlaybackConfigurationTemps(plan resourcePlaybackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) (*string, *int64, types.String, types.String, *string, *string, *string) {
+func readPlaybackConfigurationTemps(plan resourcePlaybackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) (*string, *int64, types.String, types.String, *string, *string, *string, map[string]*string) {
 	plan.Name = playbackConfiguration.Name
 	// PERSONALIZATION THRESHOLD SECONDS
 	if playbackConfiguration.PersonalizationThresholdSeconds != nil {
@@ -217,7 +212,12 @@ func readPlaybackConfigurationTemps(plan resourcePlaybackConfigurationModel, pla
 	if playbackConfiguration.VideoContentSourceUrl != nil {
 		plan.VideoContentSourceUrl = playbackConfiguration.VideoContentSourceUrl
 	}
-	return plan.Name, plan.PersonalizationThresholdSeconds, plan.PlaybackEndpointPrefix, plan.SessionInitializationEndpointPrefix, plan.SlateAdUrl, plan.TranscodeProfileName, plan.VideoContentSourceUrl
+
+	// TAGS
+	if playbackConfiguration.Tags != nil {
+		plan.Tags = playbackConfiguration.Tags
+	}
+	return plan.Name, plan.PersonalizationThresholdSeconds, plan.PlaybackEndpointPrefix, plan.SessionInitializationEndpointPrefix, plan.SlateAdUrl, plan.TranscodeProfileName, plan.VideoContentSourceUrl, plan.Tags
 }
 
 func readAvailSuppression(plan resourcePlaybackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) resourcePlaybackConfigurationModel {

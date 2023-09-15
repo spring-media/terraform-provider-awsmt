@@ -144,15 +144,11 @@ func (d *dataSourceVodSource) Read(ctx context.Context, req datasource.ReadReque
 		data.SourceLocationName = vodSource.SourceLocationName
 	}
 
-	if vodSource.Tags != nil && len(vodSource.Tags) > 0 {
+	if len(vodSource.Tags) > 0 {
 		data.Tags = make(map[string]*string)
 		for key, value := range vodSource.Tags {
 			data.Tags[key] = value
 		}
-	}
-
-	if vodSource.VodSourceName != nil {
-		data.VodSourceName = vodSource.VodSourceName
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
