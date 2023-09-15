@@ -354,19 +354,25 @@ func readOutputsToData(data dataSourceChannelModel, channel []*mediatailor.Respo
 				outputs.HlsPlaylistSettings = hlsPlaylistSettings
 
 			}
-			if output.ManifestName != nil {
-				outputs.ManifestName = types.StringValue(*output.ManifestName)
-			}
-			if output.PlaybackUrl != nil {
-				outputs.PlaybackUrl = types.StringValue(*output.PlaybackUrl)
-			}
-			if output.SourceGroup != nil {
-				outputs.SourceGroup = types.StringValue(*output.SourceGroup)
-			}
+			outputs.ManifestName, outputs.PlaybackUrl, outputs.SourceGroup = readMPS(output.ManifestName, output.PlaybackUrl, output.SourceGroup)
 			data.Outputs = append(data.Outputs, outputs)
 		}
 	}
 	return data
+}
+
+func readMPS(manifestName *string, playbackUrl *string, sourceGroup *string) (types.String, types.String, types.String) {
+	outputs := outputsDSModel{}
+	if manifestName != nil {
+		outputs.ManifestName = types.StringValue(*manifestName)
+	}
+	if playbackUrl != nil {
+		outputs.PlaybackUrl = types.StringValue(*playbackUrl)
+	}
+	if sourceGroup != nil {
+		outputs.SourceGroup = types.StringValue(*sourceGroup)
+	}
+	return outputs.ManifestName, outputs.PlaybackUrl, outputs.SourceGroup
 }
 
 func readDashPlaylistConfigurationsToData(output *mediatailor.ResponseOutputItem) *dashPlaylistSettingsDSModel {
