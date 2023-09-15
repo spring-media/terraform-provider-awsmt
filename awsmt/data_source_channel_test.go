@@ -19,7 +19,10 @@ func TestAccChannelDataSourceBasic(t *testing.T) {
   					outputs = [{
     					manifest_name                = "default"
 						source_group                 = "default"
-    					hls_playlist_settings = {manifest_window_seconds = 30}
+    					hls_playlist_settings = {
+							ad_markup_type = ["DATERANGE"]
+							manifest_window_seconds = 30
+						}
   					}]
   					playback_mode = "LOOP"
   					policy = "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"AllowAnonymous\", \"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\": \"mediatailor:GetManifest\", \"Resource\": \"arn:aws:mediatailor:eu-central-1:319158032161:channel/test\"}]}"
@@ -99,7 +102,10 @@ func TestAccChannelDataSourceFillerSlateLinear(t *testing.T) {
   					outputs = [{
     					manifest_name                = "default"
 						source_group                 = "default"
-    					hls_playlist_settings = {manifest_window_seconds = 30}
+    					hls_playlist_settings = {
+							ad_markup_type = ["DATERANGE"]
+							manifest_window_seconds = 30
+						}
   					}]
   					playback_mode = "LINEAR"
 					filler_slate = {
@@ -152,7 +158,10 @@ func TestAccChannelDataSourceErrors(t *testing.T) {
   					outputs = [{
     					manifest_name                = "default"
 						source_group                 = "default"
-    					hls_playlist_settings = {manifest_window_seconds = 30}
+    					hls_playlist_settings = {
+							ad_markup_type = ["DATERANGE"]
+							manifest_window_seconds = 30
+						}
   					}]
   					playback_mode = "LOOP"
   					policy = "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"AllowAnonymous\", \"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\": \"mediatailor:GetManifest\", \"Resource\": \"arn:aws:mediatailor:eu-central-1:319158032161:channel/test\"}]}"

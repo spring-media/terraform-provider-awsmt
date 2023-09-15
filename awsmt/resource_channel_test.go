@@ -128,7 +128,8 @@ func TestAccChannelResourceErrors(t *testing.T) {
     					manifest_name                = "default"
 						source_group                 = "default"
     					hls_playlist_settings = {
-							manifest_window_seconds = 40
+							ad_markup_type = ["DATERANGE"]
+							manifest_window_seconds = 30
 						}
   					}]
   					playback_mode = "LINEAR"
@@ -164,6 +165,7 @@ func TestAccChannelResourceRunning(t *testing.T) {
     					manifest_name                = "default"
 						source_group                 = "default"
     					hls_playlist_settings = {
+							ad_markup_type = ["DATERANGE"]
 							manifest_window_seconds = 40
 						}
   					}]
@@ -193,6 +195,7 @@ func TestAccChannelResourceRunning(t *testing.T) {
     					manifest_name                = "default"
 						source_group                 = "default"
     					hls_playlist_settings = {
+							ad_markup_type = ["DATERANGE"]
 							manifest_window_seconds = 30
 						}
   					}]
