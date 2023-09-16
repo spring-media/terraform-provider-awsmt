@@ -2,6 +2,8 @@
 
 The AWSMT Provider allows you to interact with AWS Elemental MediaTailor
 using Terraform.
+This provider version is 1.0 and will be used to maintain the first version of the 
+terraform provider for AWS MediaTailor using the Terraform Sdk v2.
 
 # Authentication
 
