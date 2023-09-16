@@ -9,24 +9,7 @@ import (
 func vodSourceInput(plan resourceVodSourceModel) mediatailor.CreateVodSourceInput {
 	var input mediatailor.CreateVodSourceInput
 
-	if plan.HttpPackageConfigurations != nil && len(plan.HttpPackageConfigurations) > 0 {
-		input.HttpPackageConfigurations = []*mediatailor.HttpPackageConfiguration{}
-		for _, httpPackageConfiguration := range plan.HttpPackageConfigurations {
-			httpPackageConfigurations := &mediatailor.HttpPackageConfiguration{}
-			httpPackageConfigurations.Path = httpPackageConfiguration.Path
-			httpPackageConfigurations.SourceGroup = httpPackageConfiguration.SourceGroup
-			httpPackageConfigurations.Type = httpPackageConfiguration.Type
-			input.HttpPackageConfigurations = append(input.HttpPackageConfigurations, httpPackageConfigurations)
-		}
-	}
-
-	if plan.VodSourceName != nil {
-		input.VodSourceName = plan.VodSourceName
-	}
-
-	if plan.SourceLocationName != nil {
-		input.SourceLocationName = plan.SourceLocationName
-	}
+	input.HttpPackageConfigurations, input.VodSourceName, input.SourceLocationName = getBasicVodSourceInput(&plan)
 
 	if plan.Tags != nil && len(plan.Tags) > 0 {
 		input.Tags = plan.Tags
@@ -83,9 +66,35 @@ func readVodSourceToPlan(plan resourceVodSourceModel, vodSource mediatailor.Crea
 func vodSourceUpdateInput(plan resourceVodSourceModel) mediatailor.UpdateVodSourceInput {
 	var input mediatailor.UpdateVodSourceInput
 
+	input.HttpPackageConfigurations, input.VodSourceName, input.SourceLocationName = getBasicVodSourceInput(&plan)
+
+	return input
+}
+
+func getBasicVodSourceInput(plan *resourceVodSourceModel) ([]*mediatailor.HttpPackageConfiguration, *string, *string) {
+	var httpPackageConfigurations []*mediatailor.HttpPackageConfiguration
+	var vodSourceName *string
+	var sourceLocationName *string
+
 	if plan.HttpPackageConfigurations != nil && len(plan.HttpPackageConfigurations) > 0 {
+		httpPackageConfigurations = getHttpInput(plan.HttpPackageConfigurations)
+	}
+
+	if plan.VodSourceName != nil {
+		vodSourceName = plan.VodSourceName
+	}
+
+	if plan.SourceLocationName != nil {
+		sourceLocationName = plan.SourceLocationName
+	}
+	return httpPackageConfigurations, vodSourceName, sourceLocationName
+}
+
+func getHttpInput(plan []httpPackageConfigurationsVSRModel) []*mediatailor.HttpPackageConfiguration {
+	var input mediatailor.CreateVodSourceInput
+	if len(plan) > 0 {
 		input.HttpPackageConfigurations = []*mediatailor.HttpPackageConfiguration{}
-		for _, httpPackageConfiguration := range plan.HttpPackageConfigurations {
+		for _, httpPackageConfiguration := range plan {
 			httpPackageConfigurations := &mediatailor.HttpPackageConfiguration{}
 			httpPackageConfigurations.Path = httpPackageConfiguration.Path
 			httpPackageConfigurations.SourceGroup = httpPackageConfiguration.SourceGroup
@@ -93,14 +102,5 @@ func vodSourceUpdateInput(plan resourceVodSourceModel) mediatailor.UpdateVodSour
 			input.HttpPackageConfigurations = append(input.HttpPackageConfigurations, httpPackageConfigurations)
 		}
 	}
-
-	if plan.VodSourceName != nil {
-		input.VodSourceName = plan.VodSourceName
-	}
-
-	if plan.SourceLocationName != nil {
-		input.SourceLocationName = plan.SourceLocationName
-	}
-
-	return input
+	return input.HttpPackageConfigurations
 }

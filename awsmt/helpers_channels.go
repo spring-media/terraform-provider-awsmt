@@ -3,7 +3,9 @@ package awsmt
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"reflect"
 	"time"
 )
 
@@ -421,4 +423,25 @@ func stopChannel(state *string, channelName *string, client *mediatailor.MediaTa
 		}
 	}
 	return nil
+}
+
+func updatePolicy(plan *resourceChannelModel, channelName *string, oldPolicy *mediatailor.GetChannelPolicyOutput, newPolicy jsontypes.Normalized, client *mediatailor.MediaTailor) (resourceChannelModel, error) {
+	if !reflect.DeepEqual(oldPolicy, newPolicy) {
+		if !newPolicy.IsNull() {
+			plan.Policy = jsontypes.NewNormalizedPointerValue(aws.String(newPolicy.String()))
+			_, err := client.PutChannelPolicy(&mediatailor.PutChannelPolicyInput{ChannelName: channelName, Policy: aws.String(newPolicy.String())})
+			if err != nil {
+				return *plan, err
+			}
+		} else {
+			plan.Policy = jsontypes.NewNormalizedNull()
+			_, err := client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: channelName})
+			if err != nil {
+				return *plan, err
+			}
+		}
+	} else {
+		plan.Policy = jsontypes.NewNormalizedPointerValue(oldPolicy.Policy)
+	}
+	return *plan, nil
 }

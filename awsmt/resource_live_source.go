@@ -225,11 +225,11 @@ func (r *resourceLiveSource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	input := &mediatailor.DeleteLiveSourceInput{}
-	input.LiveSourceName = state.LiveSourceName
-	input.SourceLocationName = state.SourceLocationName
+	params := &mediatailor.DeleteLiveSourceInput{}
+	params.LiveSourceName = state.LiveSourceName
+	params.SourceLocationName = state.SourceLocationName
 
-	_, err := r.client.DeleteLiveSource(input)
+	_, err := r.client.DeleteLiveSource(params)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while deleting live source "+err.Error(),

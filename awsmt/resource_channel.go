@@ -2,7 +2,6 @@ package awsmt
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -11,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"reflect"
 	"strings"
 )
 
@@ -333,29 +331,12 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 
 	newPolicy := plan.Policy
 
-	if !reflect.DeepEqual(oldPolicy, newPolicy) {
-		newPolicy := plan.Policy
-		if !newPolicy.IsNull() {
-			plan.Policy = jsontypes.NewNormalizedPointerValue(aws.String(newPolicy.String()))
-			_, err := r.client.PutChannelPolicy(&mediatailor.PutChannelPolicyInput{ChannelName: channelName, Policy: aws.String(newPolicy.String())})
-			if err != nil {
-				resp.Diagnostics.AddError(
-					"Error while updating the channel policy "+err.Error(),
-					err.Error(),
-				)
-			}
-		} else {
-			plan.Policy = jsontypes.NewNormalizedNull()
-			_, err := r.client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: channelName})
-			if err != nil {
-				resp.Diagnostics.AddError(
-					"Error while deleting channel policy "+err.Error(),
-					err.Error(),
-				)
-			}
-		}
-	} else {
-		plan.Policy = jsontypes.NewNormalizedPointerValue(oldPolicy.Policy)
+	plan, err = updatePolicy(&plan, channelName, oldPolicy, newPolicy, r.client)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error while updating channel policy "+err.Error(),
+			err.Error(),
+		)
 	}
 
 	var params = getUpdateChannelInput(plan)
