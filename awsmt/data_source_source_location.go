@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var (
@@ -21,42 +20,6 @@ func DataSourceSourceLocation() datasource.DataSource {
 
 type dataSourceSourceLocation struct {
 	client *mediatailor.MediaTailor
-}
-type dataSourceSourceLocationModel struct {
-	ID                                  types.String                                `tfsdk:"id"`
-	AccessConfiguration                 *accessConfigurationDSModel                 `tfsdk:"access_configuration"`
-	Arn                                 types.String                                `tfsdk:"arn"`
-	CreationTime                        types.String                                `tfsdk:"creation_time"`
-	DefaultSegmentDeliveryConfiguration *defaultSegmentDeliveryConfigurationDSModel `tfsdk:"default_segment_delivery_configuration"`
-	HttpConfiguration                   *httpConfigurationDSModel                   `tfsdk:"http_configuration"`
-	LastModifiedTime                    types.String                                `tfsdk:"last_modified_time"`
-	SegmentDeliveryConfigurations       []segmentDeliveryConfigurationsDSModel      `tfsdk:"segment_delivery_configurations"`
-	SourceLocationName                  *string                                     `tfsdk:"source_location_name"`
-	Tags                                map[string]*string                          `tfsdk:"tags"`
-}
-
-type accessConfigurationDSModel struct {
-	AccessType                             types.String                                   `tfsdk:"access_type"`
-	SecretsManagerAccessTokenConfiguration *secretsManagerAccessTokenConfigurationDSModel `tfsdk:"secrets_manager_access_token_configuration"`
-}
-
-type secretsManagerAccessTokenConfigurationDSModel struct {
-	HeaderName      types.String `tfsdk:"header_name"`
-	SecretArn       types.String `tfsdk:"secret_arn"`
-	SecretStringKey types.String `tfsdk:"secret_string_key"`
-}
-
-type defaultSegmentDeliveryConfigurationDSModel struct {
-	BaseUrl types.String `tfsdk:"dsdc_base_url"`
-}
-
-type httpConfigurationDSModel struct {
-	BaseUrl types.String `tfsdk:"hc_base_url"`
-}
-
-type segmentDeliveryConfigurationsDSModel struct {
-	BaseUrl types.String `tfsdk:"sdc_base_url"`
-	SDCName types.String `tfsdk:"sdc_name"`
 }
 
 func (d *dataSourceSourceLocation) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -125,7 +88,7 @@ func (d *dataSourceSourceLocation) Configure(_ context.Context, req datasource.C
 }
 
 func (d *dataSourceSourceLocation) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data dataSourceSourceLocationModel
+	var data sourceLocationModel
 	diags := req.Config.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -140,7 +103,7 @@ func (d *dataSourceSourceLocation) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	data = readSourceLocationToData(data, *sourceLocation)
+	data = readSourceLocationToPlan(data, mediatailor.CreateSourceLocationOutput(*sourceLocation))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

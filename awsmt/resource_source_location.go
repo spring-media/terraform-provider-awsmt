@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"reflect"
 )
 
@@ -24,43 +23,6 @@ func ResourceSourceLocation() resource.Resource {
 
 type resourceSourceLocation struct {
 	client *mediatailor.MediaTailor
-}
-
-type resourceSourceLocationModel struct {
-	ID                                  types.String                               `tfsdk:"id"`
-	AccessConfiguration                 *accessConfigurationRModel                 `tfsdk:"access_configuration"`
-	Arn                                 types.String                               `tfsdk:"arn"`
-	CreationTime                        types.String                               `tfsdk:"creation_time"`
-	DefaultSegmentDeliveryConfiguration *defaultSegmentDeliveryConfigurationRModel `tfsdk:"default_segment_delivery_configuration"`
-	HttpConfiguration                   *httpConfigurationRModel                   `tfsdk:"http_configuration"`
-	LastModifiedTime                    types.String                               `tfsdk:"last_modified_time"`
-	SegmentDeliveryConfigurations       []segmentDeliveryConfigurationsRModel      `tfsdk:"segment_delivery_configurations"`
-	SourceLocationName                  *string                                    `tfsdk:"source_location_name"`
-	Tags                                map[string]*string                         `tfsdk:"tags"`
-}
-
-type accessConfigurationRModel struct {
-	AccessType                             *string                                       `tfsdk:"access_type"`
-	SecretsManagerAccessTokenConfiguration *secretsManagerAccessTokenConfigurationRModel `tfsdk:"secrets_manager_access_token_configuration"`
-}
-
-type secretsManagerAccessTokenConfigurationRModel struct {
-	HeaderName      *string `tfsdk:"header_name"`
-	SecretArn       *string `tfsdk:"secret_arn"`
-	SecretStringKey *string `tfsdk:"secret_string_key"`
-}
-
-type defaultSegmentDeliveryConfigurationRModel struct {
-	BaseUrl *string `tfsdk:"dsdc_base_url"`
-}
-
-type httpConfigurationRModel struct {
-	BaseUrl *string `tfsdk:"hc_base_url"`
-}
-
-type segmentDeliveryConfigurationsRModel struct {
-	BaseUrl *string `tfsdk:"sdc_base_url"`
-	SDCName *string `tfsdk:"sdc_name"`
 }
 
 func (r *resourceSourceLocation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -129,7 +91,7 @@ func (r *resourceSourceLocation) Configure(_ context.Context, req resource.Confi
 }
 
 func (r *resourceSourceLocation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceSourceLocationModel
+	var plan sourceLocationModel
 
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -156,7 +118,7 @@ func (r *resourceSourceLocation) Create(ctx context.Context, req resource.Create
 }
 
 func (r *resourceSourceLocation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourceSourceLocationModel
+	var state sourceLocationModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -181,7 +143,7 @@ func (r *resourceSourceLocation) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *resourceSourceLocation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan resourceSourceLocationModel
+	var plan sourceLocationModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -257,7 +219,7 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 }
 
 func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourceSourceLocationModel
+	var state sourceLocationModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
