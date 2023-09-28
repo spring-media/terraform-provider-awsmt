@@ -14,7 +14,7 @@ func TestAccChannelDataSourceBasic(t *testing.T) {
 			{
 				Config: `
 				resource "awsmt_channel" "test"  {
-  					channel_name = "test"
+  					name = "test"
   					channel_state = "STOPPED"
   					outputs = [{
     					manifest_name                = "default"
@@ -31,7 +31,7 @@ func TestAccChannelDataSourceBasic(t *testing.T) {
 					}
 
 				data "awsmt_channel" "test" {
-  					channel_name = awsmt_channel.test.channel_name
+  					name = awsmt_channel.test.name
 				}
 				output "channel_out" {
 					value = data.awsmt_channel.test
@@ -40,7 +40,7 @@ func TestAccChannelDataSourceBasic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.awsmt_channel.test", "id", "test"),
 					resource.TestMatchResourceAttr("data.awsmt_channel.test", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:channel\/.*$`)),
-					resource.TestCheckResourceAttr("data.awsmt_channel.test", "channel_name", "test"),
+					resource.TestCheckResourceAttr("data.awsmt_channel.test", "name", "test"),
 					resource.TestMatchResourceAttr("data.awsmt_channel.test", "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
 					resource.TestMatchResourceAttr("data.awsmt_channel.test", "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
 					resource.TestCheckResourceAttr("data.awsmt_channel.test", "channel_state", "STOPPED"),
@@ -69,35 +69,35 @@ func TestAccChannelDataSourceFillerSlateLinear(t *testing.T) {
 						source_group = "default"
     					type = "HLS"
   					}]
-  					source_location_name = awsmt_source_location.test_source_location.source_location_name
-  					vod_source_name = "vod_source_example"
+  					source_location_name = awsmt_source_location.test_source_location.name
+  					name = "vod_source_example"
 					tags = {"Environment": "dev"}
 				}
 				data "awsmt_vod_source" "data_test" {
-  					source_location_name = awsmt_source_location.test_source_location.source_location_name
-  					vod_source_name = awsmt_vod_source.test.vod_source_name
+  					source_location_name = awsmt_source_location.test_source_location.name
+  					name = awsmt_vod_source.test.name
 				}
 
 				output "vod_source_out" {
   					value = data.awsmt_vod_source.data_test
 				}
 				resource "awsmt_source_location" "test_source_location"{
-  					source_location_name = "test_source_location"
+  					name = "test_source_location"
   					http_configuration = {
-    					hc_base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
+    					base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
   					}
   					default_segment_delivery_configuration = {
-    					dsdc_base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
+    					base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
   					}
 				}
 				data "awsmt_source_location" "test" {
-  					source_location_name = awsmt_source_location.test_source_location.source_location_name
+  					name = awsmt_source_location.test_source_location.name
 				}
 				output "awsmt_source_location" {
   					value = data.awsmt_source_location.test
 				}
 				resource "awsmt_channel" "test"  {
-  					channel_name = "test"
+  					name = "test"
   					channel_state = "STOPPED"
   					outputs = [{
     					manifest_name                = "default"
@@ -109,8 +109,8 @@ func TestAccChannelDataSourceFillerSlateLinear(t *testing.T) {
   					}]
   					playback_mode = "LINEAR"
 					filler_slate = {
-						source_location_name = awsmt_source_location.test_source_location.source_location_name
-						vod_source_name = awsmt_vod_source.test.vod_source_name
+						source_location_name = awsmt_source_location.test_source_location.name
+						vod_source_name = awsmt_vod_source.test.name
 					}
   					policy = "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"AllowAnonymous\", \"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\": \"mediatailor:GetManifest\", \"Resource\": \"arn:aws:mediatailor:eu-central-1:319158032161:channel/test\"}]}"
   					tier = "BASIC"
@@ -118,7 +118,7 @@ func TestAccChannelDataSourceFillerSlateLinear(t *testing.T) {
 					}
 
 				data "awsmt_channel" "test" {
-  					channel_name = awsmt_channel.test.channel_name
+  					name = awsmt_channel.test.name
 				}
 				output "channel_out" {
 					value = data.awsmt_channel.test
@@ -127,7 +127,7 @@ func TestAccChannelDataSourceFillerSlateLinear(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.awsmt_channel.test", "id", "test"),
 					resource.TestMatchResourceAttr("data.awsmt_channel.test", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:channel\/.*$`)),
-					resource.TestCheckResourceAttr("data.awsmt_channel.test", "channel_name", "test"),
+					resource.TestCheckResourceAttr("data.awsmt_channel.test", "name", "test"),
 					resource.TestMatchResourceAttr("data.awsmt_channel.test", "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
 					resource.TestMatchResourceAttr("data.awsmt_channel.test", "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
 					resource.TestCheckResourceAttr("data.awsmt_channel.test", "channel_state", "STOPPED"),
@@ -153,7 +153,7 @@ func TestAccChannelDataSourceErrors(t *testing.T) {
 			{
 				Config: `
 				resource "awsmt_channel" "test"  {
-  					channel_name = "test"
+  					name = "test"
   					channel_state = "STOPPED"
   					outputs = [{
     					manifest_name                = "default"
@@ -170,7 +170,7 @@ func TestAccChannelDataSourceErrors(t *testing.T) {
 					}
 
 				data "awsmt_channel" "test" {
-  					channel_name = "testingError"
+  					name = "testingError"
 				}
 				output "channel_out" {
 					value = data.awsmt_channel.test

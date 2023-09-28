@@ -19,8 +19,8 @@ func liveSourceInput(plan liveSourceModel) mediatailor.CreateLiveSourceInput {
 		}
 	}
 
-	if plan.LiveSourceName != nil {
-		input.LiveSourceName = plan.LiveSourceName
+	if plan.Name != nil {
+		input.LiveSourceName = plan.Name
 	}
 
 	if plan.SourceLocationName != nil {
@@ -56,7 +56,7 @@ func readLiveSourceToPlan(plan liveSourceModel, liveSource mediatailor.CreateLiv
 	}
 
 	if liveSource.LiveSourceName != nil {
-		plan.LiveSourceName = liveSource.LiveSourceName
+		plan.Name = liveSource.LiveSourceName
 	}
 
 	if liveSource.SourceLocationName != nil {
@@ -83,8 +83,8 @@ func liveSourceUpdateInput(plan liveSourceModel) mediatailor.UpdateLiveSourceInp
 		}
 	}
 
-	if plan.LiveSourceName != nil {
-		input.LiveSourceName = plan.LiveSourceName
+	if plan.Name != nil {
+		input.LiveSourceName = plan.Name
 	}
 
 	if plan.SourceLocationName != nil {

@@ -31,7 +31,7 @@ func (d *dataSourceChannel) Schema(_ context.Context, _ datasource.SchemaRequest
 		Attributes: map[string]schema.Attribute{
 			"id":            computedString,
 			"arn":           computedString,
-			"channel_name":  requiredString,
+			"name":          requiredString,
 			"channel_state": computedString,
 			"creation_time": computedString,
 			"filler_slate": schema.SingleNestedAttribute{
@@ -97,7 +97,7 @@ func (d *dataSourceChannel) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	channelName := data.ChannelName
+	channelName := data.Name
 
 	channel, err := d.client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: channelName})
 	if err != nil {

@@ -50,7 +50,7 @@ func (d *dataSourceVodSource) Schema(_ context.Context, _ datasource.SchemaReque
 			"last_modified_time":   computedString,
 			"source_location_name": requiredString,
 			"tags":                 computedMap,
-			"vod_source_name":      requiredString,
+			"name":                 requiredString,
 		},
 	}
 }
@@ -72,7 +72,7 @@ func (d *dataSourceVodSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	sourceLocationName := data.SourceLocationName
-	vodSourceName := data.VodSourceName
+	vodSourceName := data.Name
 
 	vodSource, err := d.client.DescribeVodSource(&mediatailor.DescribeVodSourceInput{SourceLocationName: sourceLocationName, VodSourceName: vodSourceName})
 	if err != nil {

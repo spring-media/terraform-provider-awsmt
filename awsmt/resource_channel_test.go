@@ -21,7 +21,7 @@ func TestAccChannelResourceBasic(t *testing.T) {
 			{
 				Config: `
 				resource "awsmt_channel" "test"  {
-  					channel_name = "test"
+  					name = "test"
   					channel_state = "STOPPED"
   					outputs = [{
     					manifest_name                = "default"
@@ -40,7 +40,7 @@ func TestAccChannelResourceBasic(t *testing.T) {
 					}
 
 				data "awsmt_channel" "test" {
-  					channel_name = awsmt_channel.test.channel_name
+  					name = awsmt_channel.test.name
 				}
 				output "channel_out" {
 					value = data.awsmt_channel.test
@@ -49,7 +49,7 @@ func TestAccChannelResourceBasic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("awsmt_channel.test", "id", "test"),
 					resource.TestMatchResourceAttr("awsmt_channel.test", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:channel\/.*$`)),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "channel_name", "test"),
+					resource.TestCheckResourceAttr("awsmt_channel.test", "name", "test"),
 					resource.TestMatchResourceAttr("awsmt_channel.test", "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
 					resource.TestMatchResourceAttr("awsmt_channel.test", "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
 					resource.TestCheckResourceAttr("awsmt_channel.test", "channel_state", "STOPPED"),
@@ -74,7 +74,7 @@ func TestAccChannelResourceBasic(t *testing.T) {
 			{
 				Config: `
 				resource "awsmt_channel" "test"  {
-  					channel_name = "test"
+  					name = "test"
   					channel_state = "RUNNING"
   					outputs = [{
     					manifest_name                = "default"
@@ -94,7 +94,7 @@ func TestAccChannelResourceBasic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("awsmt_channel.test", "id", "test"),
 					resource.TestMatchResourceAttr("awsmt_channel.test", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:channel\/.*$`)),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "channel_name", "test"),
+					resource.TestCheckResourceAttr("awsmt_channel.test", "name", "test"),
 					resource.TestMatchResourceAttr("awsmt_channel.test", "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
 					resource.TestMatchResourceAttr("awsmt_channel.test", "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
 					resource.TestCheckResourceAttr("awsmt_channel.test", "channel_state", "RUNNING"),
@@ -122,7 +122,7 @@ func TestAccChannelResourceErrors(t *testing.T) {
 			{
 				Config: `
 				resource "awsmt_channel" "test"  {
-  					channel_name = "test"
+  					name = "test"
   					channel_state = "RUNNING"
   					outputs = [{
     					manifest_name                = "default"
@@ -139,7 +139,7 @@ func TestAccChannelResourceErrors(t *testing.T) {
 					}
 
 				data "awsmt_channel" "test" {
-  					channel_name = awsmt_channel.test.channel_name
+  					name = awsmt_channel.test.name
 				}
 				output "channel_out" {
 					value = data.awsmt_channel.test
@@ -159,7 +159,7 @@ func TestAccChannelResourceRunning(t *testing.T) {
 			{
 				Config: `
 				resource "awsmt_channel" "test"  {
-  					channel_name = "test"
+  					name = "test"
   					channel_state = "RUNNING"
   					outputs = [{
     					manifest_name                = "default"
@@ -175,7 +175,7 @@ func TestAccChannelResourceRunning(t *testing.T) {
 					}
 
 				data "awsmt_channel" "test" {
-  					channel_name = awsmt_channel.test.channel_name
+  					name = awsmt_channel.test.name
 				}
 				output "channel_out" {
 					value = data.awsmt_channel.test
@@ -189,7 +189,7 @@ func TestAccChannelResourceRunning(t *testing.T) {
 			{
 				Config: `
 				resource "awsmt_channel" "test"  {
-  					channel_name = "test"
+  					name = "test"
   					channel_state = "RUNNING"
   					outputs = [{
     					manifest_name                = "default"
@@ -205,7 +205,7 @@ func TestAccChannelResourceRunning(t *testing.T) {
 				}
 
 				data "awsmt_channel" "test" {
-  					channel_name = awsmt_channel.test.channel_name
+  					name = awsmt_channel.test.name
 				}
 				output "channel_out" {
 					value = data.awsmt_channel.test

@@ -39,7 +39,7 @@ func (d *dataSourceSourceLocation) Schema(_ context.Context, _ datasource.Schema
 							stringvalidator.OneOf("S3_SIGV4", "SECRETS_MANAGER_ACCESS_TOKEN"),
 						},
 					},
-					"secrets_manager_access_token_configuration": schema.SingleNestedAttribute{
+					"smatc": schema.SingleNestedAttribute{
 						Computed: true,
 						Attributes: map[string]schema.Attribute{
 							"header_name":       computedString,
@@ -54,13 +54,13 @@ func (d *dataSourceSourceLocation) Schema(_ context.Context, _ datasource.Schema
 			"default_segment_delivery_configuration": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"dsdc_base_url": computedString,
+					"base_url": computedString,
 				},
 			},
 			"http_configuration": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"hc_base_url": computedString,
+					"base_url": computedString,
 				},
 			},
 			"last_modified_time": computedString,
@@ -68,13 +68,13 @@ func (d *dataSourceSourceLocation) Schema(_ context.Context, _ datasource.Schema
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"sdc_base_url": computedString,
-						"sdc_name":     computedString,
+						"base_url": computedString,
+						"name":     computedString,
 					},
 				},
 			},
-			"source_location_name": requiredString,
-			"tags":                 computedMap,
+			"name": requiredString,
+			"tags": computedMap,
 		},
 	}
 }
@@ -95,7 +95,7 @@ func (d *dataSourceSourceLocation) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	sourceLocationName := data.SourceLocationName
+	sourceLocationName := data.Name
 
 	sourceLocation, err := d.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: sourceLocationName})
 	if err != nil {

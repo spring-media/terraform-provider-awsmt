@@ -8,7 +8,7 @@ type liveSourceModel struct {
 	CreationTime              types.String                     `tfsdk:"creation_time"`
 	HttpPackageConfigurations []httpPackageConfigurationsModel `tfsdk:"http_package_configurations"`
 	LastModifiedTime          types.String                     `tfsdk:"last_modified_time"`
-	LiveSourceName            *string                          `tfsdk:"live_source_name"`
+	Name                      *string                          `tfsdk:"name"`
 	SourceLocationName        *string                          `tfsdk:"source_location_name"`
 	Tags                      map[string]*string               `tfsdk:"tags"`
 }

@@ -55,7 +55,7 @@ func (r *resourceVodSource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"last_modified_time":   computedString,
 			"source_location_name": requiredString,
 			"tags":                 optionalMap,
-			"vod_source_name":      requiredString,
+			"name":                 requiredString,
 		},
 	}
 }
@@ -102,17 +102,17 @@ func (r *resourceVodSource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	var sourceLocationName, vodSourceName string
+	var sourceLocationName, name string
 
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("source_location_name"), &sourceLocationName)...)
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("vod_source_name"), &vodSourceName)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &name)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := &mediatailor.DescribeVodSourceInput{}
-	input.VodSourceName = &vodSourceName
+	input.VodSourceName = &name
 	input.SourceLocationName = &sourceLocationName
 
 	vodSource, err := r.client.DescribeVodSource(input)
@@ -139,7 +139,7 @@ func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	input := &mediatailor.DescribeVodSourceInput{}
-	input.VodSourceName = plan.VodSourceName
+	input.VodSourceName = plan.Name
 	input.SourceLocationName = plan.SourceLocationName
 
 	vodSource, err := r.client.DescribeVodSource(input)
@@ -189,7 +189,7 @@ func (r *resourceVodSource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	input := &mediatailor.DeleteVodSourceInput{}
-	input.VodSourceName = state.VodSourceName
+	input.VodSourceName = state.Name
 	input.SourceLocationName = state.SourceLocationName
 
 	_, err := r.client.DeleteVodSource(input)
@@ -207,11 +207,11 @@ func (r *resourceVodSource) ImportState(ctx context.Context, req resource.Import
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: source_location_name, vod_source_name. Got: %q", req.ID),
+			fmt.Sprintf("Expected import identifier with format: source_location_name, name. Got: %q", req.ID),
 		)
 		return
 	}
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("source_location_name"), idParts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("vod_source_name"), idParts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), idParts[1])...)
 }

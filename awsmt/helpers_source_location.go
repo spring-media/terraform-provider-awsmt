@@ -24,7 +24,7 @@ func sourceLocationInput(plan sourceLocationModel) mediatailor.CreateSourceLocat
 	}
 
 	// Source Location Name
-	params.SourceLocationName = plan.SourceLocationName
+	params.SourceLocationName = plan.Name
 
 	// Segment Delivery Configurations
 	if len(plan.SegmentDeliveryConfigurations) > 0 && plan.SegmentDeliveryConfigurations != nil {
@@ -119,7 +119,7 @@ func updateSourceLocationInput(plan sourceLocationModel) mediatailor.UpdateSourc
 	}
 
 	// Source Location Name
-	params.SourceLocationName = plan.SourceLocationName
+	params.SourceLocationName = plan.Name
 
 	return params
 }
@@ -150,7 +150,7 @@ func readSourceLocationToPlan(plan sourceLocationModel, sourceLocation mediatail
 	}
 
 	if sourceLocation.SourceLocationName != nil && *sourceLocation.SourceLocationName != "" {
-		plan.SourceLocationName = sourceLocation.SourceLocationName
+		plan.Name = sourceLocation.SourceLocationName
 	}
 	if sourceLocation.Tags != nil && len(sourceLocation.Tags) > 0 {
 		plan.Tags = sourceLocation.Tags

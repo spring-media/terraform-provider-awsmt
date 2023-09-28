@@ -8,7 +8,7 @@ import (
 type channelModel struct {
 	ID               types.String         `tfsdk:"id"`
 	Arn              types.String         `tfsdk:"arn"`
-	ChannelName      *string              `tfsdk:"channel_name"`
+	Name             *string              `tfsdk:"name"`
 	ChannelState     *string              `tfsdk:"channel_state"`
 	CreationTime     types.String         `tfsdk:"creation_time"`
 	FillerSlate      *fillerSlateModel    `tfsdk:"filler_slate"`

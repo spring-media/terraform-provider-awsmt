@@ -11,13 +11,13 @@ type sourceLocationModel struct {
 	HttpConfiguration                   *httpConfigurationModel                   `tfsdk:"http_configuration"`
 	LastModifiedTime                    types.String                              `tfsdk:"last_modified_time"`
 	SegmentDeliveryConfigurations       []segmentDeliveryConfigurationsModel      `tfsdk:"segment_delivery_configurations"`
-	SourceLocationName                  *string                                   `tfsdk:"source_location_name"`
+	Name                                *string                                   `tfsdk:"name"`
 	Tags                                map[string]*string                        `tfsdk:"tags"`
 }
 
 type accessConfigurationModel struct {
 	AccessType                             *string                                      `tfsdk:"access_type"`
-	SecretsManagerAccessTokenConfiguration *secretsManagerAccessTokenConfigurationModel `tfsdk:"secrets_manager_access_token_configuration"`
+	SecretsManagerAccessTokenConfiguration *secretsManagerAccessTokenConfigurationModel `tfsdk:"smatc"`
 }
 
 type secretsManagerAccessTokenConfigurationModel struct {
@@ -27,14 +27,14 @@ type secretsManagerAccessTokenConfigurationModel struct {
 }
 
 type defaultSegmentDeliveryConfigurationModel struct {
-	BaseUrl *string `tfsdk:"dsdc_base_url"`
+	BaseUrl *string `tfsdk:"base_url"`
 }
 
 type httpConfigurationModel struct {
-	BaseUrl *string `tfsdk:"hc_base_url"`
+	BaseUrl *string `tfsdk:"base_url"`
 }
 
 type segmentDeliveryConfigurationsModel struct {
-	BaseUrl *string `tfsdk:"sdc_base_url"`
-	SDCName *string `tfsdk:"sdc_name"`
+	BaseUrl *string `tfsdk:"base_url"`
+	SDCName *string `tfsdk:"name"`
 }

@@ -19,30 +19,29 @@ func TestAccLiveSourceResourceBasic(t *testing.T) {
     					source_group = "default"
     					type = "HLS"
   					}]
-  					source_location_name = awsmt_source_location.test_source_location.source_location_name
-  					live_source_name = "live_source_example"
+  					source_location_name = awsmt_source_location.test_source_location.name
+  					name = "live_source_example"
 					tags = {"Environment": "dev"}
 				}
 
 				data "awsmt_live_source" "data_test" {
-  					source_location_name = awsmt_source_location.test_source_location.source_location_name
-  					live_source_name = awsmt_live_source.test.live_source_name
+  					source_location_name = awsmt_source_location.test_source_location.name
+  					name = awsmt_live_source.test.name
 				}
-
 				output "live_source_out" {
   					value = data.awsmt_live_source.data_test
 				}
 			resource "awsmt_source_location" "test_source_location"{
-  				source_location_name = "test_source_location"
+  				name = "test_source_location"
   				http_configuration = {
-    				hc_base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
+    				base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
   				}
   				default_segment_delivery_configuration = {
-    				dsdc_base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
+    				base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
   				}
 			}
 			data "awsmt_source_location" "test" {
-  				source_location_name = awsmt_source_location.test_source_location.source_location_name
+  				name = awsmt_source_location.test_source_location.name
 			}
 			output "awsmt_source_location" {
   				value = data.awsmt_source_location.test
@@ -56,16 +55,11 @@ func TestAccLiveSourceResourceBasic(t *testing.T) {
 					resource.TestCheckResourceAttr("awsmt_live_source.test", "http_package_configurations.0.source_group", "default"),
 					resource.TestCheckResourceAttr("awsmt_live_source.test", "http_package_configurations.0.type", "HLS"),
 					resource.TestMatchResourceAttr("awsmt_live_source.test", "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
-					resource.TestCheckResourceAttr("awsmt_live_source.test", "live_source_name", "live_source_example"),
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "name", "live_source_example"),
 					resource.TestCheckResourceAttr("awsmt_live_source.test", "source_location_name", "test_source_location"),
 					resource.TestCheckResourceAttr("awsmt_live_source.test", "tags.Environment", "dev"),
 				),
 			},
-			// ImportState testing
-			/*{
-				ResourceName:      "awsmt_live_source.test",
-				ImportState:       true,
-			},*/
 			{Config: `
 				resource "awsmt_live_source" "test" {
   					http_package_configurations = [{
@@ -73,30 +67,30 @@ func TestAccLiveSourceResourceBasic(t *testing.T) {
     					source_group = "default"
     					type = "HLS"
   					}]
-  					source_location_name = awsmt_source_location.test_source_location.source_location_name
-  					live_source_name = "live_source_example"
+  					source_location_name = awsmt_source_location.test_source_location.name
+  					name = "live_source_example"
 					tags = {"Environment": "dev", "Testing": "pass"}
 				}
 
 				data "awsmt_live_source" "data_test" {
-  					source_location_name = awsmt_source_location.test_source_location.source_location_name
-  					live_source_name = awsmt_live_source.test.live_source_name
+  					source_location_name = awsmt_source_location.test_source_location.name
+  					name = awsmt_live_source.test.name
 				}
 
 				output "live_source_out" {
   					value = data.awsmt_live_source.data_test
 				}
 			resource "awsmt_source_location" "test_source_location"{
-  				source_location_name = "test_source_location"
+  				name = "test_source_location"
   				http_configuration = {
-    				hc_base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
+    				base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
   				}
   				default_segment_delivery_configuration = {
-    				dsdc_base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
+    				base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
   				}
 			}
 			data "awsmt_source_location" "test" {
-  				source_location_name = awsmt_source_location.test_source_location.source_location_name
+  				name = awsmt_source_location.test_source_location.name
 			}
 			output "awsmt_source_location" {
   				value = data.awsmt_source_location.test
@@ -110,7 +104,7 @@ func TestAccLiveSourceResourceBasic(t *testing.T) {
 					resource.TestCheckResourceAttr("awsmt_live_source.test", "http_package_configurations.0.source_group", "default"),
 					resource.TestCheckResourceAttr("awsmt_live_source.test", "http_package_configurations.0.type", "HLS"),
 					resource.TestMatchResourceAttr("awsmt_live_source.test", "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
-					resource.TestCheckResourceAttr("awsmt_live_source.test", "live_source_name", "live_source_example"),
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "name", "live_source_example"),
 					resource.TestCheckResourceAttr("awsmt_live_source.test", "source_location_name", "test_source_location"),
 					resource.TestCheckResourceAttr("awsmt_live_source.test", "tags.Environment", "dev"),
 					resource.TestCheckResourceAttr("awsmt_live_source.test", "tags.Testing", "pass"),

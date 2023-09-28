@@ -10,5 +10,5 @@ type vodSourceModel struct {
 	LastModifiedTime          types.String                     `tfsdk:"last_modified_time"`
 	SourceLocationName        *string                          `tfsdk:"source_location_name"`
 	Tags                      map[string]*string               `tfsdk:"tags"`
-	VodSourceName             *string                          `tfsdk:"vod_source_name"`
+	Name                      *string                          `tfsdk:"name"`
 }

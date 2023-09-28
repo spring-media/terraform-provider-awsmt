@@ -49,7 +49,7 @@ func readVodSourceToPlan(plan vodSourceModel, vodSource mediatailor.CreateVodSou
 	}
 
 	if vodSource.VodSourceName != nil {
-		plan.VodSourceName = vodSource.VodSourceName
+		plan.Name = vodSource.VodSourceName
 	}
 
 	if vodSource.SourceLocationName != nil {
@@ -80,8 +80,8 @@ func getBasicVodSourceInput(plan *vodSourceModel) ([]*mediatailor.HttpPackageCon
 		httpPackageConfigurations = getHttpInput(plan.HttpPackageConfigurations)
 	}
 
-	if plan.VodSourceName != nil {
-		vodSourceName = plan.VodSourceName
+	if plan.Name != nil {
+		vodSourceName = plan.Name
 	}
 
 	if plan.SourceLocationName != nil {

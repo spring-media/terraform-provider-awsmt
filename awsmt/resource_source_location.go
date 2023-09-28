@@ -42,7 +42,7 @@ func (r *resourceSourceLocation) Schema(_ context.Context, _ resource.SchemaRequ
 							stringvalidator.OneOf("S3_SIGV4"),
 						},
 					},
-					"secrets_manager_access_token_configuration": schema.SingleNestedAttribute{
+					"smatc": schema.SingleNestedAttribute{
 						Optional: true,
 						Attributes: map[string]schema.Attribute{
 							"header_name":       optionalString,
@@ -57,13 +57,13 @@ func (r *resourceSourceLocation) Schema(_ context.Context, _ resource.SchemaRequ
 			"default_segment_delivery_configuration": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
-					"dsdc_base_url": optionalString,
+					"base_url": optionalString,
 				},
 			},
 			"http_configuration": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
-					"hc_base_url": requiredString,
+					"base_url": requiredString,
 				},
 			},
 			"last_modified_time": computedString,
@@ -71,13 +71,13 @@ func (r *resourceSourceLocation) Schema(_ context.Context, _ resource.SchemaRequ
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"sdc_base_url": optionalString,
-						"sdc_name":     optionalString,
+						"base_url": optionalString,
+						"name":     optionalString,
 					},
 				},
 			},
-			"source_location_name": requiredString,
-			"tags":                 optionalMap,
+			"name": requiredString,
+			"tags": optionalMap,
 		},
 	}
 }
@@ -125,7 +125,7 @@ func (r *resourceSourceLocation) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	name := state.SourceLocationName
+	name := state.Name
 
 	sourceLocation, err := r.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: name})
 	if err != nil {
@@ -150,7 +150,7 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	name := plan.SourceLocationName
+	name := plan.Name
 
 	sourceLocation, err := r.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: name})
 	if err != nil {
@@ -174,7 +174,7 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 
 	if !reflect.DeepEqual(sourceLocation.AccessConfiguration, plan.AccessConfiguration) {
 		// delete source location
-		name := plan.SourceLocationName
+		name := plan.Name
 		err := deleteSourceLocation(r.client, name)
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -226,7 +226,7 @@ func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	name := state.SourceLocationName
+	name := state.Name
 
 	vodSourcesList, err := r.client.ListVodSources(&mediatailor.ListVodSourcesInput{SourceLocationName: name})
 	if err != nil {
@@ -276,5 +276,5 @@ func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.Delete
 }
 
 func (r *resourceSourceLocation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("source_location_name"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
 }

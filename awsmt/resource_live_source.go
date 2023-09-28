@@ -53,7 +53,7 @@ func (r *resourceLiveSource) Schema(_ context.Context, _ resource.SchemaRequest,
 				},
 			},
 			"last_modified_time":   computedString,
-			"live_source_name":     requiredString,
+			"name":                 requiredString,
 			"source_location_name": requiredString,
 			"tags":                 optionalMap,
 		},
@@ -102,17 +102,17 @@ func (r *resourceLiveSource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	var sourceLocationName, liveSourceName string
+	var sourceLocationName, name string
 
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("source_location_name"), &sourceLocationName)...)
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("live_source_name"), &liveSourceName)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &name)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := &mediatailor.DescribeLiveSourceInput{}
-	input.LiveSourceName = &liveSourceName
+	input.LiveSourceName = &name
 	input.SourceLocationName = &sourceLocationName
 
 	liveSource, err := r.client.DescribeLiveSource(input)
@@ -139,7 +139,7 @@ func (r *resourceLiveSource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	input := &mediatailor.DescribeLiveSourceInput{}
-	input.LiveSourceName = plan.LiveSourceName
+	input.LiveSourceName = plan.Name
 	input.SourceLocationName = plan.SourceLocationName
 
 	liveSource, err := r.client.DescribeLiveSource(input)
@@ -189,7 +189,7 @@ func (r *resourceLiveSource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	params := &mediatailor.DeleteLiveSourceInput{}
-	params.LiveSourceName = state.LiveSourceName
+	params.LiveSourceName = state.Name
 	params.SourceLocationName = state.SourceLocationName
 
 	_, err := r.client.DeleteLiveSource(params)
@@ -207,12 +207,12 @@ func (r *resourceLiveSource) ImportState(ctx context.Context, req resource.Impor
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: source_location_name, live_source_name. Got: %q", req.ID),
+			fmt.Sprintf("Expected import identifier with format: source_location_name, name. Got: %q", req.ID),
 		)
 		return
 	}
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("source_location_name"), idParts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("live_source_name"), idParts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), idParts[1])...)
 
 }

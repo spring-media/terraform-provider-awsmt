@@ -21,7 +21,7 @@ func newChannelInputBuilder(channelName *string, outputs []outputsModel, fillerS
 func channelInput(plan channelModel) mediatailor.CreateChannelInput {
 	var input mediatailor.CreateChannelInput
 
-	input.ChannelName, input.Outputs, input.FillerSlate = newChannelInputBuilder(plan.ChannelName, plan.Outputs, plan.FillerSlate)
+	input.ChannelName, input.Outputs, input.FillerSlate = newChannelInputBuilder(plan.Name, plan.Outputs, plan.FillerSlate)
 
 	if plan.PlaybackMode != nil {
 		input.PlaybackMode = plan.PlaybackMode
@@ -79,7 +79,7 @@ func createChannelPolicy(channelName *string, policy *string, client *mediatailo
 // UPDATE CHANNEL
 func getUpdateChannelInput(plan channelModel) mediatailor.UpdateChannelInput {
 	var input mediatailor.UpdateChannelInput
-	input.ChannelName, input.Outputs, input.FillerSlate = newChannelInputBuilder(plan.ChannelName, plan.Outputs, plan.FillerSlate)
+	input.ChannelName, input.Outputs, input.FillerSlate = newChannelInputBuilder(plan.Name, plan.Outputs, plan.FillerSlate)
 	return input
 }
 
@@ -168,7 +168,7 @@ func readChannelComputedValuesToPlan(plan channelModel, arn *string, channelName
 		plan.Arn = types.StringValue(*arn)
 	}
 
-	plan.ChannelName = channelName
+	plan.Name = channelName
 
 	if creationTime != nil {
 		plan.CreationTime = types.StringValue((aws.TimeValue(creationTime)).String())

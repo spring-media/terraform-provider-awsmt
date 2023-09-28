@@ -33,9 +33,9 @@ func (r *resourceChannel) Metadata(_ context.Context, req resource.MetadataReque
 func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id":           computedString,
-			"arn":          computedString,
-			"channel_name": requiredString,
+			"id":   computedString,
+			"arn":  computedString,
+			"name": requiredString,
 			// @ADR
 			// Context: We cannot test the deletion of a running channel if we cannot set the channel_state property
 			// through the provider
@@ -139,7 +139,7 @@ func (r *resourceChannel) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	if *plan.ChannelState == "RUNNING" {
-		_, err := r.client.StartChannel(&mediatailor.StartChannelInput{ChannelName: plan.ChannelName})
+		_, err := r.client.StartChannel(&mediatailor.StartChannelInput{ChannelName: plan.Name})
 		if err != nil {
 			resp.Diagnostics.AddError("Error while starting the channel "+*channel.ChannelName, err.Error())
 			return
@@ -148,7 +148,7 @@ func (r *resourceChannel) Create(ctx context.Context, req resource.CreateRequest
 
 	if !plan.Policy.IsNull() {
 		policy := plan.Policy.ValueString()
-		if err := createChannelPolicy(plan.ChannelName, &policy, r.client); err != nil {
+		if err := createChannelPolicy(plan.Name, &policy, r.client); err != nil {
 			resp.Diagnostics.AddError("Error while creating the channel policy for channel "+*channel.ChannelName, err.Error())
 			return
 		}
@@ -173,7 +173,7 @@ func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	channel, err := r.client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: state.ChannelName})
+	channel, err := r.client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: state.Name})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while describing channel "+err.Error(),
@@ -181,7 +181,7 @@ func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, re
 		)
 	}
 
-	policy, err := r.client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: state.ChannelName})
+	policy, err := r.client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: state.Name})
 	if err != nil && !strings.Contains(err.Error(), "NotFound") {
 		resp.Diagnostics.AddError(
 			"Error while getting channel policy "+err.Error(),
@@ -216,7 +216,7 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	channelName := plan.ChannelName
+	channelName := plan.Name
 
 	channel, err := r.client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: channelName})
 	if err != nil {
@@ -307,7 +307,7 @@ func (r *resourceChannel) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	if _, err := r.client.StopChannel(&mediatailor.StopChannelInput{ChannelName: state.ChannelName}); err != nil {
+	if _, err := r.client.StopChannel(&mediatailor.StopChannelInput{ChannelName: state.Name}); err != nil {
 		resp.Diagnostics.AddError(
 			"error while stopping the channel "+err.Error(),
 			err.Error(),
@@ -315,7 +315,7 @@ func (r *resourceChannel) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	if _, err := r.client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: state.ChannelName}); err != nil {
+	if _, err := r.client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: state.Name}); err != nil {
 		resp.Diagnostics.AddError(
 			"error while deleting the channel policy "+err.Error(),
 			err.Error(),
@@ -323,7 +323,7 @@ func (r *resourceChannel) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	if _, err := r.client.DeleteChannel(&mediatailor.DeleteChannelInput{ChannelName: state.ChannelName}); err != nil {
+	if _, err := r.client.DeleteChannel(&mediatailor.DeleteChannelInput{ChannelName: state.Name}); err != nil {
 		resp.Diagnostics.AddError(
 			"error while deleting the channel "+err.Error(),
 			err.Error(),
@@ -333,5 +333,5 @@ func (r *resourceChannel) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func (r *resourceChannel) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("channel_name"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
 }

@@ -48,7 +48,7 @@ func (d *dataSourceLiveSource) Schema(_ context.Context, _ datasource.SchemaRequ
 				},
 			},
 			"last_modified_time":   computedString,
-			"live_source_name":     requiredString,
+			"name":                 requiredString,
 			"source_location_name": requiredString,
 			"tags":                 computedMap,
 		},
@@ -72,7 +72,7 @@ func (d *dataSourceLiveSource) Read(ctx context.Context, req datasource.ReadRequ
 	}
 
 	sourceLocationName := data.SourceLocationName
-	liveSourceName := data.LiveSourceName
+	liveSourceName := data.Name
 
 	liveSource, err := d.client.DescribeLiveSource(&mediatailor.DescribeLiveSourceInput{SourceLocationName: sourceLocationName, LiveSourceName: liveSourceName})
 	if err != nil {
