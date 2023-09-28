@@ -3,9 +3,9 @@ package awsmt
 import (
 	"context"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"strings"
 )
 
@@ -20,44 +20,6 @@ func DataSourceChannel() datasource.DataSource {
 
 type dataSourceChannel struct {
 	client *mediatailor.MediaTailor
-}
-type dataSourceChannelModel struct {
-	ID               types.String        `tfsdk:"id"`
-	Arn              types.String        `tfsdk:"arn"`
-	ChannelName      *string             `tfsdk:"channel_name"`
-	ChannelState     types.String        `tfsdk:"channel_state"`
-	CreationTime     types.String        `tfsdk:"creation_time"`
-	FillerSlate      *fillerSlateDSModel `tfsdk:"filler_slate"`
-	LastModifiedTime types.String        `tfsdk:"last_modified_time"`
-	Outputs          []outputsDSModel    `tfsdk:"outputs"`
-	PlaybackMode     types.String        `tfsdk:"playback_mode"`
-	Policy           types.String        `tfsdk:"policy"`
-	Tags             map[string]*string  `tfsdk:"tags"`
-	Tier             types.String        `tfsdk:"tier"`
-}
-
-type fillerSlateDSModel struct {
-	SourceLocationName types.String `tfsdk:"source_location_name"`
-	VodSourceName      types.String `tfsdk:"vod_source_name"`
-}
-
-type outputsDSModel struct {
-	DashPlaylistSettings *dashPlaylistSettingsDSModel `tfsdk:"dash_playlist_settings"`
-	HlsPlaylistSettings  *hlsPlaylistSettingsDSModel  `tfsdk:"hls_playlist_settings"`
-	ManifestName         types.String                 `tfsdk:"manifest_name"`
-	PlaybackUrl          types.String                 `tfsdk:"playback_url"`
-	SourceGroup          types.String                 `tfsdk:"source_group"`
-}
-
-type dashPlaylistSettingsDSModel struct {
-	ManifestWindowSeconds             types.Int64 `tfsdk:"manifest_window_seconds"`
-	MinBufferTimeSeconds              types.Int64 `tfsdk:"min_buffer_time_seconds"`
-	MinUpdatePeriodSeconds            types.Int64 `tfsdk:"min_update_period_seconds"`
-	SuggestedPresentationDelaySeconds types.Int64 `tfsdk:"suggested_presentation_delay_seconds"`
-}
-type hlsPlaylistSettingsDSModel struct {
-	AdMarkupType          []types.String `tfsdk:"ad_markup_type"`
-	ManifestWindowSeconds types.Int64    `tfsdk:"manifest_window_seconds"`
 }
 
 func (d *dataSourceChannel) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -110,7 +72,8 @@ func (d *dataSourceChannel) Schema(_ context.Context, _ datasource.SchemaRequest
 				Computed: true,
 			},
 			"policy": schema.StringAttribute{
-				Computed: true,
+				Computed:   true,
+				CustomType: jsontypes.NormalizedType{},
 			},
 			"tags": computedMap,
 			"tier": computedString,
@@ -127,7 +90,7 @@ func (d *dataSourceChannel) Configure(_ context.Context, req datasource.Configur
 }
 
 func (d *dataSourceChannel) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data dataSourceChannelModel
+	var data channelModel
 	diags := req.Config.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -152,10 +115,14 @@ func (d *dataSourceChannel) Read(ctx context.Context, req datasource.ReadRequest
 	}
 
 	if policy.Policy != nil {
-		data.Policy = types.StringValue(*policy.Policy)
+		data.Policy = jsontypes.NewNormalizedPointerValue(policy.Policy)
 	}
 
-	data = readChannelToData(data, *channel)
+	if channel.ChannelState != nil {
+		data.ChannelState = channel.ChannelState
+	}
+
+	data = readChannelToState(data, *channel)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"strings"
 )
 
@@ -25,45 +24,6 @@ func ResourceChannel() resource.Resource {
 
 type resourceChannel struct {
 	client *mediatailor.MediaTailor
-}
-
-type resourceChannelModel struct {
-	ID               types.String         `tfsdk:"id"`
-	Arn              types.String         `tfsdk:"arn"`
-	ChannelName      *string              `tfsdk:"channel_name"`
-	ChannelState     *string              `tfsdk:"channel_state"`
-	CreationTime     types.String         `tfsdk:"creation_time"`
-	FillerSlate      *fillerSlateRModel   `tfsdk:"filler_slate"`
-	LastModifiedTime types.String         `tfsdk:"last_modified_time"`
-	Outputs          []outputsRModel      `tfsdk:"outputs"`
-	PlaybackMode     *string              `tfsdk:"playback_mode"`
-	Policy           jsontypes.Normalized `tfsdk:"policy"`
-	Tags             map[string]*string   `tfsdk:"tags"`
-	Tier             *string              `tfsdk:"tier"`
-}
-
-type fillerSlateRModel struct {
-	SourceLocationName *string `tfsdk:"source_location_name"`
-	VodSourceName      *string `tfsdk:"vod_source_name"`
-}
-
-type outputsRModel struct {
-	DashPlaylistSettings *dashPlaylistSettingsRModel `tfsdk:"dash_playlist_settings"`
-	HlsPlaylistSettings  *hlsPlaylistSettingsRModel  `tfsdk:"hls_playlist_settings"`
-	ManifestName         *string                     `tfsdk:"manifest_name"`
-	PlaybackUrl          types.String                `tfsdk:"playback_url"`
-	SourceGroup          *string                     `tfsdk:"source_group"`
-}
-
-type dashPlaylistSettingsRModel struct {
-	ManifestWindowSeconds             *int64 `tfsdk:"manifest_window_seconds"`
-	MinBufferTimeSeconds              *int64 `tfsdk:"min_buffer_time_seconds"`
-	MinUpdatePeriodSeconds            *int64 `tfsdk:"min_update_period_seconds"`
-	SuggestedPresentationDelaySeconds *int64 `tfsdk:"suggested_presentation_delay_seconds"`
-}
-type hlsPlaylistSettingsRModel struct {
-	AdMarkupType          []*string `tfsdk:"ad_markup_type"`
-	ManifestWindowSeconds *int64    `tfsdk:"manifest_window_seconds"`
 }
 
 func (r *resourceChannel) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -162,7 +122,7 @@ func (r *resourceChannel) Configure(_ context.Context, req resource.ConfigureReq
 }
 
 func (r *resourceChannel) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceChannelModel
+	var plan channelModel
 
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -205,7 +165,7 @@ func (r *resourceChannel) Create(ctx context.Context, req resource.CreateRequest
 }
 
 func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourceChannelModel
+	var state channelModel
 
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -249,7 +209,7 @@ func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan resourceChannelModel
+	var plan channelModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -340,7 +300,7 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 }
 
 func (r *resourceChannel) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourceChannelModel
+	var state channelModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
