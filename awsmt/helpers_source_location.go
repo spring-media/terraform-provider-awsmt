@@ -152,7 +152,7 @@ func readSourceLocationToPlan(plan sourceLocationModel, sourceLocation mediatail
 	if sourceLocation.SourceLocationName != nil && *sourceLocation.SourceLocationName != "" {
 		plan.Name = sourceLocation.SourceLocationName
 	}
-	if sourceLocation.Tags != nil && len(sourceLocation.Tags) > 0 {
+	if len(sourceLocation.Tags) > 0 {
 		plan.Tags = sourceLocation.Tags
 	}
 

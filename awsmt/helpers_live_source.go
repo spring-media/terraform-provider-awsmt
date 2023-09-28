@@ -63,7 +63,7 @@ func readLiveSourceToPlan(plan liveSourceModel, liveSource mediatailor.CreateLiv
 		plan.SourceLocationName = liveSource.SourceLocationName
 	}
 
-	if liveSource.Tags != nil && len(liveSource.Tags) > 0 {
+	if len(liveSource.Tags) > 0 {
 		plan.Tags = liveSource.Tags
 	}
 

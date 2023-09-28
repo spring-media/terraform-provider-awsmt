@@ -213,7 +213,7 @@ func readPlaybackConfigurationTemps(plan playbackConfigurationModel, playbackCon
 	}
 
 	// TAGS
-	if playbackConfiguration.Tags != nil {
+	if len(playbackConfiguration.Tags) > 0 {
 		plan.Tags = playbackConfiguration.Tags
 	}
 	return plan.Name, plan.PersonalizationThresholdSeconds, plan.PlaybackEndpointPrefix, plan.SessionInitializationEndpointPrefix, plan.SlateAdUrl, plan.TranscodeProfileName, plan.VideoContentSourceUrl, plan.Tags

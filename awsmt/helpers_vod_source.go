@@ -56,7 +56,7 @@ func readVodSourceToPlan(plan vodSourceModel, vodSource mediatailor.CreateVodSou
 		plan.SourceLocationName = vodSource.SourceLocationName
 	}
 
-	if vodSource.Tags != nil && len(vodSource.Tags) > 0 {
+	if len(vodSource.Tags) > 0 {
 		plan.Tags = vodSource.Tags
 	}
 
