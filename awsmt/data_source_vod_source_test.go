@@ -49,7 +49,7 @@ func TestAccVodSourceDataSourceBasic(t *testing.T) {
 				}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.awsmt_vod_source.data_test", "id", "vod_source_example"),
+					resource.TestCheckResourceAttr("data.awsmt_vod_source.data_test", "id", "test_source_location,vod_source_example"),
 					resource.TestMatchResourceAttr("data.awsmt_vod_source.data_test", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:vodSource\/.*$`)),
 					resource.TestMatchResourceAttr("data.awsmt_vod_source.data_test", "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
 					resource.TestCheckResourceAttr("data.awsmt_vod_source.data_test", "http_package_configurations.0.path", "/"),

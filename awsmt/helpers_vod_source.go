@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func vodSourceInput(plan resourceVodSourceModel) mediatailor.CreateVodSourceInput {
+func vodSourceInput(plan vodSourceModel) mediatailor.CreateVodSourceInput {
 	var input mediatailor.CreateVodSourceInput
 
 	input.HttpPackageConfigurations, input.VodSourceName, input.SourceLocationName = getBasicVodSourceInput(&plan)
@@ -18,7 +18,7 @@ func vodSourceInput(plan resourceVodSourceModel) mediatailor.CreateVodSourceInpu
 	return input
 }
 
-func readVodSourceToPlan(plan resourceVodSourceModel, vodSource mediatailor.CreateVodSourceOutput) resourceVodSourceModel {
+func readVodSourceToPlan(plan vodSourceModel, vodSource mediatailor.CreateVodSourceOutput) vodSourceModel {
 	vodSourceName := *vodSource.VodSourceName
 	sourceLocationName := *vodSource.SourceLocationName
 	idNames := sourceLocationName + "," + vodSourceName
@@ -34,9 +34,9 @@ func readVodSourceToPlan(plan resourceVodSourceModel, vodSource mediatailor.Crea
 	}
 
 	if vodSource.HttpPackageConfigurations != nil && len(vodSource.HttpPackageConfigurations) > 0 {
-		plan.HttpPackageConfigurations = []httpPackageConfigurationsVSRModel{}
+		plan.HttpPackageConfigurations = []httpPackageConfigurationsModel{}
 		for _, httpPackageConfiguration := range vodSource.HttpPackageConfigurations {
-			httpPackageConfigurations := httpPackageConfigurationsVSRModel{}
+			httpPackageConfigurations := httpPackageConfigurationsModel{}
 			httpPackageConfigurations.Path = httpPackageConfiguration.Path
 			httpPackageConfigurations.SourceGroup = httpPackageConfiguration.SourceGroup
 			httpPackageConfigurations.Type = httpPackageConfiguration.Type
@@ -63,7 +63,7 @@ func readVodSourceToPlan(plan resourceVodSourceModel, vodSource mediatailor.Crea
 	return plan
 }
 
-func vodSourceUpdateInput(plan resourceVodSourceModel) mediatailor.UpdateVodSourceInput {
+func vodSourceUpdateInput(plan vodSourceModel) mediatailor.UpdateVodSourceInput {
 	var input mediatailor.UpdateVodSourceInput
 
 	input.HttpPackageConfigurations, input.VodSourceName, input.SourceLocationName = getBasicVodSourceInput(&plan)
@@ -71,7 +71,7 @@ func vodSourceUpdateInput(plan resourceVodSourceModel) mediatailor.UpdateVodSour
 	return input
 }
 
-func getBasicVodSourceInput(plan *resourceVodSourceModel) ([]*mediatailor.HttpPackageConfiguration, *string, *string) {
+func getBasicVodSourceInput(plan *vodSourceModel) ([]*mediatailor.HttpPackageConfiguration, *string, *string) {
 	var httpPackageConfigurations []*mediatailor.HttpPackageConfiguration
 	var vodSourceName *string
 	var sourceLocationName *string
@@ -90,7 +90,7 @@ func getBasicVodSourceInput(plan *resourceVodSourceModel) ([]*mediatailor.HttpPa
 	return httpPackageConfigurations, vodSourceName, sourceLocationName
 }
 
-func getHttpInput(plan []httpPackageConfigurationsVSRModel) []*mediatailor.HttpPackageConfiguration {
+func getHttpInput(plan []httpPackageConfigurationsModel) []*mediatailor.HttpPackageConfiguration {
 	var input mediatailor.CreateVodSourceInput
 	if len(plan) > 0 {
 		input.HttpPackageConfigurations = []*mediatailor.HttpPackageConfiguration{}

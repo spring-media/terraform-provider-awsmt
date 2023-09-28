@@ -2,13 +2,11 @@ package awsmt
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var (
@@ -22,22 +20,6 @@ func DataSourceVodSource() datasource.DataSource {
 
 type dataSourceVodSource struct {
 	client *mediatailor.MediaTailor
-}
-type vodSourceModel struct {
-	ID                        types.String                     `tfsdk:"id"`
-	Arn                       types.String                     `tfsdk:"arn"`
-	CreationTime              types.String                     `tfsdk:"creation_time"`
-	HttpPackageConfigurations []httpPackageConfigurationsModel `tfsdk:"http_package_configurations"`
-	LastModifiedTime          types.String                     `tfsdk:"last_modified_time"`
-	SourceLocationName        *string                          `tfsdk:"source_location_name"`
-	Tags                      map[string]*string               `tfsdk:"tags"`
-	VodSourceName             *string                          `tfsdk:"vod_source_name"`
-}
-
-type httpPackageConfigurationsModel struct {
-	Path        types.String `tfsdk:"path"`
-	SourceGroup types.String `tfsdk:"source_group"`
-	Type        types.String `tfsdk:"type"`
 }
 
 func (d *dataSourceVodSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -98,30 +80,7 @@ func (d *dataSourceVodSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	data.ID = types.StringValue(*vodSource.VodSourceName)
-	if vodSource.Arn != nil && *vodSource.Arn != "" {
-		data.Arn = types.StringValue(*vodSource.Arn)
-	}
-	if vodSource.CreationTime != nil {
-		data.CreationTime = types.StringValue((aws.TimeValue(vodSource.CreationTime)).String())
-	}
-
-	data.HttpPackageConfigurations = readHttpPackageConfigurations(vodSource.HttpPackageConfigurations)
-
-	if vodSource.LastModifiedTime != nil {
-		data.LastModifiedTime = types.StringValue((aws.TimeValue(vodSource.LastModifiedTime)).String())
-	}
-
-	if vodSource.SourceLocationName != nil && *vodSource.SourceLocationName != "" {
-		data.SourceLocationName = vodSource.SourceLocationName
-	}
-
-	if len(vodSource.Tags) > 0 {
-		data.Tags = make(map[string]*string)
-		for key, value := range vodSource.Tags {
-			data.Tags[key] = value
-		}
-	}
+	data = readVodSourceToPlan(data, mediatailor.CreateVodSourceOutput(*vodSource))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
