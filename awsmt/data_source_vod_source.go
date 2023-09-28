@@ -23,18 +23,18 @@ func DataSourceVodSource() datasource.DataSource {
 type dataSourceVodSource struct {
 	client *mediatailor.MediaTailor
 }
-type dataSourceVodSourceModel struct {
-	ID                        types.String                       `tfsdk:"id"`
-	Arn                       types.String                       `tfsdk:"arn"`
-	CreationTime              types.String                       `tfsdk:"creation_time"`
-	HttpPackageConfigurations []httpPackageConfigurationsDSModel `tfsdk:"http_package_configurations"`
-	LastModifiedTime          types.String                       `tfsdk:"last_modified_time"`
-	SourceLocationName        *string                            `tfsdk:"source_location_name"`
-	Tags                      map[string]*string                 `tfsdk:"tags"`
-	VodSourceName             *string                            `tfsdk:"vod_source_name"`
+type vodSourceModel struct {
+	ID                        types.String                     `tfsdk:"id"`
+	Arn                       types.String                     `tfsdk:"arn"`
+	CreationTime              types.String                     `tfsdk:"creation_time"`
+	HttpPackageConfigurations []httpPackageConfigurationsModel `tfsdk:"http_package_configurations"`
+	LastModifiedTime          types.String                     `tfsdk:"last_modified_time"`
+	SourceLocationName        *string                          `tfsdk:"source_location_name"`
+	Tags                      map[string]*string               `tfsdk:"tags"`
+	VodSourceName             *string                          `tfsdk:"vod_source_name"`
 }
 
-type httpPackageConfigurationsDSModel struct {
+type httpPackageConfigurationsModel struct {
 	Path        types.String `tfsdk:"path"`
 	SourceGroup types.String `tfsdk:"source_group"`
 	Type        types.String `tfsdk:"type"`
@@ -82,7 +82,7 @@ func (d *dataSourceVodSource) Configure(_ context.Context, req datasource.Config
 }
 
 func (d *dataSourceVodSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data dataSourceVodSourceModel
+	var data vodSourceModel
 	diags := req.Config.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -106,16 +106,7 @@ func (d *dataSourceVodSource) Read(ctx context.Context, req datasource.ReadReque
 		data.CreationTime = types.StringValue((aws.TimeValue(vodSource.CreationTime)).String())
 	}
 
-	if vodSource.HttpPackageConfigurations != nil && len(vodSource.HttpPackageConfigurations) > 0 {
-		data.HttpPackageConfigurations = []httpPackageConfigurationsDSModel{}
-		for _, httpPackageConfiguration := range vodSource.HttpPackageConfigurations {
-			httpPackageConfigurations := httpPackageConfigurationsDSModel{}
-			httpPackageConfigurations.Path = types.StringValue(*httpPackageConfiguration.Path)
-			httpPackageConfigurations.SourceGroup = types.StringValue(*httpPackageConfiguration.SourceGroup)
-			httpPackageConfigurations.Type = types.StringValue(*httpPackageConfiguration.Type)
-			data.HttpPackageConfigurations = append(data.HttpPackageConfigurations, httpPackageConfigurations)
-		}
-	}
+	data.HttpPackageConfigurations = readHttpPackageConfigurations(vodSource.HttpPackageConfigurations)
 
 	if vodSource.LastModifiedTime != nil {
 		data.LastModifiedTime = types.StringValue((aws.TimeValue(vodSource.LastModifiedTime)).String())

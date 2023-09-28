@@ -23,21 +23,15 @@ func DataSourceLiveSource() datasource.DataSource {
 type dataSourceLiveSource struct {
 	client *mediatailor.MediaTailor
 }
-type dataSourceLiveSourceModel struct {
-	ID                          types.String                         `tfsdk:"id"`
-	Arn                         types.String                         `tfsdk:"arn"`
-	CreationTime                types.String                         `tfsdk:"creation_time"`
-	HttpPackageConfigurationsLS []httpPackageConfigurationsLSDSModel `tfsdk:"http_package_configurations"`
-	LastModifiedTime            types.String                         `tfsdk:"last_modified_time"`
-	LiveSourceName              *string                              `tfsdk:"live_source_name"`
-	SourceLocationName          *string                              `tfsdk:"source_location_name"`
-	Tags                        map[string]*string                   `tfsdk:"tags"`
-}
-
-type httpPackageConfigurationsLSDSModel struct {
-	Path        types.String `tfsdk:"path"`
-	SourceGroup types.String `tfsdk:"source_group"`
-	Type        types.String `tfsdk:"type"`
+type liveSourceModel struct {
+	ID                        types.String                     `tfsdk:"id"`
+	Arn                       types.String                     `tfsdk:"arn"`
+	CreationTime              types.String                     `tfsdk:"creation_time"`
+	HttpPackageConfigurations []httpPackageConfigurationsModel `tfsdk:"http_package_configurations"`
+	LastModifiedTime          types.String                     `tfsdk:"last_modified_time"`
+	LiveSourceName            *string                          `tfsdk:"live_source_name"`
+	SourceLocationName        *string                          `tfsdk:"source_location_name"`
+	Tags                      map[string]*string               `tfsdk:"tags"`
 }
 
 func (d *dataSourceLiveSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -82,7 +76,7 @@ func (d *dataSourceLiveSource) Configure(_ context.Context, req datasource.Confi
 }
 
 func (d *dataSourceLiveSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data dataSourceLiveSourceModel
+	var data liveSourceModel
 	diags := req.Config.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -108,16 +102,7 @@ func (d *dataSourceLiveSource) Read(ctx context.Context, req datasource.ReadRequ
 		data.CreationTime = types.StringValue((aws.TimeValue(liveSource.CreationTime)).String())
 	}
 
-	if liveSource.HttpPackageConfigurations != nil && len(liveSource.HttpPackageConfigurations) > 0 {
-		data.HttpPackageConfigurationsLS = []httpPackageConfigurationsLSDSModel{}
-		for _, httpPackageConfiguration := range liveSource.HttpPackageConfigurations {
-			httpPackageConfigurations := httpPackageConfigurationsLSDSModel{}
-			httpPackageConfigurations.Path = types.StringValue(*httpPackageConfiguration.Path)
-			httpPackageConfigurations.SourceGroup = types.StringValue(*httpPackageConfiguration.SourceGroup)
-			httpPackageConfigurations.Type = types.StringValue(*httpPackageConfiguration.Type)
-			data.HttpPackageConfigurationsLS = append(data.HttpPackageConfigurationsLS, httpPackageConfigurations)
-		}
-	}
+	data.HttpPackageConfigurations = readHttpPackageConfigurations(liveSource.HttpPackageConfigurations)
 
 	if liveSource.LastModifiedTime != nil {
 		data.LastModifiedTime = types.StringValue((aws.TimeValue(liveSource.LastModifiedTime)).String())
