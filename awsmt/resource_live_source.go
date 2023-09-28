@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"reflect"
 	"strings"
 )
@@ -26,23 +25,6 @@ func ResourceLiveSource() resource.Resource {
 
 type resourceLiveSource struct {
 	client *mediatailor.MediaTailor
-}
-
-type resourceLiveSourceModel struct {
-	ID                        types.String                        `tfsdk:"id"`
-	Arn                       types.String                        `tfsdk:"arn"`
-	CreationTime              types.String                        `tfsdk:"creation_time"`
-	HttpPackageConfigurations []httpPackageConfigurationsLSRModel `tfsdk:"http_package_configurations"`
-	LastModifiedTime          types.String                        `tfsdk:"last_modified_time"`
-	LiveSourceName            *string                             `tfsdk:"live_source_name"`
-	SourceLocationName        *string                             `tfsdk:"source_location_name"`
-	Tags                      map[string]*string                  `tfsdk:"tags"`
-}
-
-type httpPackageConfigurationsLSRModel struct {
-	Path        *string `tfsdk:"path"`
-	SourceGroup *string `tfsdk:"source_group"`
-	Type        *string `tfsdk:"type"`
 }
 
 func (r *resourceLiveSource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -87,7 +69,7 @@ func (r *resourceLiveSource) Configure(_ context.Context, req resource.Configure
 }
 
 func (r *resourceLiveSource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceLiveSourceModel
+	var plan liveSourceModel
 
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -113,7 +95,7 @@ func (r *resourceLiveSource) Create(ctx context.Context, req resource.CreateRequ
 }
 
 func (r *resourceLiveSource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourceLiveSourceModel
+	var state liveSourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -149,7 +131,7 @@ func (r *resourceLiveSource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *resourceLiveSource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan resourceLiveSourceModel
+	var plan liveSourceModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -199,7 +181,7 @@ func (r *resourceLiveSource) Update(ctx context.Context, req resource.UpdateRequ
 }
 
 func (r *resourceLiveSource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourceLiveSourceModel
+	var state liveSourceModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

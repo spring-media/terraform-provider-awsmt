@@ -2,13 +2,11 @@ package awsmt
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var (
@@ -22,16 +20,6 @@ func DataSourceLiveSource() datasource.DataSource {
 
 type dataSourceLiveSource struct {
 	client *mediatailor.MediaTailor
-}
-type liveSourceModel struct {
-	ID                        types.String                     `tfsdk:"id"`
-	Arn                       types.String                     `tfsdk:"arn"`
-	CreationTime              types.String                     `tfsdk:"creation_time"`
-	HttpPackageConfigurations []httpPackageConfigurationsModel `tfsdk:"http_package_configurations"`
-	LastModifiedTime          types.String                     `tfsdk:"last_modified_time"`
-	LiveSourceName            *string                          `tfsdk:"live_source_name"`
-	SourceLocationName        *string                          `tfsdk:"source_location_name"`
-	Tags                      map[string]*string               `tfsdk:"tags"`
 }
 
 func (d *dataSourceLiveSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -92,32 +80,7 @@ func (d *dataSourceLiveSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	data.ID = types.StringValue(*liveSource.LiveSourceName)
-
-	if liveSource.Arn != nil {
-		data.Arn = types.StringValue(*liveSource.Arn)
-	}
-
-	if liveSource.CreationTime != nil {
-		data.CreationTime = types.StringValue((aws.TimeValue(liveSource.CreationTime)).String())
-	}
-
-	data.HttpPackageConfigurations = readHttpPackageConfigurations(liveSource.HttpPackageConfigurations)
-
-	if liveSource.LastModifiedTime != nil {
-		data.LastModifiedTime = types.StringValue((aws.TimeValue(liveSource.LastModifiedTime)).String())
-	}
-
-	if liveSource.SourceLocationName != nil && *liveSource.SourceLocationName != "" {
-		data.SourceLocationName = liveSource.SourceLocationName
-	}
-
-	if liveSource.Tags != nil && len(liveSource.Tags) > 0 {
-		data.Tags = make(map[string]*string)
-		for key, value := range liveSource.Tags {
-			data.Tags[key] = value
-		}
-	}
+	data = readLiveSourceToPlan(data, mediatailor.CreateLiveSourceOutput(*liveSource))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func liveSourceInput(plan resourceLiveSourceModel) mediatailor.CreateLiveSourceInput {
+func liveSourceInput(plan liveSourceModel) mediatailor.CreateLiveSourceInput {
 	var input mediatailor.CreateLiveSourceInput
 
 	if plan.HttpPackageConfigurations != nil && len(plan.HttpPackageConfigurations) > 0 {
@@ -34,7 +34,7 @@ func liveSourceInput(plan resourceLiveSourceModel) mediatailor.CreateLiveSourceI
 	return input
 }
 
-func readLiveSourceToPlan(plan resourceLiveSourceModel, liveSource mediatailor.CreateLiveSourceOutput) resourceLiveSourceModel {
+func readLiveSourceToPlan(plan liveSourceModel, liveSource mediatailor.CreateLiveSourceOutput) liveSourceModel {
 	liveSourceName := *liveSource.LiveSourceName
 	sourceLocationName := *liveSource.SourceLocationName
 	idNames := sourceLocationName + "," + liveSourceName
@@ -49,16 +49,7 @@ func readLiveSourceToPlan(plan resourceLiveSourceModel, liveSource mediatailor.C
 		plan.CreationTime = types.StringValue((aws.TimeValue(liveSource.CreationTime)).String())
 	}
 
-	if liveSource.HttpPackageConfigurations != nil && len(liveSource.HttpPackageConfigurations) > 0 {
-		plan.HttpPackageConfigurations = []httpPackageConfigurationsLSRModel{}
-		for _, httpPackageConfiguration := range liveSource.HttpPackageConfigurations {
-			httpPackageConfigurations := httpPackageConfigurationsLSRModel{}
-			httpPackageConfigurations.Path = httpPackageConfiguration.Path
-			httpPackageConfigurations.SourceGroup = httpPackageConfiguration.SourceGroup
-			httpPackageConfigurations.Type = httpPackageConfiguration.Type
-			plan.HttpPackageConfigurations = append(plan.HttpPackageConfigurations, httpPackageConfigurations)
-		}
-	}
+	plan.HttpPackageConfigurations = readHttpPackageConfigurations(liveSource.HttpPackageConfigurations)
 
 	if liveSource.LastModifiedTime != nil {
 		plan.LastModifiedTime = types.StringValue((aws.TimeValue(liveSource.LastModifiedTime)).String())
@@ -79,7 +70,7 @@ func readLiveSourceToPlan(plan resourceLiveSourceModel, liveSource mediatailor.C
 	return plan
 }
 
-func liveSourceUpdateInput(plan resourceLiveSourceModel) mediatailor.UpdateLiveSourceInput {
+func liveSourceUpdateInput(plan liveSourceModel) mediatailor.UpdateLiveSourceInput {
 	var input mediatailor.UpdateLiveSourceInput
 
 	if plan.HttpPackageConfigurations != nil && len(plan.HttpPackageConfigurations) > 0 {

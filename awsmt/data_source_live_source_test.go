@@ -49,7 +49,7 @@ func TestAccLiveSourceDataSourceBasic(t *testing.T) {
 			}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.awsmt_live_source.data_test", "id", "live_source_example"),
+					resource.TestCheckResourceAttr("data.awsmt_live_source.data_test", "id", "test_source_location,live_source_example"),
 					resource.TestMatchResourceAttr("data.awsmt_live_source.data_test", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:liveSource\/.*$`)),
 					resource.TestMatchResourceAttr("data.awsmt_live_source.data_test", "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
 					resource.TestCheckResourceAttr("data.awsmt_live_source.data_test", "http_package_configurations.0.path", "/"),
