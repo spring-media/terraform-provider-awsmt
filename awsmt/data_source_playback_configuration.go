@@ -20,70 +20,6 @@ func DataSourcePlaybackConfiguration() datasource.DataSource {
 type dataSourcePlaybackConfiguration struct {
 	client *mediatailor.MediaTailor
 }
-type dataSourcePlaybackConfigurationModel struct {
-	ID                                  types.String                   `tfsdk:"id"`
-	AdDecisionServerUrl                 *string                        `tfsdk:"ad_decision_server_url"`
-	AvailSupression                     *availSupressionModel          `tfsdk:"avail_supression"`
-	Bumper                              *bumperModel                   `tfsdk:"bumper"`
-	CdnConfiguration                    *cdnConfigurationModel         `tfsdk:"cdn_configuration"`
-	ConfigurationAliases                map[string]map[string]*string  `tfsdk:"configuration_aliases"`
-	DashConfiguration                   *dashConfigurationModel        `tfsdk:"dash_configuration"`
-	HlsConfiguration                    *hlsConfigurationModel         `tfsdk:"hls_configuration"`
-	LivePreRollConfiguration            *livePreRollConfigurationModel `tfsdk:"live_pre_roll_configuration"`
-	LogConfiguration                    *logConfigurationModel         `tfsdk:"log_configuration"`
-	ManifestProcessingRules             *manifestProcessingRulesModel  `tfsdk:"manifest_processing_rules"`
-	Name                                *string                        `tfsdk:"name"`
-	PersonalizationThresholdSeconds     *int64                         `tfsdk:"personalization_threshold_seconds"`
-	PlaybackConfigurationArn            *string                        `tfsdk:"playback_configuration_arn"`
-	PlaybackEndpointPrefix              *string                        `tfsdk:"playback_endpoint_prefix"`
-	SessionInitializationEndpointPrefix *string                        `tfsdk:"session_initialization_endpoint_prefix"`
-	SlateAdUrl                          *string                        `tfsdk:"slate_ad_url"`
-	Tags                                map[string]*string             `tfsdk:"tags"`
-	TranscodeProfileName                *string                        `tfsdk:"transcode_profile_name"`
-	VideoContentSourceUrl               *string                        `tfsdk:"video_content_source_url"`
-}
-
-type availSupressionModel struct {
-	FillPolicy *string `tfsdk:"fill_policy"`
-	Mode       *string `tfsdk:"mode"`
-	Value      *string `tfsdk:"value"`
-}
-
-type bumperModel struct {
-	EndUrl   *string `tfsdk:"end_url"`
-	StartUrl *string `tfsdk:"start_url"`
-}
-
-type cdnConfigurationModel struct {
-	AdSegmentUrlPrefix      *string `tfsdk:"ad_segment_url_prefix"`
-	ContentSegmentUrlPrefix *string `tfsdk:"content_segment_url_prefix"`
-}
-
-type dashConfigurationModel struct {
-	ManifestEndpointPrefix *string `tfsdk:"manifest_endpoint_prefix"`
-	MpdLocation            *string `tfsdk:"mpd_location"`
-	OriginManifestType     *string `tfsdk:"origin_manifest_type"`
-}
-
-type hlsConfigurationModel struct {
-	ManifestEndpointPrefix *string `tfsdk:"manifest_endpoint_prefix"`
-}
-
-type livePreRollConfigurationModel struct {
-	AdDecisionServerUrl *string `tfsdk:"ad_decision_server_url"`
-	MaxDurationSeconds  *int64  `tfsdk:"max_duration_seconds"`
-}
-
-type logConfigurationModel struct {
-	PercentEnabled *int64 `tfsdk:"percent_enabled"`
-}
-
-type manifestProcessingRulesModel struct {
-	AdMarkerPassthrough *adMarkerPassthroughModel `tfsdk:"ad_marker_passthrough"`
-}
-type adMarkerPassthroughModel struct {
-	Enabled *bool `tfsdk:"enabled"`
-}
 
 func (d *dataSourcePlaybackConfiguration) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_playback_configuration"
@@ -132,12 +68,7 @@ func (d *dataSourcePlaybackConfiguration) Schema(_ context.Context, _ datasource
 					"origin_manifest_type":     computedString,
 				},
 			},
-			"hls_configuration": schema.SingleNestedAttribute{
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"manifest_endpoint_prefix": computedString,
-				},
-			},
+			"hls_configuration_manifest_endpoint_prefix": computedString,
 			"live_pre_roll_configuration": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
@@ -145,12 +76,7 @@ func (d *dataSourcePlaybackConfiguration) Schema(_ context.Context, _ datasource
 					"max_duration_seconds":   computedInt64,
 				},
 			},
-			"log_configuration": schema.SingleNestedAttribute{
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"percent_enabled": computedInt64,
-				},
-			},
+			"log_configuration_percent_enabled": computedInt64,
 			"manifest_processing_rules": schema.SingleNestedAttribute{
 				Computed: true,
 
@@ -185,7 +111,7 @@ func (d *dataSourcePlaybackConfiguration) Configure(_ context.Context, req datas
 }
 
 func (d *dataSourcePlaybackConfiguration) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data dataSourcePlaybackConfigurationModel
+	var data playbackConfigurationModel
 	diags := req.Config.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -203,7 +129,7 @@ func (d *dataSourcePlaybackConfiguration) Read(ctx context.Context, req datasour
 		return
 	}
 
-	data = readPlaybackConfigToData(data, *playbackConfiguration)
+	data = readPlaybackConfigToPlan(data, mediatailor.PutPlaybackConfigurationOutput(*playbackConfiguration))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

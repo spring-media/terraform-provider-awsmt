@@ -24,67 +24,6 @@ type resourcePlaybackConfiguration struct {
 	client *mediatailor.MediaTailor
 }
 
-type resourcePlaybackConfigurationModel struct {
-	ID                   types.String                    `tfsdk:"id"`
-	AdDecisionServerUrl  *string                         `tfsdk:"ad_decision_server_url"`
-	AvailSupression      *resourceAvailSupressionModel   `tfsdk:"avail_supression"`
-	Bumper               *resourceBumperModel            `tfsdk:"bumper"`
-	CdnConfiguration     *resourceCdnConfigurationModel  `tfsdk:"cdn_configuration"`
-	ConfigurationAliases map[string]map[string]*string   `tfsdk:"configuration_aliases"`
-	DashConfiguration    *resourceDashConfigurationModel `tfsdk:"dash_configuration"`
-	// @ADR
-	// Context: The Provider Framework does not allow computed blocks
-	// Decision: We decided to flatten the Log Configuration and the HLS Configuration blocks into the resource.
-	// Consequences: The schema of the object differs from that of the SDK.
-	HlsConfigurationManifestEndpointPrefix types.String                           `tfsdk:"hls_configuration_manifest_endpoint_prefix"`
-	LogConfigurationPercentEnabled         types.Int64                            `tfsdk:"log_configuration_percent_enabled"`
-	LivePreRollConfiguration               *resourceLivePreRollConfigurationModel `tfsdk:"live_pre_roll_configuration"`
-	ManifestProcessingRules                *resourceManifestProcessingRulesModel  `tfsdk:"manifest_processing_rules"`
-	Name                                   *string                                `tfsdk:"name"`
-	PersonalizationThresholdSeconds        *int64                                 `tfsdk:"personalization_threshold_seconds"`
-	PlaybackConfigurationArn               types.String                           `tfsdk:"playback_configuration_arn"`
-	PlaybackEndpointPrefix                 types.String                           `tfsdk:"playback_endpoint_prefix"`
-	SessionInitializationEndpointPrefix    types.String                           `tfsdk:"session_initialization_endpoint_prefix"`
-	SlateAdUrl                             *string                                `tfsdk:"slate_ad_url"`
-	Tags                                   map[string]*string                     `tfsdk:"tags"`
-	TranscodeProfileName                   *string                                `tfsdk:"transcode_profile_name"`
-	VideoContentSourceUrl                  *string                                `tfsdk:"video_content_source_url"`
-}
-
-type resourceAvailSupressionModel struct {
-	FillPolicy *string `tfsdk:"fill_policy"`
-	Mode       *string `tfsdk:"mode"`
-	Value      *string `tfsdk:"value"`
-}
-
-type resourceBumperModel struct {
-	EndUrl   *string `tfsdk:"end_url"`
-	StartUrl *string `tfsdk:"start_url"`
-}
-
-type resourceCdnConfigurationModel struct {
-	AdSegmentUrlPrefix      *string `tfsdk:"ad_segment_url_prefix"`
-	ContentSegmentUrlPrefix *string `tfsdk:"content_segment_url_prefix"`
-}
-
-type resourceDashConfigurationModel struct {
-	ManifestEndpointPrefix types.String `tfsdk:"manifest_endpoint_prefix"`
-	MpdLocation            *string      `tfsdk:"mpd_location"`
-	OriginManifestType     *string      `tfsdk:"origin_manifest_type"`
-}
-
-type resourceLivePreRollConfigurationModel struct {
-	AdDecisionServerUrl *string `tfsdk:"ad_decision_server_url"`
-	MaxDurationSeconds  *int64  `tfsdk:"max_duration_seconds"`
-}
-
-type resourceManifestProcessingRulesModel struct {
-	AdMarkerPassthrough *resourceAdMarkerPassthroughModel `tfsdk:"ad_marker_passthrough"`
-}
-type resourceAdMarkerPassthroughModel struct {
-	Enabled *bool `tfsdk:"enabled"`
-}
-
 func (r *resourcePlaybackConfiguration) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_playback_configuration"
 }
@@ -172,7 +111,7 @@ func (r *resourcePlaybackConfiguration) Configure(_ context.Context, req resourc
 }
 
 func (r *resourcePlaybackConfiguration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourcePlaybackConfigurationModel
+	var plan playbackConfigurationModel
 
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -201,7 +140,7 @@ func (r *resourcePlaybackConfiguration) Create(ctx context.Context, req resource
 }
 
 func (r *resourcePlaybackConfiguration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourcePlaybackConfigurationModel
+	var state playbackConfigurationModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -231,7 +170,7 @@ func (r *resourcePlaybackConfiguration) Read(ctx context.Context, req resource.R
 }
 
 func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan resourcePlaybackConfigurationModel
+	var plan playbackConfigurationModel
 
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -294,7 +233,7 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 }
 
 func (r *resourcePlaybackConfiguration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourcePlaybackConfigurationModel
+	var state playbackConfigurationModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

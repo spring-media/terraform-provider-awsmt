@@ -75,7 +75,7 @@ func TestAccPlaybackConfigurationDataSourceBasic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "slate_ad_url", "https://exampleurl.com/"),
 					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "tags.Environment", "dev"),
 					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "video_content_source_url", "https://exampleurl.com/"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "log_configuration.percent_enabled", "0"),
+					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "log_configuration_percent_enabled", "0"),
 				),
 			},
 		},
