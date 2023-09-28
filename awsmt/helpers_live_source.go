@@ -10,13 +10,7 @@ func liveSourceInput(plan liveSourceModel) mediatailor.CreateLiveSourceInput {
 	var input mediatailor.CreateLiveSourceInput
 
 	if plan.HttpPackageConfigurations != nil && len(plan.HttpPackageConfigurations) > 0 {
-		for _, httpPackageConfiguration := range plan.HttpPackageConfigurations {
-			httpPackageConfigurations := &mediatailor.HttpPackageConfiguration{}
-			httpPackageConfigurations.Path = httpPackageConfiguration.Path
-			httpPackageConfigurations.SourceGroup = httpPackageConfiguration.SourceGroup
-			httpPackageConfigurations.Type = httpPackageConfiguration.Type
-			input.HttpPackageConfigurations = append(input.HttpPackageConfigurations, httpPackageConfigurations)
-		}
+		input.HttpPackageConfigurations = getHttpInput(plan.HttpPackageConfigurations)
 	}
 
 	if plan.Name != nil {
@@ -74,13 +68,7 @@ func liveSourceUpdateInput(plan liveSourceModel) mediatailor.UpdateLiveSourceInp
 	var input mediatailor.UpdateLiveSourceInput
 
 	if plan.HttpPackageConfigurations != nil && len(plan.HttpPackageConfigurations) > 0 {
-		for _, httpPackageConfiguration := range plan.HttpPackageConfigurations {
-			httpPackageConfigurations := &mediatailor.HttpPackageConfiguration{}
-			httpPackageConfigurations.Path = httpPackageConfiguration.Path
-			httpPackageConfigurations.SourceGroup = httpPackageConfiguration.SourceGroup
-			httpPackageConfigurations.Type = httpPackageConfiguration.Type
-			input.HttpPackageConfigurations = append(input.HttpPackageConfigurations, httpPackageConfigurations)
-		}
+		input.HttpPackageConfigurations = getHttpInput(plan.HttpPackageConfigurations)
 	}
 
 	if plan.Name != nil {
