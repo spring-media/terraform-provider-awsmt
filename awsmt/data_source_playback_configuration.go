@@ -92,49 +92,28 @@ func (d *dataSourcePlaybackConfiguration) Metadata(_ context.Context, req dataso
 func (d *dataSourcePlaybackConfiguration) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
-			"ad_decision_server_url": schema.StringAttribute{
-				Computed: true,
-			},
+			"id":                     computedString,
+			"ad_decision_server_url": computedString,
 			"avail_supression": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"fill_policy": schema.StringAttribute{
-						Computed:   true,
-						CustomType: types.StringType,
-					},
-					"mode": schema.StringAttribute{
-						Computed:   true,
-						CustomType: types.StringType,
-					},
-					"value": schema.StringAttribute{
-						Computed:   true,
-						CustomType: types.StringType,
-					},
+					"fill_policy": computedString,
+					"mode":        computedString,
+					"value":       computedString,
 				},
 			},
 			"bumper": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"end_url": schema.StringAttribute{
-						Computed: true,
-					},
-					"start_url": schema.StringAttribute{
-						Computed: true,
-					},
+					"end_url":   computedString,
+					"start_url": computedString,
 				},
 			},
 			"cdn_configuration": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"ad_segment_url_prefix": schema.StringAttribute{
-						Computed: true,
-					},
-					"content_segment_url_prefix": schema.StringAttribute{
-						Computed: true,
-					},
+					"ad_segment_url_prefix":      computedString,
+					"content_segment_url_prefix": computedString,
 				},
 			},
 			"configuration_aliases": schema.ListAttribute{
@@ -148,42 +127,28 @@ func (d *dataSourcePlaybackConfiguration) Schema(_ context.Context, _ datasource
 			"dash_configuration": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"manifest_endpoint_prefix": schema.StringAttribute{
-						Computed: true,
-					},
-					"mpd_location": schema.StringAttribute{
-						Computed: true,
-					},
-					"origin_manifest_type": schema.StringAttribute{
-						Computed: true,
-					},
+					"manifest_endpoint_prefix": computedString,
+					"mpd_location":             computedString,
+					"origin_manifest_type":     computedString,
 				},
 			},
 			"hls_configuration": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"manifest_endpoint_prefix": schema.StringAttribute{
-						Computed: true,
-					},
+					"manifest_endpoint_prefix": computedString,
 				},
 			},
 			"live_pre_roll_configuration": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"ad_decision_server_url": schema.StringAttribute{
-						Computed: true,
-					},
-					"max_duration_seconds": schema.Int64Attribute{
-						Computed: true,
-					},
+					"ad_decision_server_url": computedString,
+					"max_duration_seconds":   computedInt64,
 				},
 			},
 			"log_configuration": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"percent_enabled": schema.Int64Attribute{
-						Computed: true,
-					},
+					"percent_enabled": computedInt64,
 				},
 			},
 			"manifest_processing_rules": schema.SingleNestedAttribute{
@@ -193,41 +158,20 @@ func (d *dataSourcePlaybackConfiguration) Schema(_ context.Context, _ datasource
 					"ad_marker_passthrough": schema.SingleNestedAttribute{
 						Computed: true,
 						Attributes: map[string]schema.Attribute{
-							"enabled": schema.BoolAttribute{
-								Computed: true,
-							},
+							"enabled": computedBool,
 						},
 					},
 				},
 			},
-			"name": schema.StringAttribute{
-				Required: true,
-			},
-			"personalization_threshold_seconds": schema.Int64Attribute{
-				Computed: true,
-			},
-			"playback_configuration_arn": schema.StringAttribute{
-				Computed: true,
-			},
-			"playback_endpoint_prefix": schema.StringAttribute{
-				Computed: true,
-			},
-			"session_initialization_endpoint_prefix": schema.StringAttribute{
-				Computed: true,
-			},
-			"slate_ad_url": schema.StringAttribute{
-				Computed: true,
-			},
-			"tags": schema.MapAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
-			},
-			"transcode_profile_name": schema.StringAttribute{
-				Computed: true,
-			},
-			"video_content_source_url": schema.StringAttribute{
-				Computed: true,
-			},
+			"name":                                   requiredString,
+			"personalization_threshold_seconds":      computedInt64,
+			"playback_configuration_arn":             computedString,
+			"playback_endpoint_prefix":               computedString,
+			"session_initialization_endpoint_prefix": computedString,
+			"slate_ad_url":                           computedString,
+			"tags":                                   computedMap,
+			"transcode_profile_name":                 computedString,
+			"video_content_source_url":               computedString,
 		},
 	}
 }

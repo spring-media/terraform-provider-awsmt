@@ -73,15 +73,9 @@ func (r *resourceChannel) Metadata(_ context.Context, req resource.MetadataReque
 func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
-			"arn": schema.StringAttribute{
-				Computed: true,
-			},
-			"channel_name": schema.StringAttribute{
-				Required: true,
-			},
+			"id":           computedString,
+			"arn":          computedString,
+			"channel_name": requiredString,
 			// @ADR
 			// Context: We cannot test the deletion of a running channel if we cannot set the channel_state property
 			// through the provider
@@ -95,23 +89,15 @@ func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, re
 					stringvalidator.OneOf("RUNNING", "STOPPED"),
 				},
 			},
-			"creation_time": schema.StringAttribute{
-				Computed: true,
-			},
+			"creation_time": computedString,
 			"filler_slate": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
-					"source_location_name": schema.StringAttribute{
-						Optional: true,
-					},
-					"vod_source_name": schema.StringAttribute{
-						Optional: true,
-					},
+					"source_location_name": optionalString,
+					"vod_source_name":      optionalString,
 				},
 			},
-			"last_modified_time": schema.StringAttribute{
-				Computed: true,
-			},
+			"last_modified_time": computedString,
 			"outputs": schema.ListNestedAttribute{
 				Required: true,
 				NestedObject: schema.NestedAttributeObject{
@@ -119,41 +105,22 @@ func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, re
 						"dash_playlist_settings": schema.SingleNestedAttribute{
 							Optional: true,
 							Attributes: map[string]schema.Attribute{
-								"manifest_window_seconds": schema.Int64Attribute{
-									Optional: true,
-								},
-								"min_buffer_time_seconds": schema.Int64Attribute{
-									Optional: true,
-								},
-								"min_update_period_seconds": schema.Int64Attribute{
-									Optional: true,
-								},
-								"suggested_presentation_delay_seconds": schema.Int64Attribute{
-									Optional: true,
-								},
+								"manifest_window_seconds":              optionalInt64,
+								"min_buffer_time_seconds":              optionalInt64,
+								"min_update_period_seconds":            optionalInt64,
+								"suggested_presentation_delay_seconds": optionalInt64,
 							},
 						},
 						"hls_playlist_settings": schema.SingleNestedAttribute{
 							Optional: true,
 							Attributes: map[string]schema.Attribute{
-								"ad_markup_type": schema.ListAttribute{
-									Optional:    true,
-									ElementType: types.StringType,
-								},
-								"manifest_window_seconds": schema.Int64Attribute{
-									Optional: true,
-								},
+								"ad_markup_type":          optionalList,
+								"manifest_window_seconds": optionalInt64,
 							},
 						},
-						"manifest_name": schema.StringAttribute{
-							Required: true,
-						},
-						"playback_url": schema.StringAttribute{
-							Computed: true,
-						},
-						"source_group": schema.StringAttribute{
-							Required: true,
-						},
+						"manifest_name": requiredString,
+						"playback_url":  computedString,
+						"source_group":  requiredString,
 					},
 				},
 			},
@@ -175,10 +142,7 @@ func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Optional:   true,
 				CustomType: jsontypes.NormalizedType{},
 			},
-			"tags": schema.MapAttribute{
-				Optional:    true,
-				ElementType: types.StringType,
-			},
+			"tags": optionalMap,
 			"tier": schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{

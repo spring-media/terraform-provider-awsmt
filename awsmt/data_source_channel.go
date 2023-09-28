@@ -67,35 +67,19 @@ func (d *dataSourceChannel) Metadata(_ context.Context, req datasource.MetadataR
 func (d *dataSourceChannel) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
-			"arn": schema.StringAttribute{
-				Computed: true,
-			},
-			"channel_name": schema.StringAttribute{
-				Required: true,
-			},
-			"channel_state": schema.StringAttribute{
-				Computed: true,
-			},
-			"creation_time": schema.StringAttribute{
-				Computed: true,
-			},
+			"id":            computedString,
+			"arn":           computedString,
+			"channel_name":  requiredString,
+			"channel_state": computedString,
+			"creation_time": computedString,
 			"filler_slate": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
-					"source_location_name": schema.StringAttribute{
-						Computed: true,
-					},
-					"vod_source_name": schema.StringAttribute{
-						Computed: true,
-					},
+					"source_location_name": computedString,
+					"vod_source_name":      computedString,
 				},
 			},
-			"last_modified_time": schema.StringAttribute{
-				Computed: true,
-			},
+			"last_modified_time": computedString,
 			"outputs": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
@@ -103,41 +87,22 @@ func (d *dataSourceChannel) Schema(_ context.Context, _ datasource.SchemaRequest
 						"dash_playlist_settings": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
-								"manifest_window_seconds": schema.Int64Attribute{
-									Computed: true,
-								},
-								"min_buffer_time_seconds": schema.Int64Attribute{
-									Computed: true,
-								},
-								"min_update_period_seconds": schema.Int64Attribute{
-									Computed: true,
-								},
-								"suggested_presentation_delay_seconds": schema.Int64Attribute{
-									Computed: true,
-								},
+								"manifest_window_seconds":              computedInt64,
+								"min_buffer_time_seconds":              computedInt64,
+								"min_update_period_seconds":            computedInt64,
+								"suggested_presentation_delay_seconds": computedInt64,
 							},
 						},
 						"hls_playlist_settings": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
-								"ad_markup_type": schema.ListAttribute{
-									Computed:    true,
-									ElementType: types.StringType,
-								},
-								"manifest_window_seconds": schema.Int64Attribute{
-									Computed: true,
-								},
+								"ad_markup_type":          computedList,
+								"manifest_window_seconds": computedInt64,
 							},
 						},
-						"manifest_name": schema.StringAttribute{
-							Computed: true,
-						},
-						"playback_url": schema.StringAttribute{
-							Computed: true,
-						},
-						"source_group": schema.StringAttribute{
-							Computed: true,
-						},
+						"manifest_name": computedString,
+						"playback_url":  computedString,
+						"source_group":  computedString,
 					},
 				},
 			},
@@ -147,13 +112,8 @@ func (d *dataSourceChannel) Schema(_ context.Context, _ datasource.SchemaRequest
 			"policy": schema.StringAttribute{
 				Computed: true,
 			},
-			"tags": schema.MapAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
-			},
-			"tier": schema.StringAttribute{
-				Computed: true,
-			},
+			"tags": computedMap,
+			"tier": computedString,
 		},
 	}
 }

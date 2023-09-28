@@ -92,46 +92,28 @@ func (r *resourcePlaybackConfiguration) Metadata(_ context.Context, req resource
 func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
-			"ad_decision_server_url": schema.StringAttribute{
-				Required: true,
-			},
+			"id":                     computedString,
+			"ad_decision_server_url": requiredString,
 			"avail_supression": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
-					"fill_policy": schema.StringAttribute{
-						Optional: true,
-					},
-					"mode": schema.StringAttribute{
-						Optional: true,
-					},
-					"value": schema.StringAttribute{
-						Optional: true,
-					},
+					"fill_policy": optionalString,
+					"mode":        optionalString,
+					"value":       optionalString,
 				},
 			},
 			"bumper": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
-					"end_url": schema.StringAttribute{
-						Optional: true,
-					},
-					"start_url": schema.StringAttribute{
-						Optional: true,
-					},
+					"end_url":   optionalString,
+					"start_url": optionalString,
 				},
 			},
 			"cdn_configuration": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
-					"ad_segment_url_prefix": schema.StringAttribute{
-						Optional: true,
-					},
-					"content_segment_url_prefix": schema.StringAttribute{
-						Optional: true,
-					},
+					"ad_segment_url_prefix":      optionalString,
+					"content_segment_url_prefix": optionalString,
 				},
 			},
 			"configuration_aliases": schema.MapAttribute{
@@ -143,32 +125,18 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 			"dash_configuration": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
-					"manifest_endpoint_prefix": schema.StringAttribute{
-						Computed: true,
-					},
-					"mpd_location": schema.StringAttribute{
-						Optional: true,
-					},
-					"origin_manifest_type": schema.StringAttribute{
-						Optional: true,
-					},
+					"manifest_endpoint_prefix": computedString,
+					"mpd_location":             optionalString,
+					"origin_manifest_type":     optionalString,
 				},
 			},
-			"hls_configuration_manifest_endpoint_prefix": schema.StringAttribute{
-				Computed: true,
-			},
-			"log_configuration_percent_enabled": schema.Int64Attribute{
-				Computed: true,
-			},
+			"hls_configuration_manifest_endpoint_prefix": computedString,
+			"log_configuration_percent_enabled":          computedInt64,
 			"live_pre_roll_configuration": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
-					"ad_decision_server_url": schema.StringAttribute{
-						Optional: true,
-					},
-					"max_duration_seconds": schema.Int64Attribute{
-						Optional: true,
-					},
+					"ad_decision_server_url": optionalString,
+					"max_duration_seconds":   optionalInt64,
 				},
 			},
 			"manifest_processing_rules": schema.SingleNestedAttribute{
@@ -177,41 +145,20 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 					"ad_marker_passthrough": schema.SingleNestedAttribute{
 						Optional: true,
 						Attributes: map[string]schema.Attribute{
-							"enabled": schema.BoolAttribute{
-								Optional: true,
-							},
+							"enabled": optionalBool,
 						},
 					},
 				},
 			},
-			"name": schema.StringAttribute{
-				Required: true,
-			},
-			"personalization_threshold_seconds": schema.Int64Attribute{
-				Optional: true,
-			},
-			"playback_configuration_arn": schema.StringAttribute{
-				Computed: true,
-			},
-			"playback_endpoint_prefix": schema.StringAttribute{
-				Computed: true,
-			},
-			"session_initialization_endpoint_prefix": schema.StringAttribute{
-				Computed: true,
-			},
-			"slate_ad_url": schema.StringAttribute{
-				Optional: true,
-			},
-			"tags": schema.MapAttribute{
-				Optional:    true,
-				ElementType: types.StringType,
-			},
-			"transcode_profile_name": schema.StringAttribute{
-				Optional: true,
-			},
-			"video_content_source_url": schema.StringAttribute{
-				Required: true,
-			},
+			"name":                                   requiredString,
+			"personalization_threshold_seconds":      optionalInt64,
+			"playback_configuration_arn":             computedString,
+			"playback_endpoint_prefix":               computedString,
+			"session_initialization_endpoint_prefix": computedString,
+			"slate_ad_url":                           optionalString,
+			"tags":                                   optionalMap,
+			"transcode_profile_name":                 optionalString,
+			"video_content_source_url":               requiredString,
 		},
 	}
 }

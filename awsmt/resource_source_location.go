@@ -70,9 +70,7 @@ func (r *resourceSourceLocation) Metadata(_ context.Context, req resource.Metada
 func (r *resourceSourceLocation) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
+			"id": computedString,
 			"access_configuration": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
@@ -85,64 +83,39 @@ func (r *resourceSourceLocation) Schema(_ context.Context, _ resource.SchemaRequ
 					"secrets_manager_access_token_configuration": schema.SingleNestedAttribute{
 						Optional: true,
 						Attributes: map[string]schema.Attribute{
-							"header_name": schema.StringAttribute{
-								Optional: true,
-							},
-							"secret_arn": schema.StringAttribute{
-								Optional: true,
-							},
-							"secret_string_key": schema.StringAttribute{
-								Optional: true,
-							},
+							"header_name":       optionalString,
+							"secret_arn":        optionalString,
+							"secret_string_key": optionalString,
 						},
 					},
 				},
 			},
-			"arn": schema.StringAttribute{
-				Computed: true,
-			},
-			"creation_time": schema.StringAttribute{
-				Computed: true,
-			},
+			"arn":           computedString,
+			"creation_time": computedString,
 			"default_segment_delivery_configuration": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
-					"dsdc_base_url": schema.StringAttribute{
-						Optional: true,
-					},
+					"dsdc_base_url": optionalString,
 				},
 			},
 			"http_configuration": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
-					"hc_base_url": schema.StringAttribute{
-						Required: true,
-					},
+					"hc_base_url": requiredString,
 				},
 			},
-			"last_modified_time": schema.StringAttribute{
-				Computed: true,
-			},
+			"last_modified_time": computedString,
 			"segment_delivery_configurations": schema.ListNestedAttribute{
 				Optional: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"sdc_base_url": schema.StringAttribute{
-							Optional: true,
-						},
-						"sdc_name": schema.StringAttribute{
-							Optional: true,
-						},
+						"sdc_base_url": optionalString,
+						"sdc_name":     optionalString,
 					},
 				},
 			},
-			"source_location_name": schema.StringAttribute{
-				Required: true,
-			},
-			"tags": schema.MapAttribute{
-				Optional:    true,
-				ElementType: types.StringType,
-			},
+			"source_location_name": requiredString,
+			"tags":                 optionalMap,
 		},
 	}
 }

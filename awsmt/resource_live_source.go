@@ -52,25 +52,15 @@ func (r *resourceLiveSource) Metadata(_ context.Context, req resource.MetadataRe
 func (r *resourceLiveSource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
-			"arn": schema.StringAttribute{
-				Computed: true,
-			},
-			"creation_time": schema.StringAttribute{
-				Computed: true,
-			},
+			"id":            computedString,
+			"arn":           computedString,
+			"creation_time": computedString,
 			"http_package_configurations": schema.ListNestedAttribute{
 				Required: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"path": schema.StringAttribute{
-							Required: true,
-						},
-						"source_group": schema.StringAttribute{
-							Required: true,
-						},
+						"path":         requiredString,
+						"source_group": requiredString,
 						"type": schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
@@ -80,19 +70,10 @@ func (r *resourceLiveSource) Schema(_ context.Context, _ resource.SchemaRequest,
 					},
 				},
 			},
-			"last_modified_time": schema.StringAttribute{
-				Computed: true,
-			},
-			"live_source_name": schema.StringAttribute{
-				Required: true,
-			},
-			"source_location_name": schema.StringAttribute{
-				Required: true,
-			},
-			"tags": schema.MapAttribute{
-				Optional:    true,
-				ElementType: types.StringType,
-			},
+			"last_modified_time":   computedString,
+			"live_source_name":     requiredString,
+			"source_location_name": requiredString,
+			"tags":                 optionalMap,
 		},
 	}
 }
