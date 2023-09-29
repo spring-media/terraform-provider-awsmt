@@ -12,7 +12,39 @@ func TestAccLiveSourceDataSourceBasic(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `
+				Config: liveSourceDS(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.awsmt_live_source.data_test", "id", "test_source_location,live_source_example"),
+					resource.TestMatchResourceAttr("data.awsmt_live_source.data_test", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:liveSource\/.*$`)),
+					resource.TestMatchResourceAttr("data.awsmt_live_source.data_test", "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr("data.awsmt_live_source.data_test", "http_package_configurations.0.path", "/"),
+					resource.TestCheckResourceAttr("data.awsmt_live_source.data_test", "http_package_configurations.0.source_group", "default"),
+					resource.TestCheckResourceAttr("data.awsmt_live_source.data_test", "http_package_configurations.0.type", "HLS"),
+					resource.TestMatchResourceAttr("data.awsmt_live_source.data_test", "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr("data.awsmt_live_source.data_test", "name", "live_source_example"),
+					resource.TestCheckResourceAttr("data.awsmt_live_source.data_test", "source_location_name", "test_source_location"),
+					resource.TestCheckResourceAttr("data.awsmt_live_source.data_test", "tags.Environment", "dev"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLiveSourceDataSourceErrors(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      liveSourceError(),
+				ExpectError: regexp.MustCompile("Error while describing live source"),
+			},
+		},
+	})
+}
+
+func liveSourceDS() string {
+	return `
 				resource "awsmt_live_source" "test" {
   					http_package_configurations = [{
     					path = "/"
@@ -47,31 +79,11 @@ func TestAccLiveSourceDataSourceBasic(t *testing.T) {
 			output "awsmt_source_location" {
   				value = data.awsmt_source_location.test
 			}
-				`,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.awsmt_live_source.data_test", "id", "test_source_location,live_source_example"),
-					resource.TestMatchResourceAttr("data.awsmt_live_source.data_test", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:liveSource\/.*$`)),
-					resource.TestMatchResourceAttr("data.awsmt_live_source.data_test", "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
-					resource.TestCheckResourceAttr("data.awsmt_live_source.data_test", "http_package_configurations.0.path", "/"),
-					resource.TestCheckResourceAttr("data.awsmt_live_source.data_test", "http_package_configurations.0.source_group", "default"),
-					resource.TestCheckResourceAttr("data.awsmt_live_source.data_test", "http_package_configurations.0.type", "HLS"),
-					resource.TestMatchResourceAttr("data.awsmt_live_source.data_test", "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
-					resource.TestCheckResourceAttr("data.awsmt_live_source.data_test", "name", "live_source_example"),
-					resource.TestCheckResourceAttr("data.awsmt_live_source.data_test", "source_location_name", "test_source_location"),
-					resource.TestCheckResourceAttr("data.awsmt_live_source.data_test", "tags.Environment", "dev"),
-				),
-			},
-		},
-	})
+				`
 }
 
-func TestAccLiveSourceDataSourceErrors(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: `
+func liveSourceError() string {
+	return `
 				resource "awsmt_live_source" "test" {
   					http_package_configurations = [{
     					path = "/"
@@ -106,9 +118,5 @@ func TestAccLiveSourceDataSourceErrors(t *testing.T) {
 			output "awsmt_source_location" {
   				value = data.awsmt_source_location.test
 			}
-				`,
-				ExpectError: regexp.MustCompile("Error while describing live source"),
-			},
-		},
-	})
+				`
 }

@@ -292,15 +292,16 @@ func stopChannel(state *string, channelName *string, client *mediatailor.MediaTa
 	return nil
 }
 
-func updatePolicy(plan *channelModel, channelName *string, oldPolicy *mediatailor.GetChannelPolicyOutput, newPolicy jsontypes.Normalized, client *mediatailor.MediaTailor) (channelModel, error) {
+func updatePolicy(plan *channelModel, channelName *string, oldPolicy jsontypes.Normalized, newPolicy jsontypes.Normalized, client *mediatailor.MediaTailor) (channelModel, error) {
 	if !reflect.DeepEqual(oldPolicy, newPolicy) {
 		if !newPolicy.IsNull() {
-			plan.Policy = jsontypes.NewNormalizedPointerValue(aws.String(newPolicy.String()))
-			_, err := client.PutChannelPolicy(&mediatailor.PutChannelPolicyInput{ChannelName: channelName, Policy: aws.String(newPolicy.String())})
+			policy := newPolicy.ValueString()
+			plan.Policy = newPolicy
+			_, err := client.PutChannelPolicy(&mediatailor.PutChannelPolicyInput{ChannelName: channelName, Policy: &policy})
 			if err != nil {
 				return *plan, err
 			}
-		} else {
+		} else if newPolicy.IsNull() {
 			plan.Policy = jsontypes.NewNormalizedNull()
 			_, err := client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: channelName})
 			if err != nil {
@@ -308,7 +309,7 @@ func updatePolicy(plan *channelModel, channelName *string, oldPolicy *mediatailo
 			}
 		}
 	} else {
-		plan.Policy = jsontypes.NewNormalizedPointerValue(oldPolicy.Policy)
+		plan.Policy = oldPolicy
 	}
 	return *plan, nil
 }

@@ -12,27 +12,7 @@ func TestAccSourceLocationDataSourceBasic(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `resource "awsmt_source_location" "test_source_location"{
-  							name = "test_source_location"
-  							http_configuration = {
-    							base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
-  							}
-  							default_segment_delivery_configuration = {
-    							base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
-  							}
-							segment_delivery_configurations = [{
-    							base_url = "https://example.com/"
-								name = "default"
-  							}]
-							tags = {"Environment": "dev"}
-						}
-						data "awsmt_source_location" "read" {
-  							name = awsmt_source_location.test_source_location.name
-						}
-						output "awsmt_source_location" {
-  							value = data.awsmt_source_location.read
-						}
-`,
+				Config: sourceLocationDS(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.awsmt_source_location.read", "id", "test_source_location"),
 					resource.TestMatchResourceAttr("data.awsmt_source_location.read", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:sourceLocation\/.*$`)),
@@ -54,7 +34,39 @@ func TestAccSourceLocationDataSourceErrors(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `resource "awsmt_source_location" "test_source_location"{
+				Config:      sourceLocationDSError(),
+				ExpectError: regexp.MustCompile("Error while describing source location"),
+			},
+		},
+	})
+}
+
+func sourceLocationDS() string {
+	return `resource "awsmt_source_location" "test_source_location"{
+  							name = "test_source_location"
+  							http_configuration = {
+    							base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
+  							}
+  							default_segment_delivery_configuration = {
+    							base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
+  							}
+							segment_delivery_configurations = [{
+    							base_url = "https://example.com/"
+								name = "default"
+  							}]
+							tags = {"Environment": "dev"}
+						}
+						data "awsmt_source_location" "read" {
+  							name = awsmt_source_location.test_source_location.name
+						}
+						output "awsmt_source_location" {
+  							value = data.awsmt_source_location.read
+						}
+`
+}
+
+func sourceLocationDSError() string {
+	return `resource "awsmt_source_location" "test_source_location"{
   							name = "test_source_location"
   							http_configuration = {
     							base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
@@ -74,9 +86,5 @@ func TestAccSourceLocationDataSourceErrors(t *testing.T) {
 						output "awsmt_source_location" {
   							value = data.awsmt_source_location.read
 						}
-`,
-				ExpectError: regexp.MustCompile("Error while describing source location"),
-			},
-		},
-	})
+`
 }

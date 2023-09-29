@@ -253,9 +253,11 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 		)
 	}
 
+	policy := jsontypes.NewNormalizedPointerValue(oldPolicy.Policy)
+
 	newPolicy := plan.Policy
 
-	plan, err = updatePolicy(&plan, channelName, oldPolicy, newPolicy, r.client)
+	plan, err = updatePolicy(&plan, channelName, policy, newPolicy, r.client)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating channel policy "+err.Error(),
