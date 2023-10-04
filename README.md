@@ -9,7 +9,7 @@ A Terraform provider for AWS MediaTailor
 ## Documentation
 
 You can find the documentation about the provider, and its data sources [here](https://registry.terraform.io/providers/spring-media/awsmt/latest/docs).
-For the resources documentation check Github. 
+For the resources documentation check Github.
 
 ## Building the Provider
 
