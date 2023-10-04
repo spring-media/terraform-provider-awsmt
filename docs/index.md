@@ -19,7 +19,7 @@ Example configuration (using Terraform 0.13 or newer):
 terraform {
   required_providers {
     awsmt = {
-      version = "~> 1.17"
+      version = "~> 2.0.0"
       source  = "spring-media/awsmt"
      }
   }

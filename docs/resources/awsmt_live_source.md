@@ -38,8 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Live Sources can be imported using their ARN as identifier. For example:
+Live Sources can be imported using their Name and SourceLocationName in one string as identifier. For example:
 
 ```sh
-  $ terraform import awsmt_live_source.example arn:aws:mediatailor:us-east-1:000000000000:liveSource/sourceLocationName/LiveSourceName
-```
+  $ terraform import awsmt_live_source.example name:example-live-source,example-source-location

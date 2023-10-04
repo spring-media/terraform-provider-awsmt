@@ -38,8 +38,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VOD Sources can be imported using their ARN as identifier. For example:
+VOD Sources can be imported using their Name and SourceLocationName as a string as identifier. For example:
 
 ```sh
-  $ terraform import awsmt_vod_source.example arn:aws:mediatailor:us-east-1:000000000000:vodSource/sourceLocationName/VodSourceName
+  $ terraform import awsmt_vod_source.example name:example-vod-source,example-source-location
 ```
