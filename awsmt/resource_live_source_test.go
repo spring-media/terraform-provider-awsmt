@@ -2,229 +2,97 @@ package awsmt
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
+	"regexp"
 	"testing"
 )
 
-func init() {
-	resource.AddTestSweepers("test_live_source", &resource.Sweeper{
-		Name: "test_live_source",
-		F: func(region string) error {
-			client, err := sharedClientForRegion(region)
-			if err != nil {
-				return fmt.Errorf("error getting client: %s", err)
-			}
-			conn := client.(*mediatailor.MediaTailor)
-			names := map[string]string{"live_source_basic_sl": "live_source_test_basic", "live_source_update_sl": "live_source_test_basic", "live_source_tags_sl": "live_source_test_basic", "basic_source_location": "live_source_data_source_test"}
-			for k, v := range names {
-				_, err = conn.DeleteLiveSource(&mediatailor.DeleteLiveSourceInput{SourceLocationName: &k, LiveSourceName: &v})
-				if err != nil {
-					if !strings.Contains(err.Error(), "NotFound") {
-						return err
-					}
-				}
-				_, err = conn.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: &k})
-				if err != nil {
-					if !strings.Contains(err.Error(), "NotFound") {
-						return err
-					}
-				}
-
-			}
-			return nil
-		},
-	})
-}
-
-func TestAccLiveSourceResource_basic(t *testing.T) {
-	rName := "live_source_test_basic"
-	resourceName := "awsmt_live_source.test"
-	SourceLocationName := "live_source_basic_sl"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: ProviderFactories,
-		CheckDestroy:      testAccCheckLiveSourceDestroy,
+func TestAccLiveSourceResourceBasic(t *testing.T) {
+	name := "live_source_example"
+	path := "/"
+	path2 := "/test"
+	k1 := "Environment"
+	v1 := "dev"
+	k2 := "Testing"
+	v2 := "pass"
+	k3 := "Environment"
+	v3 := "prod"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLiveSourceConfig(SourceLocationName, rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "source_location_name", SourceLocationName),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.source_group", "default"),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.type", "HLS"),
+				Config: basicLiveSourceWithSourceLocation(name, path, k1, v1, k2, v2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "id", "test_source_location,live_source_example"),
+					resource.TestMatchResourceAttr("awsmt_live_source.test", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:liveSource\/.*$`)),
+					resource.TestMatchResourceAttr("awsmt_live_source.test", "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "http_package_configurations.0.path", "/"),
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "http_package_configurations.0.source_group", "default"),
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "http_package_configurations.0.type", "HLS"),
+					resource.TestMatchResourceAttr("awsmt_live_source.test", "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "name", "live_source_example"),
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "source_location_name", "test_source_location"),
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "tags.Environment", "dev"),
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "tags.Testing", "pass"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportStateVerify: true,
-				ImportState:       true,
-			},
-		},
-	})
-}
-
-func TestAccLiveSourceResource_update(t *testing.T) {
-	rName := "live_source_test_basic"
-	resourceName := "awsmt_live_source.test"
-	SourceLocationName := "live_source_update_sl"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: ProviderFactories,
-		CheckDestroy:      testAccCheckLiveSourceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccLiveSourceConfig_update(SourceLocationName, rName, "/"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "source_location_name", SourceLocationName),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.source_group", "default"),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.type", "HLS"),
-				),
-			},
-			{
-				Config: testAccLiveSourceConfig_update(SourceLocationName, rName, "/test"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "source_location_name", SourceLocationName),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.path", "/test"),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.source_group", "default"),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.type", "HLS"),
+				Config: basicLiveSourceWithSourceLocation(name, path2, k3, v3, k2, v2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "id", "test_source_location,live_source_example"),
+					resource.TestMatchResourceAttr("awsmt_live_source.test", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:liveSource\/.*$`)),
+					resource.TestMatchResourceAttr("awsmt_live_source.test", "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "http_package_configurations.0.path", "/test"),
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "http_package_configurations.0.source_group", "default"),
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "http_package_configurations.0.type", "HLS"),
+					resource.TestMatchResourceAttr("awsmt_live_source.test", "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "name", "live_source_example"),
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "source_location_name", "test_source_location"),
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "tags.Environment", "prod"),
+					resource.TestCheckResourceAttr("awsmt_live_source.test", "tags.Testing", "pass"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccLiveSourceResource_tags(t *testing.T) {
-	rName := "live_source_test_basic"
-	resourceName := "awsmt_live_source.test"
-	SourceLocationName := "live_source_tags_sl"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: ProviderFactories,
-		CheckDestroy:      testAccCheckLiveSourceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccLiveSourceConfig_tags(SourceLocationName, rName, "a", "b", "c", "d"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "source_location_name", SourceLocationName),
-					resource.TestCheckResourceAttr(resourceName, "tags.a", "b"),
-					resource.TestCheckResourceAttr(resourceName, "tags.c", "d"),
-				),
-			},
-			{
-				Config: testAccLiveSourceConfig_tags(SourceLocationName, rName, "e", "f", "g", "h"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "source_location_name", SourceLocationName),
-					resource.TestCheckResourceAttr(resourceName, "tags.e", "f"),
-					resource.TestCheckResourceAttr(resourceName, "tags.g", "h"),
-				),
-			},
-		},
-	})
-}
+func basicLiveSourceWithSourceLocation(name, path, k1, v1, k2, v2 string) string {
+	return fmt.Sprintf(`resource "awsmt_live_source" "test" {
+  							http_package_configurations = [{
+								path = "%[2]s"
+								source_group = "default"
+    							type = "HLS"
+  							}]
+  							source_location_name = awsmt_source_location.test_source_location.name
+  							name = "%[1]s"
+							tags = {
+   		 						"%[3]s": "%[4]s",
+								"%[5]s": "%[6]s"
+							}
+						}
+						data "awsmt_live_source" "data_test" {
+  							source_location_name = awsmt_source_location.test_source_location.name
+  							name = awsmt_live_source.test.name
+						}
 
-func testAccCheckLiveSourceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*mediatailor.MediaTailor)
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "awsmt_live_source" {
-			continue
-		}
-
-		var resourceName string
-
-		if arn.IsARN(rs.Primary.ID) {
-			resourceArn, err := arn.Parse(rs.Primary.ID)
-			if err != nil {
-				return fmt.Errorf("error parsing resource arn: %s.\n%s", err, rs.Primary.ID)
-			}
-			arnSections := strings.Split(resourceArn.Resource, "/")
-			resourceName = arnSections[len(arnSections)-1]
-		} else {
-			resourceName = rs.Primary.ID
-		}
-
-		input := &mediatailor.DescribeLiveSourceInput{LiveSourceName: aws.String(resourceName), SourceLocationName: aws.String("source-location-testacc")}
-		_, err := conn.DescribeLiveSource(input)
-
-		if err != nil && strings.Contains(err.Error(), "NotFound") {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func testAccLiveSourceConfig(sourceLocationName, liveSourceName string) string {
-	return fmt.Sprintf(`
-resource "awsmt_source_location" "example"{
-  name = "%[1]s"
-  http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
-}
-
-resource "awsmt_live_source" "test" {
-  http_package_configurations {
-    path = "/"
-    source_group = "default"
-    type = "HLS"
-  }
-  source_location_name = awsmt_source_location.example.name
-  name = "%[2]s"
-}
-`, sourceLocationName, liveSourceName)
-}
-
-func testAccLiveSourceConfig_update(sourceLocationName, liveSourceName, path string) string {
-	return fmt.Sprintf(`
-resource "awsmt_source_location" "example"{
-  name = "%[1]s"
-  http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
-}
-
-resource "awsmt_live_source" "test" {
-  http_package_configurations {
-    path = "%[3]s"
-    source_group = "default"
-    type = "HLS"
-  }
-  source_location_name = awsmt_source_location.example.name
-  name = "%[2]s"
-}
-`, sourceLocationName, liveSourceName, path)
-}
-
-func testAccLiveSourceConfig_tags(sourceLocationName, liveSourceName, k1, v1, k2, v2 string) string {
-	return fmt.Sprintf(`
-resource "awsmt_source_location" "example"{
-  name = "%[1]s"
-  http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
-}
-
-resource "awsmt_live_source" "test" {
-  http_package_configurations {
-    path = "%[3]s"
-    source_group = "default"
-    type = "HLS"
-  }
-  source_location_name = awsmt_source_location.example.name
-  tags = {
-    "%[3]s": "%[4]s",
-	"%[5]s": "%[6]s",
-  }
-  name = "%[2]s"
-}
-`, sourceLocationName, liveSourceName, k1, v1, k2, v2)
+						output "live_source_out" {
+  							value = data.awsmt_live_source.data_test
+						}
+						resource "awsmt_source_location" "test_source_location"{
+  							name = "test_source_location"
+  							http_configuration = {
+    							base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
+  							}
+  							default_segment_delivery_configuration = {
+    							base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
+  							}
+						}
+						data "awsmt_source_location" "test" {
+  							name = awsmt_source_location.test_source_location.name
+						}
+						output "awsmt_source_location" {
+  							value = data.awsmt_source_location.test
+						}
+						`, name, path, k1, v1, k2, v2)
 }

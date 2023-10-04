@@ -2,49 +2,58 @@ package awsmt
 
 import (
 	"context"
-	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
+
 	"github.com/aws/aws-sdk-go/service/mediatailor"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
-func dataSourceLiveSource() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: dataSourceLiveSourceRead,
-		Schema: map[string]*schema.Schema{
-			"arn":           &computedString,
-			"creation_time": &computedString,
-			"http_package_configurations": createComputedList(map[string]*schema.Schema{
-				"path":         &computedString,
-				"source_group": &computedString,
-				"type":         &computedString,
-			}),
-			"last_modified_time":   &computedString,
-			"name":                 &requiredString,
-			"source_location_name": &requiredString,
-			"tags":                 &computedTags,
-		},
-	}
+var (
+	_ datasource.DataSource              = &dataSourceLiveSource{}
+	_ datasource.DataSourceWithConfigure = &dataSourceLiveSource{}
+)
+
+func DataSourceLiveSource() datasource.DataSource {
+	return &dataSourceLiveSource{}
 }
 
-func dataSourceLiveSourceRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*mediatailor.MediaTailor)
-	resourceName := d.Get("name").(string)
-	sourceLocationName := d.Get("source_location_name").(string)
+type dataSourceLiveSource struct {
+	client *mediatailor.MediaTailor
+}
 
-	input := &mediatailor.DescribeLiveSourceInput{SourceLocationName: &(sourceLocationName), LiveSourceName: aws.String(resourceName)}
+func (d *dataSourceLiveSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_live_source"
+}
 
-	res, err := client.DescribeLiveSource(input)
+func (d *dataSourceLiveSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = buildDatasourceSchema()
+}
+
+func (d *dataSourceLiveSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	d.client = req.ProviderData.(*mediatailor.MediaTailor)
+}
+
+func (d *dataSourceLiveSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data liveSourceModel
+	diags := req.Config.Get(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	sourceLocationName := data.SourceLocationName
+	liveSourceName := data.Name
+
+	liveSource, err := d.client.DescribeLiveSource(&mediatailor.DescribeLiveSourceInput{SourceLocationName: sourceLocationName, LiveSourceName: liveSourceName})
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while reading the live source: %v", err))
+		resp.Diagnostics.AddError("Error while describing live source", err.Error())
+		return
 	}
 
-	d.SetId(fmt.Sprintf("%q/%q", *res.SourceLocationName, *res.LiveSourceName))
+	data = readLiveSourceToPlan(data, mediatailor.CreateLiveSourceOutput(*liveSource))
 
-	if err = setLiveSource(res, d); err != nil {
-		return diag.FromErr(err)
-	}
-
-	return nil
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

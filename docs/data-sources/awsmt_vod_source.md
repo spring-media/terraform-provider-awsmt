@@ -7,7 +7,7 @@ Use this resource to get information on a MediaTailor VOD Source.
 ```terraform
 data "awsmt_vod_source" "data_test" {
   source_location_name = awsmt_source_location.example.source_location_name
-  name                 = awsmt_vod_source.test.name
+  name      = awsmt_vod_source.test.name
 }
 ```
 

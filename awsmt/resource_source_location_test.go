@@ -2,217 +2,167 @@ package awsmt
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
+	"regexp"
 	"testing"
 )
 
-func init() {
-	resource.AddTestSweepers("test_source_location", &resource.Sweeper{
-		Name: "test_source_location",
-		F: func(region string) error {
-			client, err := sharedClientForRegion(region)
-			if err != nil {
-				return fmt.Errorf("error getting client: %s", err)
-			}
-			conn := client.(*mediatailor.MediaTailor)
-			names := []string{"source_location_test_basic", "source_location_test_recreate", "source_location_test_update", "source_location_test_tags", "basic_source_location"}
-			for _, n := range names {
-				_, err = conn.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: &n})
-				if err != nil {
-					if !strings.Contains(err.Error(), "NotFound") {
-						return err
-					}
+func TestAccSourceLocationResource(t *testing.T) {
+	name := "test_source_location"
+	base_url := "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
+	base_url2 := "https://example.com/"
+	k1 := "Environment"
+	v1 := "dev"
+	k2 := "Testing"
+	v2 := "pass"
+	k3 := "Environment"
+	v3 := "prod"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				Config: basicSourceLocation(name, base_url, k1, v1, k2, v2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "id", "test_source_location"),
+					resource.TestMatchResourceAttr("awsmt_source_location.test_source_location", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:sourceLocation\/.*$`)),
+					resource.TestMatchResourceAttr("awsmt_source_location.test_source_location", "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "default_segment_delivery_configuration.base_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"),
+					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "http_configuration.base_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"),
+					resource.TestMatchResourceAttr("awsmt_source_location.test_source_location", "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "segment_delivery_configurations.0.base_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"),
+					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "name", "test_source_location"),
+					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "tags.Testing", "pass"),
+					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "tags.Environment", "dev"),
+				),
+			},
+			// ImportState testing
+			{
+				ResourceName: "awsmt_source_location.test_source_location",
+				ImportState:  true,
+			},
+			// Update and Read testing
+			{
+				Config: basicSourceLocationWithAccessConfig(name, base_url2, k3, v3, k2, v2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "id", "test_source_location"),
+					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "access_configuration.access_type", "S3_SIGV4"),
+					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "name", "test_source_location"),
+					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "http_configuration.base_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"),
+					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "default_segment_delivery_configuration.base_url", "https://example.com/"),
+					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "segment_delivery_configurations.0.base_url", "https://example.com/"),
+					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "tags.Testing", "pass"),
+					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "tags.Environment", "prod")),
+			},
+			// Delete testing automatically occurs in TestCase
+		},
+	})
+}
+func TestAccSourceLocationDeleteVodResource(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				Config: basicSourceLocationWithVodSource(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "id", "test_source_location"),
+					resource.TestCheckResourceAttr("awsmt_source_location.test_source_location", "name", "test_source_location"),
+				),
+			},
+		},
+	})
+}
+
+func basicSourceLocation(name, base_url, k1, v1, k2, v2 string) string {
+	return fmt.Sprintf(`resource "awsmt_source_location" "test_source_location"{
+  							name = "%[1]s"
+  							http_configuration = {
+    							base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
+  							}
+  							default_segment_delivery_configuration = {
+    							base_url = "%[2]s"
+  							}
+							segment_delivery_configurations = [{
+    							base_url = "%[2]s"
+								name = "default"
+  							}]
+							tags = {
+   		 						"%[3]s": "%[4]s",
+								"%[5]s": "%[6]s"
+							}
+						}
+						data "awsmt_source_location" "read" {
+  							name = awsmt_source_location.test_source_location.name
+						}
+						output "awsmt_source_location" {
+  							value = data.awsmt_source_location.read
+						}
+						`, name, base_url, k1, v1, k2, v2)
+
+}
+
+func basicSourceLocationWithAccessConfig(name, base_url, k1, v1, k2, v2 string) string {
+	return fmt.Sprintf(`resource "awsmt_source_location" "test_source_location"{
+  							name = "%[1]s"
+  							http_configuration = {
+    							base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
+  							}
+							access_configuration = {
+								access_type = "S3_SIGV4"
+							}
+  							default_segment_delivery_configuration = {
+    							base_url = "%[2]s"
+  							}
+							segment_delivery_configurations = [{
+    							base_url = "%[2]s"
+								name = "default"
+  							}]
+							tags = {
+   		 						"%[3]s": "%[4]s",
+								"%[5]s": "%[6]s"
+							}
+						}
+						data "awsmt_source_location" "read" {
+  							name = awsmt_source_location.test_source_location.name
+						}
+						output "awsmt_source_location" {
+  							value = data.awsmt_source_location.read
+						}
+						`, name, base_url, k1, v1, k2, v2)
+}
+
+func basicSourceLocationWithVodSource() string {
+	return `resource "awsmt_source_location" "test_source_location"{
+  							name = "test_source_location"
+  							http_configuration = {
+    							base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
+  							}
+  							default_segment_delivery_configuration = {
+    							base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
+  							}
+							segment_delivery_configurations = [{
+    							base_url = "https://example.com/"
+								name = "default"
+  							}]
+							tags = {"Environment": "dev"}
+						}
+						data "awsmt_source_location" "read" {
+  							name = awsmt_source_location.test_source_location.name
+						}
+						output "awsmt_source_location" {
+  							value = data.awsmt_source_location.read
+						}
+						resource "awsmt_vod_source" "test" {
+  					http_package_configurations = [{
+						path = "/test"
+						source_group = "default"
+    					type = "HLS"
+  					}]
+  					source_location_name = awsmt_source_location.test_source_location.name
+  					name = "vod_source_example"
 				}
-
-			}
-			return nil
-		},
-	})
-}
-
-func TestAccSourceLocationResource_basic(t *testing.T) {
-	rName := "source_location_test_basic"
-	resourceName := "awsmt_source_location.test"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: ProviderFactories,
-		CheckDestroy:      testAccCheckSourceLocationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSourceLocationConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "http_configuration_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportStateVerify: true,
-				ImportState:       true,
-			},
-		},
-	})
-}
-
-func TestAccSourceLocationResource_recreate(t *testing.T) {
-	rName := "source_location_test_recreate"
-	resourceName := "awsmt_source_location.test"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: ProviderFactories,
-		CheckDestroy:      testAccCheckSourceLocationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSourceLocationConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "http_configuration_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"),
-				),
-			},
-			{
-				Taint:  []string{resourceName},
-				Config: testAccSourceLocationConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "http_configuration_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccSourceLocationResource_update(t *testing.T) {
-	rName := "source_location_test_update"
-	resourceName := "awsmt_source_location.test_update"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: ProviderFactories,
-		CheckDestroy:      testAccCheckSourceLocationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSourceLocationConfig_update(rName, "example", "https://example.com", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "default_segment_delivery_configuration_url", "https://example.com"),
-					resource.TestCheckResourceAttr(resourceName, "segment_delivery_configurations.0.name", "example"),
-					resource.TestCheckResourceAttr(resourceName, "segment_delivery_configurations.0.base_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"),
-					resource.TestCheckResourceAttr(resourceName, "http_configuration_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"),
-				),
-			},
-			{
-				Config: testAccSourceLocationConfig_update(rName, "test", "https://test.com", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "default_segment_delivery_configuration_url", "https://test.com"),
-					resource.TestCheckResourceAttr(resourceName, "segment_delivery_configurations.0.name", "test"),
-					resource.TestCheckResourceAttr(resourceName, "segment_delivery_configurations.0.base_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"),
-					resource.TestCheckResourceAttr(resourceName, "http_configuration_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccSourceLocationResource_tags(t *testing.T) {
-	rName := "source_location_test_tags"
-	resourceName := "awsmt_source_location.test_tags"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: ProviderFactories,
-		CheckDestroy:      testAccCheckSourceLocationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSourceLocationConfig_tags(rName, "a", "b", "c", "d"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.a", "b"),
-					resource.TestCheckResourceAttr(resourceName, "tags.c", "d"),
-				),
-			},
-			{
-				Config: testAccSourceLocationConfig_tags(rName, "e", "f", "g", "h"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.e", "f"),
-					resource.TestCheckResourceAttr(resourceName, "tags.g", "h"),
-				),
-			},
-		},
-	})
-}
-
-func testAccCheckSourceLocationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*mediatailor.MediaTailor)
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "awsmt_source_location" {
-			continue
-		}
-
-		var resourceName string
-
-		if arn.IsARN(rs.Primary.ID) {
-			resourceArn, err := arn.Parse(rs.Primary.ID)
-			if err != nil {
-				return fmt.Errorf("error parsing resource arn: %s.\n%s", err, rs.Primary.ID)
-			}
-			arnSections := strings.Split(resourceArn.Resource, "/")
-			resourceName = arnSections[len(arnSections)-1]
-		} else {
-			resourceName = rs.Primary.ID
-		}
-
-		input := &mediatailor.DescribeSourceLocationInput{SourceLocationName: aws.String(resourceName)}
-		_, err := conn.DescribeSourceLocation(input)
-
-		if err != nil && strings.Contains(err.Error(), "NotFound") {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func testAccSourceLocationConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "awsmt_source_location" "test"{
-  name = "%[1]s"
-  http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
-}
-`, rName)
-}
-
-func testAccSourceLocationConfig_update(rName, exampleString, exampleUrl, baseUrl string) string {
-	return fmt.Sprintf(`
-resource "awsmt_source_location" "test_update"{
-  default_segment_delivery_configuration_url = "%[3]s"
-  http_configuration_url = "%[4]s"
-  name = "%[1]s"
-  segment_delivery_configurations {
-    base_url = "%[4]s"
-    name =     "%[2]s"
-  }
-}
-`, rName, exampleString, exampleUrl, baseUrl)
-}
-
-func testAccSourceLocationConfig_tags(rName, k1, v1, k2, v2 string) string {
-	return fmt.Sprintf(`
-resource "awsmt_source_location" "test_tags"{
-  name = "%[1]s"
-  http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
-  tags = {
-    "%[2]s": "%[3]s",
-	"%[4]s": "%[5]s",
-  }
-}
-`, rName, k1, v1, k2, v2)
+`
 }

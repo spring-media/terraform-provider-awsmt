@@ -1,54 +1,54 @@
 package awsmt
 
-import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+import (
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+)
 
-var computedString = schema.Schema{
-	Type:     schema.TypeString,
-	Computed: true,
-}
-
-var optionalString = schema.Schema{
-	Type:     schema.TypeString,
-	Optional: true,
-}
-
-var requiredString = schema.Schema{
-	Type:     schema.TypeString,
+var requiredString = schema.StringAttribute{
 	Required: true,
 }
 
-var computedInt = schema.Schema{
-	Type:     schema.TypeInt,
+var computedString = schema.StringAttribute{
 	Computed: true,
 }
 
-var optionalInt = schema.Schema{
-	Type:     schema.TypeInt,
-	Optional: true,
-}
-
-var computedBool = schema.Schema{
-	Type:     schema.TypeBool,
+var computedInt64 = schema.Int64Attribute{
 	Computed: true,
 }
 
-var optionalBool = schema.Schema{
-	Type:     schema.TypeBool,
-	Optional: true,
+var computedMap = schema.MapAttribute{
+	Computed:    true,
+	ElementType: types.StringType,
 }
 
-var computedTags = schema.Schema{
-	Type:     schema.TypeMap,
+var computedList = schema.ListAttribute{
+	Computed:    true,
+	ElementType: types.StringType,
+}
+
+var computedBool = schema.BoolAttribute{
 	Computed: true,
-	Elem: &schema.Schema{
-		Type: schema.TypeString,
-	},
 }
 
-var optionalTags = schema.Schema{
-	Type:     schema.TypeMap,
+var optionalString = schema.StringAttribute{
 	Optional: true,
-	Elem: &schema.Schema{
-		Type: schema.TypeString,
-	},
+}
+
+var optionalInt64 = schema.Int64Attribute{
+	Optional: true,
+}
+
+var optionalMap = schema.MapAttribute{
+	Optional:    true,
+	ElementType: types.StringType,
+}
+
+var optionalList = schema.ListAttribute{
+	Optional:    true,
+	ElementType: types.StringType,
+}
+
+var optionalBool = schema.BoolAttribute{
+	Optional: true,
 }

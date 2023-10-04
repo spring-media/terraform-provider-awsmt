@@ -2,68 +2,127 @@ package awsmt
 
 import (
 	"context"
-	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"strings"
 )
 
-func dataSourceChannel() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: dataSourceChannelRead,
-		Schema: map[string]*schema.Schema{
-			"arn":           &computedString,
-			"name":          &requiredString,
-			"channel_state": &computedString,
-			"creation_time": &computedString,
-			"filler_slate": createComputedList(map[string]*schema.Schema{
-				"source_location_name": &computedString,
-				"vod_source_name":      &computedString,
-			}),
-			"last_modified_time": &computedString,
-			"outputs": createComputedList(map[string]*schema.Schema{
-				"dash_manifest_windows_seconds":             &computedInt,
-				"dash_min_buffer_time_seconds":              &computedInt,
-				"dash_min_update_period_seconds":            &computedInt,
-				"dash_suggested_presentation_delay_seconds": &computedInt,
-				"hls_manifest_windows_seconds":              &computedInt,
-				"manifest_name":                             &computedString,
-				"playback_url":                              &computedString,
-				"source_group":                              &computedString,
-			}),
-			"playback_mode": &computedString,
-			"policy":        &computedString,
-			"tags":          &computedTags,
-			"tier":          &computedString,
+var (
+	_ datasource.DataSource              = &dataSourceChannel{}
+	_ datasource.DataSourceWithConfigure = &dataSourceChannel{}
+)
+
+func DataSourceChannel() datasource.DataSource {
+	return &dataSourceChannel{}
+}
+
+type dataSourceChannel struct {
+	client *mediatailor.MediaTailor
+}
+
+func (d *dataSourceChannel) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_channel"
+}
+
+func (d *dataSourceChannel) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":            computedString,
+			"arn":           computedString,
+			"name":          requiredString,
+			"channel_state": computedString,
+			"creation_time": computedString,
+			"filler_slate": schema.SingleNestedAttribute{
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"source_location_name": computedString,
+					"vod_source_name":      computedString,
+				},
+			},
+			"last_modified_time": computedString,
+			"outputs": schema.ListNestedAttribute{
+				Computed: true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"dash_playlist_settings": schema.SingleNestedAttribute{
+							Computed: true,
+							Attributes: map[string]schema.Attribute{
+								"manifest_window_seconds":              computedInt64,
+								"min_buffer_time_seconds":              computedInt64,
+								"min_update_period_seconds":            computedInt64,
+								"suggested_presentation_delay_seconds": computedInt64,
+							},
+						},
+						"hls_playlist_settings": schema.SingleNestedAttribute{
+							Computed: true,
+							Attributes: map[string]schema.Attribute{
+								"ad_markup_type":          computedList,
+								"manifest_window_seconds": computedInt64,
+							},
+						},
+						"manifest_name": computedString,
+						"playback_url":  computedString,
+						"source_group":  computedString,
+					},
+				},
+			},
+			"playback_mode": schema.StringAttribute{
+				Computed: true,
+			},
+			"policy": schema.StringAttribute{
+				Computed:   true,
+				CustomType: jsontypes.NormalizedType{},
+			},
+			"tags": computedMap,
+			"tier": computedString,
 		},
 	}
 }
 
-func dataSourceChannelRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	client := m.(*mediatailor.MediaTailor)
-
-	name := d.Get("name").(string)
-	res, err := client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: &name})
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while retrieving the channel: %w", err))
+func (d *dataSourceChannel) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
 	}
 
-	policy, err := client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: aws.String(name)})
+	d.client = req.ProviderData.(*mediatailor.MediaTailor)
+}
+
+func (d *dataSourceChannel) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data channelModel
+	diags := req.Config.Get(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	channelName := data.Name
+
+	channel, err := d.client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: channelName})
+	if err != nil {
+		resp.Diagnostics.AddError("Error while describing channel "+*channelName, err.Error())
+		return
+	}
+
+	policy, err := d.client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: channelName})
 	if err != nil && !strings.Contains(err.Error(), "NotFound") {
-		return diag.FromErr(fmt.Errorf("error while getting the channel policy: %v", err))
-	}
-	if err := setChannelPolicy(policy, d); err != nil {
-		diag.FromErr(err)
-	}
-
-	d.SetId(aws.StringValue(res.ChannelName))
-
-	err = setChannel(res, d)
-	if err != nil {
-		diag.FromErr(err)
+		resp.Diagnostics.AddError(
+			"Error while getting the channel policy "+err.Error(),
+			err.Error(),
+		)
+		return
 	}
 
-	return nil
+	if policy.Policy != nil {
+		data.Policy = jsontypes.NewNormalizedPointerValue(policy.Policy)
+	}
+
+	if channel.ChannelState != nil {
+		data.ChannelState = channel.ChannelState
+	}
+
+	data = readChannelToState(data, *channel)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

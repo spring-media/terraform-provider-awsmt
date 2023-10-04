@@ -2,389 +2,129 @@ package awsmt
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/mediatailor"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"regexp"
 	"testing"
 )
 
-func init() {
-	resource.AddTestSweepers("test_playback_configuration", &resource.Sweeper{
-		Name: "test_playback_configuration",
-		F: func(region string) error {
-			client, err := sharedClientForRegion(region)
-			if err != nil {
-				return fmt.Errorf("error getting client: %s", err)
-			}
-			conn := client.(*mediatailor.MediaTailor)
-			names := []string{"test_playback_configuration_awsmt", "example_tag_removal", "testacc_example_playback"}
-			for _, n := range names {
-				_, err = conn.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: &n})
-				if err != nil {
-					return err
-				}
-			}
-			return nil
-		},
-	})
-}
-
-func TestAccPlaybackConfigurationResourceBasic(t *testing.T) {
-	resourceName := "awsmt_playback_configuration.r1"
+func TestAccPlaybackConfigurationResource(t *testing.T) {
+	name := "example-playback-configuration-awsmt"
+	ad_url := "https://exampleurl.com/"
+	ad_url2 := "https://exampleurl2.com/"
+	bumper_e := "https://wxample.com/endbumper"
+	bumper_e2 := "https://wxample.com/endbumper2"
+	bumper_s := "https://wxample.com/startbumper"
+	bumper_s2 := "https://wxample.com/startbumper2"
+	cdn_url := "https://exampleurl.com/"
+	cdn_url2 := "https://exampleurl2.com/"
+	max_d := "2"
+	max_d2 := "3"
+	p_s := "2"
+	p_s2 := "3"
+	k1 := "Environment"
+	v1 := "dev"
+	k2 := "Testing"
+	v2 := "pass"
+	k3 := "Environment"
+	v3 := "prod"
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: ProviderFactories,
-		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
+			// Create and Read testing
 			{
-				Config: testAccPlaybackConfigurationResource(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test_playback_configuration_awsmt"),
-					resource.TestMatchResourceAttr(resourceName, "playback_configuration_arn", regexp.MustCompile(`arn:aws:mediatailor`)),
+				Config: basicPlaybackConfiguration(name, ad_url, bumper_e, bumper_s, cdn_url, max_d, p_s, k1, v1, k2, v2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "id", "example-playback-configuration-awsmt"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "ad_decision_server_url", "https://exampleurl.com/"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "avail_supression.fill_policy", "FULL_AVAIL_ONLY"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "avail_supression.mode", "BEHIND_LIVE_EDGE"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "avail_supression.value", "00:00:00"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "bumper.end_url", "https://wxample.com/endbumper"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "bumper.start_url", "https://wxample.com/startbumper"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "cdn_configuration.ad_segment_url_prefix", "https://exampleurl.com/"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "dash_configuration.mpd_location", "DISABLED"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "dash_configuration.origin_manifest_type", "SINGLE_PERIOD"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "live_pre_roll_configuration.ad_decision_server_url", "https://exampleurl.com/"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "live_pre_roll_configuration.max_duration_seconds", "2"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "manifest_processing_rules.ad_marker_passthrough.enabled", "false"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "name", "example-playback-configuration-awsmt"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "personalization_threshold_seconds", "2"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "slate_ad_url", "https://exampleurl.com/"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "tags.Environment", "dev"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "tags.Testing", "pass"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "video_content_source_url", "https://exampleurl.com/"),
 				),
 			},
+			// ImportState testing
 			{
-				Config: testAccPlaybackConfigurationUpdateResource(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test_playback_configuration_awsmt"),
-					resource.TestCheckResourceAttr(resourceName, "slate_ad_url", "https://exampleurl.com/updated"),
+				ResourceName: "awsmt_playback_configuration.r1",
+				ImportState:  true,
+			},
+			// Update and Read testing
+			{
+				Config: basicPlaybackConfiguration(name, ad_url2, bumper_e2, bumper_s2, cdn_url2, max_d2, p_s2, k3, v3, k2, v2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "name", "example-playback-configuration-awsmt"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "personalization_threshold_seconds", "3"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "log_configuration_percent_enabled", "0"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "ad_decision_server_url", "https://exampleurl2.com/"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "bumper.end_url", "https://wxample.com/endbumper2"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "bumper.start_url", "https://wxample.com/startbumper2"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "cdn_configuration.ad_segment_url_prefix", "https://exampleurl2.com/"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "tags.Environment", "prod"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "tags.Testing", "pass"),
 				),
 			},
-			{
-				Config: testAccPlaybackConfigurationUpdateResourceName(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test_playback_configuration_awsmt_changed"),
-					resource.TestCheckResourceAttr(resourceName, "slate_ad_url", "https://exampleurl.com/updated"),
-				),
-			},
+			// Delete testing automatically occurs in TestCase
 		},
 	})
 }
 
-func TestAccPlaybackConfigurationResourceImport(t *testing.T) {
-	resourceName := "awsmt_playback_configuration.r2"
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { importPreCheck(t, "eu-central-1") },
-		ProviderFactories: ProviderFactories,
-		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPlaybackConfigurationImportResource(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "test_playback_configuration_awsmt"),
-					resource.TestMatchResourceAttr(resourceName, "playback_configuration_arn", regexp.MustCompile(`arn:aws:mediatailor`)),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
+func basicPlaybackConfiguration(name, ad_url, bumper_e, bumper_s, cdn_url, max_d, p_s, k1, v1, k2, v2 string) string {
+	return fmt.Sprintf(`resource "awsmt_playback_configuration" "r1" {
+  							ad_decision_server_url = "%[2]s"
+  							avail_supression = {
+								fill_policy = "FULL_AVAIL_ONLY"
+    							mode = "BEHIND_LIVE_EDGE"
+								value = "00:00:00"
+							}
+							bumper = {
+								end_url = "%[3]s"
+    							start_url = "%[4]s"
+  							}
+  							cdn_configuration = {
+    							ad_segment_url_prefix = "%[5]s"
+  							}
+  							dash_configuration = {
+    							mpd_location = "DISABLED",
+    							origin_manifest_type = "SINGLE_PERIOD"
+  							}
+							live_pre_roll_configuration = {
+								ad_decision_server_url = "%[2]s"
+								max_duration_seconds = "%[6]s"
+							}
+  							manifest_processing_rules = {
+								ad_marker_passthrough = {
+      								enabled = "false"
+    							}
+  							}
+  							name = "%[1]s"
+  							personalization_threshold_seconds = "%[7]s"
+							slate_ad_url = "https://exampleurl.com/"
+  							tags = {
+   		 						"%[8]s": "%[9]s",
+								"%[10]s": "%[11]s"
+							}
+ 	 						video_content_source_url = "%[2]s"
+						}
 
-func TestAccPlaybackConfigurationResourceTaint(t *testing.T) {
-	resourceName := "awsmt_playback_configuration.taint_test"
-	firstEndpoint := ""
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: ProviderFactories,
-		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPlaybackConfigurationResourceTaint("tf_test_acc_name"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "tf_test_acc_name"),
-					resource.TestMatchResourceAttr(resourceName, "playback_configuration_arn", regexp.MustCompile(`arn:aws:mediatailor`)),
-					testAccAssignEndpoint(resourceName, &firstEndpoint),
-				),
-			},
-			{
-				Taint:  []string{resourceName},
-				Config: testAccPlaybackConfigurationResourceTaint("tf_test_acc_tainted_name"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "tf_test_acc_tainted_name"),
-					resource.TestMatchResourceAttr(resourceName, "playback_configuration_arn", regexp.MustCompile(`arn:aws:mediatailor`)),
-					testAccCheckEndpoint(resourceName, &firstEndpoint),
-				),
-			},
-		},
-	})
-}
+						data "awsmt_playback_configuration" "test"{
+  							name = awsmt_playback_configuration.r1.name
+						}
 
-func TestAccPlaybackConfigurationRemoveResourceTag(t *testing.T) {
-	resourceName := "awsmt_playback_configuration.tags_test"
-	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: ProviderFactories,
-		CheckDestroy:      testAccCheckPlaybackConfigurationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPlaybackConfigurationResourceTags(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "example_tag_removal"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Type", "Configuration"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Organization", "Example"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Team", "Example"),
-				),
-			},
-			{
-				Config: testAccPlaybackConfigurationResourceRemoveTags(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "example_tag_removal"),
-					resource.TestCheckNoResourceAttr(resourceName, "tags.Environment"),
-					resource.TestCheckNoResourceAttr(resourceName, "tags.Type"),
-					resource.TestCheckNoResourceAttr(resourceName, "tags.Organization"),
-					resource.TestCheckNoResourceAttr(resourceName, "tags.Team"),
-				),
-			},
-		},
-	})
-}
+						output "playback_configuration_out" {
+  							value = data.awsmt_playback_configuration.test
+						}
+						`, name, ad_url, bumper_e, bumper_s, cdn_url, max_d, p_s, k1, v1, k2, v2)
 
-func testAccAssignEndpoint(resourceName string, EndpointVariable *string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
-		}
-		*EndpointVariable = rs.Primary.Attributes["playback_endpoint_prefix"]
-		return nil
-	}
-}
-
-func testAccCheckEndpoint(resourceName string, EndpointVariable *string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
-		}
-		if *EndpointVariable == rs.Primary.Attributes["playback_endpoint_prefix"] {
-			return fmt.Errorf("same Endpoint: (%s), resource not recreated", *EndpointVariable)
-		}
-		return nil
-	}
-}
-
-func importPreCheck(t *testing.T, region string) {
-	testAccPreCheck(t)
-
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		t.Fatalf("error getting client: %s", err)
-	}
-	conn := client.(*mediatailor.MediaTailor)
-
-	exampleUrl := "https://exampleurl.com/"
-	mpdLocation := "DISABLED"
-	manifestType := "SINGLE_PERIOD"
-	name := "test_playback_configuration_awsmt"
-	env := "dev"
-	input := mediatailor.PutPlaybackConfigurationInput{
-		AdDecisionServerUrl:   &exampleUrl,
-		CdnConfiguration:      &mediatailor.CdnConfiguration{AdSegmentUrlPrefix: &exampleUrl},
-		DashConfiguration:     &mediatailor.DashConfigurationForPut{MpdLocation: &mpdLocation, OriginManifestType: &manifestType},
-		Name:                  &name,
-		VideoContentSourceUrl: &exampleUrl,
-		Tags:                  map[string]*string{"Environment": &env},
-	}
-
-	_, err = conn.PutPlaybackConfiguration(&input)
-	if err != nil {
-		t.Fatal(diag.FromErr(err))
-	}
-}
-
-func testAccCheckPlaybackConfigurationDestroy(_ *terraform.State) error {
-	c := testAccProvider.Meta().(*mediatailor.MediaTailor)
-	name := "test_playback_configuration_awsmt"
-	_, err := c.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: &name})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func testAccPlaybackConfigurationResourceTags() string {
-	return `
-resource "awsmt_playback_configuration" "tags_test"{
-  ad_decision_server_url = "https://exampleurl.com/"
-  name= "example_tag_removal"
-  dash_configuration {
-    mpd_location = "EMT_DEFAULT"
-    origin_manifest_type = "MULTI_PERIOD"
-  }
-  video_content_source_url = "https://exampleurl.com"
-  tags = {
-    "Environment": "test"
-    "Type": "Configuration"
-    "Organization": "Example"
-    "Team": "Example"
-  }
-}
-`
-}
-
-func testAccPlaybackConfigurationResourceRemoveTags() string {
-	return `
-resource "awsmt_playback_configuration" "tags_test"{
-  ad_decision_server_url = "https://exampleurl.com/"
-  name= "example_tag_removal"
-  dash_configuration {
-    mpd_location = "EMT_DEFAULT"
-    origin_manifest_type = "MULTI_PERIOD"
-  }
-  video_content_source_url = "https://exampleurl.com"
-  tags = {}
-}
-`
-}
-
-func testAccPlaybackConfigurationResource() string {
-	return `
-resource "awsmt_playback_configuration" "r1" {
-  ad_decision_server_url = "https://exampleurl.com/"
-  avail_suppression {
-   mode = "OFF"
-  }
-  bumper {}
-  cdn_configuration {
-    ad_segment_url_prefix = "test"
-    content_segment_url_prefix = "test"
-  }
-  dash_configuration {
-    mpd_location = "EMT_DEFAULT"
-    origin_manifest_type = "MULTI_PERIOD"
-  }
-  live_pre_roll_configuration {
-	max_duration_seconds = 1
-  }
-  manifest_processing_rules {
-	ad_marker_passthrough {
-	  enabled = true
-	}
-  }
-  name = "test_playback_configuration_awsmt"
-  personalization_threshold_seconds = 2
-  slate_ad_url = "https://exampleurl.com/"
-  tags = {"Environment": "dev"}
-  video_content_source_url = "https://exampleurl.com/"
-}
-
-`
-}
-
-func testAccPlaybackConfigurationUpdateResource() string {
-	return `
-resource "awsmt_playback_configuration" "r1" {
-  ad_decision_server_url = "https://exampleurl.com/"
-  avail_suppression {
-   mode = "OFF"
-  }
-  bumper {}
-  cdn_configuration {
-    ad_segment_url_prefix = "test-updated"
-    content_segment_url_prefix = "test-updated"
-  }
-  dash_configuration {
-    mpd_location = "EMT_DEFAULT"
-    origin_manifest_type = "MULTI_PERIOD"
-  }
-  live_pre_roll_configuration {
-	max_duration_seconds = 1
-  }
-  manifest_processing_rules {
-	ad_marker_passthrough {
-	  enabled = true
-	}
-  }
-  name = "test_playback_configuration_awsmt"
-  personalization_threshold_seconds = 2
-  slate_ad_url = "https://exampleurl.com/updated"
-  tags = {"Environment": "dev"}
-  video_content_source_url = "https://exampleurl.com/updated"
-}
-
-`
-}
-func testAccPlaybackConfigurationUpdateResourceName() string {
-	return `
-resource "awsmt_playback_configuration" "r1" {
-  ad_decision_server_url = "https://exampleurl.com/"
-  avail_suppression {
-   mode = "OFF"
-  }
-  bumper {}
-  cdn_configuration {
-    ad_segment_url_prefix = "test-updated"
-    content_segment_url_prefix = "test-updated"
-  }
-  dash_configuration {
-    mpd_location = "EMT_DEFAULT"
-    origin_manifest_type = "MULTI_PERIOD"
-  }
-  live_pre_roll_configuration {
-	max_duration_seconds = 1
-  }
-  manifest_processing_rules {
-	ad_marker_passthrough {
-	  enabled = true
-	}
-  }
-  name = "test_playback_configuration_awsmt_changed"
-  personalization_threshold_seconds = 2
-  slate_ad_url = "https://exampleurl.com/updated"
-  tags = {"Environment": "dev"}
-  video_content_source_url = "https://exampleurl.com/updated"
-}
-
-`
-}
-func testAccPlaybackConfigurationImportResource() string {
-	return `
-resource "awsmt_playback_configuration" "r2" {
-  ad_decision_server_url = "https://exampleurl.com/"
-  bumper {
-	end_url = "https://wxample.com/endbumper"
-    start_url = "https://wxample.com/startbumper"
-  }
-  cdn_configuration {
-    ad_segment_url_prefix = "https://exampleurl.com/"
-  }
-  dash_configuration {
-    mpd_location = "DISABLED"
-	origin_manifest_type = "SINGLE_PERIOD"
-  }
-  live_pre_roll_configuration {
-	max_duration_seconds = 1
-  }
-  manifest_processing_rules {
-	ad_marker_passthrough {
-	  enabled = true
-	}
-  }
-  name = "test_playback_configuration_awsmt"
-  personalization_threshold_seconds = 2
-  tags = {"Environment": "dev"}
-  video_content_source_url = "https://exampleurl.com/"
-}
-`
-}
-
-func testAccPlaybackConfigurationResourceTaint(rName string) string {
-	return fmt.Sprintf(`
-resource "awsmt_playback_configuration" "taint_test"{
-  ad_decision_server_url = "https://exampleurl.com/"
-  name = "%[1]s"
-  dash_configuration {
-    mpd_location = "EMT_DEFAULT"
-    origin_manifest_type = "MULTI_PERIOD"
-  }
-  video_content_source_url = "https://exampleurl.com"
-}
-`, rName)
 }

@@ -2,146 +2,279 @@ package awsmt
 
 import (
 	"context"
-	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"strings"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"reflect"
 )
 
-func resourceSourceLocation() *schema.Resource {
-	return &schema.Resource{
-		CreateContext: resourceSourceLocationCreate,
-		ReadContext:   resourceSourceLocationRead,
-		UpdateContext: resourceSourceLocationUpdate,
-		DeleteContext: resourceSourceLocationDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-		Schema: map[string]*schema.Schema{
-			"access_configuration": {
-				Type:     schema.TypeList,
+var (
+	_ resource.Resource                = &resourceSourceLocation{}
+	_ resource.ResourceWithConfigure   = &resourceSourceLocation{}
+	_ resource.ResourceWithImportState = &resourceSourceLocation{}
+)
+
+func ResourceSourceLocation() resource.Resource {
+	return &resourceSourceLocation{}
+}
+
+type resourceSourceLocation struct {
+	client *mediatailor.MediaTailor
+}
+
+func (r *resourceSourceLocation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_source_location"
+}
+
+func (r *resourceSourceLocation) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id": computedString,
+			"access_configuration": schema.SingleNestedAttribute{
 				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						// may require s3:GetObject
-						"access_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"S3_SIGV4", "SECRETS_MANAGER_ACCESS_TOKEN"}, false),
+				Attributes: map[string]schema.Attribute{
+					"access_type": schema.StringAttribute{
+						Optional: true,
+						Validators: []validator.String{
+							stringvalidator.OneOf("S3_SIGV4"),
 						},
-						// SMATC is short for Secrets Manager Access Token Configuration
-						"smatc_header_name":       &optionalString,
-						"smatc_secret_arn":        &optionalString,
-						"smatc_secret_string_key": &optionalString,
+					},
+					"smatc": schema.SingleNestedAttribute{
+						Optional: true,
+						Attributes: map[string]schema.Attribute{
+							"header_name":       optionalString,
+							"secret_arn":        optionalString,
+							"secret_string_key": optionalString,
+						},
 					},
 				},
 			},
-			"arn":           &computedString,
-			"creation_time": &computedString,
-			"default_segment_delivery_configuration_url": &optionalString,
-			"http_configuration_url":                     &requiredString,
-			"last_modified_time":                         &computedString,
-			"segment_delivery_configurations": createOptionalList(
-				map[string]*schema.Schema{
-					"base_url": &optionalString,
-					"name":     &optionalString,
+			"arn":           computedString,
+			"creation_time": computedString,
+			"default_segment_delivery_configuration": schema.SingleNestedAttribute{
+				Optional: true,
+				Attributes: map[string]schema.Attribute{
+					"base_url": optionalString,
 				},
-			),
-			"name": &requiredString,
-			"tags": &optionalTags,
+			},
+			"http_configuration": schema.SingleNestedAttribute{
+				Required: true,
+				Attributes: map[string]schema.Attribute{
+					"base_url": requiredString,
+				},
+			},
+			"last_modified_time": computedString,
+			"segment_delivery_configurations": schema.ListNestedAttribute{
+				Optional: true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"base_url": optionalString,
+						"name":     optionalString,
+					},
+				},
+			},
+			"name": requiredString,
+			"tags": optionalMap,
 		},
-		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
-		),
 	}
 }
 
-func resourceSourceLocationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*mediatailor.MediaTailor)
+func (r *resourceSourceLocation) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
 
-	var params = getCreateSourceLocationInput(d)
+	r.client = req.ProviderData.(*mediatailor.MediaTailor)
+}
 
-	sourceLocation, err := client.CreateSourceLocation(&params)
+func (r *resourceSourceLocation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan sourceLocationModel
+
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	params := sourceLocationInput(plan)
+
+	// Create Source Location
+	sourceLocation, err := r.client.CreateSourceLocation(&params)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while creating the source location: %v", err))
+		resp.Diagnostics.AddError("Error while creating source location", err.Error())
+		return
 	}
-	d.SetId(aws.StringValue(sourceLocation.Arn))
 
-	return resourceSourceLocationRead(ctx, d, meta)
+	plan = readSourceLocationToPlan(plan, *sourceLocation)
+
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
-func resourceSourceLocationRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*mediatailor.MediaTailor)
+func (r *resourceSourceLocation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state sourceLocationModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	resourceName := d.Get("name").(string)
-	if len(resourceName) == 0 && len(d.Id()) > 0 {
-		resourceArn, err := arn.Parse(d.Id())
+	name := state.Name
+
+	sourceLocation, err := r.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: name})
+	if err != nil {
+		resp.Diagnostics.AddError("Error while describing source location", "Could not describe the source location: "+*name+": "+err.Error())
+		return
+	}
+
+	state = readSourceLocationToPlan(state, mediatailor.CreateSourceLocationOutput(*sourceLocation))
+
+	diags = resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+}
+
+func (r *resourceSourceLocation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan sourceLocationModel
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	name := plan.Name
+
+	sourceLocation, err := r.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: name})
+	if err != nil {
+		resp.Diagnostics.AddError("Error while describing source location", "Could not describe the source location: "+*name+": "+err.Error())
+		return
+	}
+
+	oldTags := sourceLocation.Tags
+	newTags := plan.Tags
+
+	// Check if tags are different
+	if !reflect.DeepEqual(oldTags, newTags) {
+		err = updatesTags(r.client, oldTags, newTags, *sourceLocation.Arn)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error parsing the name from resource arn: %v", err))
+			resp.Diagnostics.AddError(
+				"Error while updating playback configuration tags"+err.Error(),
+				err.Error(),
+			)
 		}
-		arnSections := strings.Split(resourceArn.Resource, "/")
-		resourceName = arnSections[len(arnSections)-1]
-	}
-	res, err := client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: aws.String(resourceName)})
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while retrieving the source location: %v", err))
 	}
 
-	if err = setSourceLocation(res, d); err != nil {
-		return diag.FromErr(err)
-	}
-
-	return nil
-}
-
-func resourceSourceLocationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*mediatailor.MediaTailor)
-
-	if d.HasChange("tags") {
-		oldValue, newValue := d.GetChange("tags")
-
-		resourceName := d.Get("name").(string)
-		res, err := client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: &resourceName})
+	if !reflect.DeepEqual(sourceLocation.AccessConfiguration, plan.AccessConfiguration) {
+		// delete source location
+		name := plan.Name
+		err := deleteSourceLocation(r.client, name)
 		if err != nil {
-			return diag.FromErr(err)
+			resp.Diagnostics.AddError(
+				"Error while deleting source location "+err.Error(),
+				err.Error(),
+			)
+			return
 		}
 
-		if err := updateTags(client, res.Arn, oldValue, newValue); err != nil {
-			return diag.FromErr(err)
+		// create source location
+		params := sourceLocationInput(plan)
+		sourceLocation, err := r.client.CreateSourceLocation(&params)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error while creating new source location with new access configuration "+err.Error(),
+				err.Error(),
+			)
+			return
 		}
+
+		plan = readSourceLocationToPlan(plan, *sourceLocation)
 	}
 
-	var params = getUpdateSourceLocationInput(d)
-	sourceLocation, err := client.UpdateSourceLocation(&params)
+	params := updateSourceLocationInput(plan)
+
+	sourceLocationUpdated, err := r.client.UpdateSourceLocation(&params)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while updating the source location: %v", err))
+		resp.Diagnostics.AddError(
+			"Error updating source location "+err.Error(),
+			err.Error(),
+		)
+		return
 	}
-	d.SetId(aws.StringValue(sourceLocation.Arn))
 
-	return resourceSourceLocationRead(ctx, d, meta)
+	plan = readSourceLocationToPlan(plan, mediatailor.CreateSourceLocationOutput(*sourceLocationUpdated))
+
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
-func resourceSourceLocationDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*mediatailor.MediaTailor)
-	sourceLocationName := aws.String(d.Get("name").(string))
-
-	if err := deleteVodSources(sourceLocationName, client); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := deleteLiveSources(sourceLocationName, client); err != nil {
-		return diag.FromErr(err)
+func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state sourceLocationModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	_, err := client.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: sourceLocationName})
+	name := state.Name
+
+	vodSourcesList, err := r.client.ListVodSources(&mediatailor.ListVodSourcesInput{SourceLocationName: name})
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while deleting the resource: %v", err))
+		resp.Diagnostics.AddError(
+			"Error retrieving vod sources "+err.Error(),
+			err.Error(),
+		)
+		return
+	}
+	for _, vodSource := range vodSourcesList.Items {
+		_, err := r.client.DeleteVodSource(&mediatailor.DeleteVodSourceInput{SourceLocationName: name, VodSourceName: vodSource.VodSourceName})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error deleting vod sources "+err.Error(),
+				err.Error(),
+			)
+			return
+		}
 	}
 
-	return nil
+	liveSourcesList, err := r.client.ListLiveSources(&mediatailor.ListLiveSourcesInput{SourceLocationName: name})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error retrieving live sources "+err.Error(),
+			err.Error(),
+		)
+		return
+	}
+	for _, liveSource := range liveSourcesList.Items {
+		if _, err := r.client.DeleteLiveSource(&mediatailor.DeleteLiveSourceInput{LiveSourceName: liveSource.LiveSourceName, SourceLocationName: name}); err != nil {
+			resp.Diagnostics.AddError(
+				"Error deleting live sources "+err.Error(),
+				err.Error(),
+			)
+			return
+		}
+	}
+
+	_, err = r.client.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: name})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting resource "+err.Error(),
+			err.Error(),
+		)
+		return
+	}
+}
+
+func (r *resourceSourceLocation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
 }

@@ -3,128 +3,188 @@ package awsmt
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/mediatailor"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"reflect"
 	"strings"
+
+	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
-func resourceVodSource() *schema.Resource {
-	return &schema.Resource{
-		CreateContext: resourceVodSourceCreate,
-		ReadContext:   resourceVodSourceRead,
-		UpdateContext: resourceVodSourceUpdate,
-		DeleteContext: resourceVodSourceDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-		Schema: map[string]*schema.Schema{
-			"arn":           &computedString,
-			"creation_time": &computedString,
-			"http_package_configurations": createRequiredList(
-				map[string]*schema.Schema{
-					"path":         &requiredString,
-					"source_group": &requiredString,
-					"type": {
-						Type:         schema.TypeString,
-						Required:     true,
-						ValidateFunc: validation.StringInSlice([]string{"DASH", "HLS"}, false),
-					},
-				},
-			),
-			"last_modified_time":   &computedString,
-			"source_location_name": &requiredString,
-			"tags":                 &optionalTags,
-			"name":                 &requiredString,
-		},
-		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
-			customdiff.ForceNewIfChange("source_location_name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
-		),
-	}
+var (
+	_ resource.Resource                = &resourceVodSource{}
+	_ resource.ResourceWithConfigure   = &resourceVodSource{}
+	_ resource.ResourceWithImportState = &resourceVodSource{}
+)
+
+func ResourceVodSource() resource.Resource {
+	return &resourceVodSource{}
 }
 
-func resourceVodSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*mediatailor.MediaTailor)
+type resourceVodSource struct {
+	client *mediatailor.MediaTailor
+}
 
-	params := getCreateVodSourceInput(d)
-	vodSource, err := client.CreateVodSource(&params)
+func (r *resourceVodSource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_vod_source"
+}
+
+func (r *resourceVodSource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = buildResourceSchema()
+}
+
+func (r *resourceVodSource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	r.client = req.ProviderData.(*mediatailor.MediaTailor)
+}
+
+func (r *resourceVodSource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan vodSourceModel
+
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	input := vodSourceInput(plan)
+
+	vodSource, err := r.client.CreateVodSource(&input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while creating the vod source: %v", err))
+		resp.Diagnostics.AddError("Error while creating vod source", err.Error())
+		return
 	}
-	d.SetId(aws.StringValue(vodSource.Arn))
 
-	return resourceVodSourceRead(ctx, d, meta)
+	plan = readVodSourceToPlan(plan, *vodSource)
+
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
-func resourceVodSourceRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*mediatailor.MediaTailor)
-	resourceName := d.Get("name").(string)
-	sourceLocationName := d.Get("source_location_name").(string)
+func (r *resourceVodSource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state vodSourceModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	if len(resourceName) == 0 && len(d.Id()) > 0 {
-		resourceArn, err := arn.Parse(d.Id())
+	var sourceLocationName, name string
+
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("source_location_name"), &sourceLocationName)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &name)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	input := &mediatailor.DescribeVodSourceInput{}
+	input.VodSourceName = &name
+	input.SourceLocationName = &sourceLocationName
+
+	vodSource, err := r.client.DescribeVodSource(input)
+	if err != nil {
+		resp.Diagnostics.AddError("Error while describing vod source", "Could not describe the vod source: "+*input.SourceLocationName+" and "+*input.VodSourceName+": "+err.Error())
+		return
+	}
+
+	state = readVodSourceToPlan(state, mediatailor.CreateVodSourceOutput(*vodSource))
+
+	diags = resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+}
+
+func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan vodSourceModel
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	input := &mediatailor.DescribeVodSourceInput{}
+	input.VodSourceName = plan.Name
+	input.SourceLocationName = plan.SourceLocationName
+
+	vodSource, err := r.client.DescribeVodSource(input)
+	if err != nil {
+		resp.Diagnostics.AddError("Error while describing Vod source", err.Error())
+		return
+	}
+
+	oldTags := vodSource.Tags
+	newTags := plan.Tags
+
+	// Check if tags are different
+	if !reflect.DeepEqual(oldTags, newTags) {
+		err = updatesTags(r.client, oldTags, newTags, *vodSource.Arn)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error parsing the name from resource arn: %v", err))
+			resp.Diagnostics.AddError(
+				"Error while updating vod source tags"+err.Error(),
+				err.Error(),
+			)
 		}
-		arnSections := strings.Split(resourceArn.Resource, "/")
-		resourceName = arnSections[len(arnSections)-1]
-		sourceLocationName = arnSections[len(arnSections)-2]
 	}
 
-	input := &mediatailor.DescribeVodSourceInput{SourceLocationName: &(sourceLocationName), VodSourceName: aws.String(resourceName)}
-
-	res, err := client.DescribeVodSource(input)
+	updateInput := vodSourceUpdateInput(plan)
+	updatedVodSource, err := r.client.UpdateVodSource(&updateInput)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while reading the vod source: %v", err))
+		resp.Diagnostics.AddError(
+			"Error while updating vod source "+err.Error(),
+			err.Error(),
+		)
 	}
 
-	if err = setVodSource(res, d); err != nil {
-		return diag.FromErr(err)
-	}
+	plan = readVodSourceToPlan(plan, mediatailor.CreateVodSourceOutput(*updatedVodSource))
 
-	return nil
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
-func resourceVodSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*mediatailor.MediaTailor)
-
-	if d.HasChange("tags") {
-		oldValue, newValue := d.GetChange("tags")
-
-		resourceName := d.Get("name").(string)
-		sourceLocationName := d.Get("source_location_name").(string)
-		res, err := client.DescribeVodSource(&mediatailor.DescribeVodSourceInput{SourceLocationName: &sourceLocationName, VodSourceName: &resourceName})
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := updateTags(client, res.Arn, oldValue, newValue); err != nil {
-			return diag.FromErr(err)
-		}
+func (r *resourceVodSource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state vodSourceModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	var params = getUpdateVodSourceInput(d)
-	vodSource, err := client.UpdateVodSource(&params)
+	input := &mediatailor.DeleteVodSourceInput{}
+	input.VodSourceName = state.Name
+	input.SourceLocationName = state.SourceLocationName
+
+	_, err := r.client.DeleteVodSource(input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while updating the vod source: %v", err))
+		resp.Diagnostics.AddError(
+			"Error while deleting vod source "+err.Error(),
+			err.Error(),
+		)
 	}
-	d.SetId(aws.StringValue(vodSource.Arn))
-
-	return resourceVodSourceRead(ctx, d, meta)
 }
 
-func resourceVodSourceDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*mediatailor.MediaTailor)
+func (r *resourceVodSource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	idParts := strings.Split(req.ID, ",")
 
-	_, err := client.DeleteVodSource(&mediatailor.DeleteVodSourceInput{VodSourceName: aws.String(d.Get("name").(string)), SourceLocationName: aws.String(d.Get("source_location_name").(string))})
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while deleting the resource: %v", err))
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		resp.Diagnostics.AddError(
+			"Unexpected Import Identifier",
+			fmt.Sprintf("Expected import identifier with format: source_location_name, name. Got: %q", req.ID),
+		)
+		return
 	}
 
-	return nil
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("source_location_name"), idParts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), idParts[1])...)
 }

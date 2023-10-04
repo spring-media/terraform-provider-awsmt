@@ -1,79 +1,83 @@
 package awsmt
 
 import (
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func setLiveSource(values *mediatailor.DescribeLiveSourceOutput, d *schema.ResourceData) error {
-	var errors []error
+func liveSourceInput(plan liveSourceModel) mediatailor.CreateLiveSourceInput {
+	var input mediatailor.CreateLiveSourceInput
 
-	if values.Arn != nil {
-		errors = append(errors, d.Set("arn", values.Arn))
+	if plan.HttpPackageConfigurations != nil && len(plan.HttpPackageConfigurations) > 0 {
+		input.HttpPackageConfigurations = getHttpInput(plan.HttpPackageConfigurations)
 	}
-	if values.CreationTime != nil {
-		errors = append(errors, d.Set("creation_time", values.CreationTime.String()))
+
+	if plan.Name != nil {
+		input.LiveSourceName = plan.Name
 	}
-	errors = append(errors, setHttpPackageConfigurations(values.HttpPackageConfigurations, d))
-	if values.LastModifiedTime != nil {
-		errors = append(errors, d.Set("last_modified_time", values.LastModifiedTime.String()))
+
+	if plan.SourceLocationName != nil {
+		input.SourceLocationName = plan.SourceLocationName
 	}
-	if values.LiveSourceName != nil {
-		errors = append(errors, d.Set("name", values.LiveSourceName))
+
+	if plan.Tags != nil && len(plan.Tags) > 0 {
+		input.Tags = plan.Tags
 	}
-	if values.SourceLocationName != nil {
-		errors = append(errors, d.Set("source_location_name", values.SourceLocationName))
-	}
-	errors = append(errors, d.Set("tags", values.Tags))
-	for _, e := range errors {
-		if e != nil {
-			return fmt.Errorf("the following error occured while setting the values: %w", e)
-		}
-	}
-	return nil
+
+	return input
 }
 
-func getCreateLiveSourceInput(d *schema.ResourceData) mediatailor.CreateLiveSourceInput {
-	var liveSourceInputParams mediatailor.CreateLiveSourceInput
+func readLiveSourceToPlan(plan liveSourceModel, liveSource mediatailor.CreateLiveSourceOutput) liveSourceModel {
+	liveSourceName := *liveSource.LiveSourceName
+	sourceLocationName := *liveSource.SourceLocationName
+	idNames := sourceLocationName + "," + liveSourceName
 
-	if c := getHttpPackageConfigurations(d); c != nil {
-		liveSourceInputParams.HttpPackageConfigurations = c
+	plan.ID = types.StringValue(idNames)
+
+	if liveSource.Arn != nil {
+		plan.Arn = types.StringValue(*liveSource.Arn)
 	}
 
-	if s, ok := d.GetOk("source_location_name"); ok {
-		liveSourceInputParams.SourceLocationName = aws.String(s.(string))
+	if liveSource.CreationTime != nil {
+		plan.CreationTime = types.StringValue((aws.TimeValue(liveSource.CreationTime)).String())
 	}
 
-	outputMap := make(map[string]*string)
-	if v, ok := d.GetOk("tags"); ok {
-		val := v.(map[string]interface{})
-		for k, value := range val {
-			temp := value.(string)
-			outputMap[k] = &temp
-		}
-	}
-	liveSourceInputParams.Tags = outputMap
+	plan.HttpPackageConfigurations = readHttpPackageConfigurations(liveSource.HttpPackageConfigurations)
 
-	if s, ok := d.GetOk("name"); ok {
-		liveSourceInputParams.LiveSourceName = aws.String(s.(string))
+	if liveSource.LastModifiedTime != nil {
+		plan.LastModifiedTime = types.StringValue((aws.TimeValue(liveSource.LastModifiedTime)).String())
 	}
 
-	return liveSourceInputParams
+	if liveSource.LiveSourceName != nil {
+		plan.Name = liveSource.LiveSourceName
+	}
+
+	if liveSource.SourceLocationName != nil {
+		plan.SourceLocationName = liveSource.SourceLocationName
+	}
+
+	if len(liveSource.Tags) > 0 {
+		plan.Tags = liveSource.Tags
+	}
+
+	return plan
 }
 
-func getUpdateLiveSourceInput(d *schema.ResourceData) mediatailor.UpdateLiveSourceInput {
-	var updatedLiveSourceParams mediatailor.UpdateLiveSourceInput
+func liveSourceUpdateInput(plan liveSourceModel) mediatailor.UpdateLiveSourceInput {
+	var input mediatailor.UpdateLiveSourceInput
 
-	if c := getHttpPackageConfigurations(d); c != nil {
-		updatedLiveSourceParams.HttpPackageConfigurations = c
+	if plan.HttpPackageConfigurations != nil && len(plan.HttpPackageConfigurations) > 0 {
+		input.HttpPackageConfigurations = getHttpInput(plan.HttpPackageConfigurations)
 	}
-	if s, ok := d.GetOk("source_location_name"); ok {
-		updatedLiveSourceParams.SourceLocationName = aws.String(s.(string))
+
+	if plan.Name != nil {
+		input.LiveSourceName = plan.Name
 	}
-	if s, ok := d.GetOk("name"); ok {
-		updatedLiveSourceParams.LiveSourceName = aws.String(s.(string))
+
+	if plan.SourceLocationName != nil {
+		input.SourceLocationName = plan.SourceLocationName
 	}
-	return updatedLiveSourceParams
+
+	return input
 }

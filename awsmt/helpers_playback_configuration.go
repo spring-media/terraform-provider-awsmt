@@ -2,293 +2,299 @@ package awsmt
 
 import (
 	"github.com/aws/aws-sdk-go/service/mediatailor"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func getSinglePlaybackConfiguration(c *mediatailor.MediaTailor, name string) (*mediatailor.PlaybackConfiguration, error) {
-	output, err := c.GetPlaybackConfiguration(&mediatailor.GetPlaybackConfigurationInput{Name: &name})
-	if err != nil {
-		return nil, err
-	}
-	return (*mediatailor.PlaybackConfiguration)(output), nil
-}
+func playbackConfigurationInput(plan playbackConfigurationModel) mediatailor.PutPlaybackConfigurationInput {
 
-func flattenPlaybackConfiguration(c *mediatailor.PlaybackConfiguration) map[string]interface{} {
-	if c == nil {
-		return map[string]interface{}{}
-	}
-	output := make(map[string]interface{})
-	output["ad_decision_server_url"] = c.AdDecisionServerUrl
-	if !(*c.AvailSuppression.Mode == "OFF" && c.AvailSuppression.Value == nil) {
-		output["avail_suppression"] = []interface{}{map[string]interface{}{
-			"mode":  c.AvailSuppression.Mode,
-			"value": c.AvailSuppression.Value,
-		}}
-	}
-	if c.Bumper.EndUrl != nil || c.Bumper.StartUrl != nil {
-		output["bumper"] = []interface{}{map[string]interface{}{
-			"end_url":   c.Bumper.EndUrl,
-			"start_url": c.Bumper.StartUrl,
-		}}
-	}
-	if c.CdnConfiguration.AdSegmentUrlPrefix != nil || c.CdnConfiguration.ContentSegmentUrlPrefix != nil {
-		output["cdn_configuration"] = []interface{}{map[string]interface{}{
-			"ad_segment_url_prefix":      c.CdnConfiguration.AdSegmentUrlPrefix,
-			"content_segment_url_prefix": c.CdnConfiguration.ContentSegmentUrlPrefix,
-		}}
-	}
-	if c.ConfigurationAliases != nil {
-		output["configuration_aliases"] = c.ConfigurationAliases
-	}
-	output["dash_configuration"] = []interface{}{map[string]interface{}{
-		"manifest_endpoint_prefix": c.DashConfiguration.ManifestEndpointPrefix,
-		"mpd_location":             c.DashConfiguration.MpdLocation,
-		"origin_manifest_type":     c.DashConfiguration.OriginManifestType,
-	}}
-	output["hls_configuration"] = []interface{}{map[string]interface{}{
-		"manifest_endpoint_prefix": c.HlsConfiguration.ManifestEndpointPrefix,
-	}}
-	if !(c.LivePreRollConfiguration.MaxDurationSeconds == nil && c.LivePreRollConfiguration.AdDecisionServerUrl == nil) {
-		output["live_pre_roll_configuration"] = []interface{}{map[string]interface{}{
-			"ad_decision_server_url": c.LivePreRollConfiguration.AdDecisionServerUrl,
-			"max_duration_seconds":   c.LivePreRollConfiguration.MaxDurationSeconds,
-		}}
-	}
-	if c.LogConfiguration != nil {
-		output["log_configuration"] = []interface{}{map[string]interface{}{
-			"percent_enabled": c.LogConfiguration.PercentEnabled,
-		}}
-	} else {
-		output["log_configuration"] = []interface{}{map[string]interface{}{
-			"percent_enabled": 0,
-		}}
-	}
-	if *c.ManifestProcessingRules.AdMarkerPassthrough.Enabled {
-		output["manifest_processing_rules"] = []interface{}{map[string]interface{}{
-			"ad_marker_passthrough": []interface{}{map[string]interface{}{
-				"enabled": c.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
-			}},
-		}}
-	}
-	output["name"] = c.Name
-	output["personalization_threshold_seconds"] = c.PersonalizationThresholdSeconds
-	output["playback_configuration_arn"] = c.PlaybackConfigurationArn
-	output["playback_endpoint_prefix"] = c.PlaybackEndpointPrefix
-	output["session_initialization_endpoint_prefix"] = c.SessionInitializationEndpointPrefix
-	output["slate_ad_url"] = c.SlateAdUrl
-	output["tags"] = c.Tags
-	output["transcode_profile_name"] = c.TranscodeProfileName
-	output["video_content_source_url"] = c.VideoContentSourceUrl
-	return output
-}
+	input := &mediatailor.PutPlaybackConfigurationInput{}
 
-type CreateInput struct {
-	d     *schema.ResourceData
-	input *mediatailor.PutPlaybackConfigurationInput
-}
+	input.AdDecisionServerUrl = plan.AdDecisionServerUrl
 
-func (i CreateInput) getAdDecisionServerUrlInput() {
-	if v, ok := i.d.GetOk("ad_decision_server_url"); ok {
-		val := v.(string)
-		i.input.AdDecisionServerUrl = &val
+	if plan.AvailSupression != nil {
+		input.AvailSuppression = getAvailSuppressionInput(plan.AvailSupression)
 	}
-}
 
-func (i CreateInput) getAvailSuppressionInput() {
-	if v, ok := i.d.GetOk("avail_suppression"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		output := mediatailor.AvailSuppression{}
-		if str, ok := val["mode"]; ok {
-			converted := str.(string)
-			output.Mode = &converted
-		}
-		if str, ok := val["value"]; ok {
-			converted := str.(string)
-			output.Value = &converted
-		}
-		i.input.AvailSuppression = &output
+	if plan.Bumper != nil {
+		input.Bumper = getBumperInput(plan.Bumper)
 	}
-}
 
-func (i CreateInput) getManifestProcessingRulesInput() {
-	if v, ok := i.d.GetOk("manifest_processing_rules"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		output := mediatailor.ManifestProcessingRules{}
-		if v2, ok := val["ad_marker_passthrough"]; ok {
-			output2 := mediatailor.AdMarkerPassthrough{}
-			val2 := v2.([]interface{})[0].(map[string]interface{})
-			if boolean, ok := val2["enabled"]; ok {
-				converted := boolean.(bool)
-				output2.Enabled = &converted
-			}
-			output.AdMarkerPassthrough = &output2
-		}
-
-		i.input.ManifestProcessingRules = &output
+	if plan.CdnConfiguration != nil {
+		input.CdnConfiguration = getCdnConfigurationInput(plan.CdnConfiguration)
 	}
-}
 
-func (i CreateInput) getBumperInput() {
-	if v, ok := i.d.GetOk("bumper"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		output := mediatailor.Bumper{}
-		if str, ok := val["end_url"]; ok {
-			converted := str.(string)
-			output.EndUrl = &converted
-		}
-		if str, ok := val["start_url"]; ok {
-			converted := str.(string)
-			output.StartUrl = &converted
-		}
-		i.input.Bumper = &output
+	if plan.ConfigurationAliases != nil {
+		input.ConfigurationAliases = plan.ConfigurationAliases
 	}
-}
 
-func (i CreateInput) getConfigurationAliasesInput() {
-	if v, ok := i.d.GetOk("configuration_aliases"); ok {
-		val := v.(map[string]map[string]*string)
-		i.input.ConfigurationAliases = val
+	if plan.DashConfiguration != nil {
+		input.DashConfiguration = getDashConfigurationInput(plan.DashConfiguration)
 	}
-}
 
-func (i CreateInput) getCDNConfigurationInput() {
-	if v, ok := i.d.GetOk("cdn_configuration"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		output := mediatailor.CdnConfiguration{}
-		if str, ok := val["ad_segment_url_prefix"]; ok {
-			converted := str.(string)
-			output.AdSegmentUrlPrefix = &converted
-		}
-		if str, ok := val["content_segment_url_prefix"]; ok {
-			converted := str.(string)
-			output.ContentSegmentUrlPrefix = &converted
-		}
-		i.input.CdnConfiguration = &output
+	if plan.LivePreRollConfiguration != nil {
+		input.LivePreRollConfiguration = getLivePreRollConfigurationInput(plan.LivePreRollConfiguration)
 	}
-}
 
-func (i CreateInput) getDashConfigurationInput() {
-	if v, ok := i.d.GetOk("dash_configuration"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		output := mediatailor.DashConfigurationForPut{}
-		if str, ok := val["mpd_location"]; ok {
-			converted := str.(string)
-			output.MpdLocation = &converted
-		}
-		if str, ok := val["origin_manifest_type"]; ok {
-			converted := str.(string)
-			output.OriginManifestType = &converted
-		}
-		i.input.DashConfiguration = &output
-	}
-}
-
-func (i CreateInput) getLivePreRollConfigurationInput() {
-	if v, ok := i.d.GetOk("live_pre_roll_configuration"); ok && v.([]interface{})[0] != nil {
-		val := v.([]interface{})[0].(map[string]interface{})
-		output := mediatailor.LivePreRollConfiguration{}
-		if str, ok := val["ad_decision_server_url"]; ok {
-			converted := str.(string)
-			output.AdDecisionServerUrl = &converted
-		}
-		if integer, ok := val["max_duration_seconds"]; ok {
-			converted := int64(integer.(int))
-			output.MaxDurationSeconds = &converted
-		}
-		i.input.LivePreRollConfiguration = &output
-	}
-}
-
-func (i CreateInput) getTagsInput() {
-	outputMap := make(map[string]*string)
-	if v, ok := i.d.GetOk("tags"); ok {
-		val := v.(map[string]interface{})
-		for k, value := range val {
-			temp := value.(string)
-			outputMap[k] = &temp
+	if plan.ManifestProcessingRules != nil {
+		input.ManifestProcessingRules = &mediatailor.ManifestProcessingRules{
+			AdMarkerPassthrough: &mediatailor.AdMarkerPassthrough{
+				Enabled: plan.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
+			},
 		}
 	}
-	i.input.Tags = outputMap
+
+	input.Name = plan.Name
+
+	if plan.PersonalizationThresholdSeconds != nil {
+		input.PersonalizationThresholdSeconds = plan.PersonalizationThresholdSeconds
+	}
+
+	if plan.SlateAdUrl != nil && *plan.SlateAdUrl != "" {
+		input.SlateAdUrl = plan.SlateAdUrl
+	}
+
+	if plan.Tags != nil {
+		input.Tags = plan.Tags
+	}
+
+	if plan.TranscodeProfileName != nil && *plan.TranscodeProfileName != "" {
+		input.TranscodeProfileName = plan.TranscodeProfileName
+	}
+
+	if plan.VideoContentSourceUrl != nil && *plan.VideoContentSourceUrl != "" {
+		input.VideoContentSourceUrl = plan.VideoContentSourceUrl
+	}
+
+	return *input
 }
 
-func (i CreateInput) getNameInput() {
-	if v, ok := i.d.GetOk("name"); ok {
-		val := v.(string)
-		i.input.Name = &val
+func getAvailSuppressionInput(availSuppression *availSupressionModel) *mediatailor.AvailSuppression {
+	params := &mediatailor.AvailSuppression{}
+	if availSuppression != nil {
+		if availSuppression.Mode != nil && *availSuppression.Mode != "" {
+			params.Mode = availSuppression.Mode
+		}
+		if availSuppression.Value != nil && *availSuppression.Value != "" {
+			params.Value = availSuppression.Value
+		}
+		if availSuppression.FillPolicy != nil && *availSuppression.FillPolicy != "" {
+			params.FillPolicy = availSuppression.FillPolicy
+		}
 	}
+	return params
 }
 
-func (i CreateInput) getPersonalizationThresholdSecondsInput() {
-	if v, ok := i.d.GetOk("personalization_threshold_seconds"); ok {
-		val := int64(v.(int))
-		i.input.PersonalizationThresholdSeconds = &val
+func getBumperInput(bumper *bumperModel) *mediatailor.Bumper {
+	params := &mediatailor.Bumper{}
+	if bumper != nil {
+		if bumper.EndUrl != nil && *bumper.EndUrl != "" {
+			params.EndUrl = bumper.EndUrl
+		}
+		if bumper.StartUrl != nil && *bumper.StartUrl != "" {
+			params.StartUrl = bumper.StartUrl
+		}
 	}
+	return params
 }
 
-func (i CreateInput) getSlateAdUrlInput() {
-	if v, ok := i.d.GetOk("slate_ad_url"); ok {
-		val := v.(string)
-		i.input.SlateAdUrl = &val
+func getCdnConfigurationInput(cdnConfiguration *cdnConfigurationModel) *mediatailor.CdnConfiguration {
+	params := &mediatailor.CdnConfiguration{}
+	if cdnConfiguration != nil {
+		if cdnConfiguration.AdSegmentUrlPrefix != nil && *cdnConfiguration.AdSegmentUrlPrefix != "" {
+			params.AdSegmentUrlPrefix = cdnConfiguration.AdSegmentUrlPrefix
+		}
+		if cdnConfiguration.ContentSegmentUrlPrefix != nil && *cdnConfiguration.ContentSegmentUrlPrefix != "" {
+			params.ContentSegmentUrlPrefix = cdnConfiguration.ContentSegmentUrlPrefix
+		}
 	}
+	return params
 }
 
-func (i CreateInput) getTranscodeProfileNameInput() {
-	if v, ok := i.d.GetOk("transcode_profile_name"); ok {
-		val := v.(string)
-		i.input.TranscodeProfileName = &val
+func getDashConfigurationInput(dashConfiguration *dashConfigurationModel) *mediatailor.DashConfigurationForPut {
+	input := &mediatailor.DashConfigurationForPut{}
+	if dashConfiguration != nil {
+		if dashConfiguration.MpdLocation != nil {
+			input.MpdLocation = dashConfiguration.MpdLocation
+		}
+		if dashConfiguration.OriginManifestType != nil {
+			input.OriginManifestType = dashConfiguration.OriginManifestType
+		}
 	}
-}
-
-func (i CreateInput) getVideoContentSourceUrlInput() {
-	if v, ok := i.d.GetOk("video_content_source_url"); ok {
-		val := v.(string)
-		i.input.VideoContentSourceUrl = &val
-	}
-}
-
-func getPlaybackConfigurationInput(d *schema.ResourceData) mediatailor.PutPlaybackConfigurationInput {
-	input := mediatailor.PutPlaybackConfigurationInput{}
-	i := CreateInput{
-		d:     d,
-		input: &input,
-	}
-	i.getAdDecisionServerUrlInput()
-	i.getAvailSuppressionInput()
-	i.getBumperInput()
-	i.getConfigurationAliasesInput()
-	i.getCDNConfigurationInput()
-	i.getDashConfigurationInput()
-	i.getLivePreRollConfigurationInput()
-	i.getManifestProcessingRulesInput()
-	i.getNameInput()
-	i.getPersonalizationThresholdSecondsInput()
-	i.getSlateAdUrlInput()
-	i.getTagsInput()
-	i.getTranscodeProfileNameInput()
-	i.getVideoContentSourceUrlInput()
 	return input
 }
 
-func returnPlaybackConfiguration(d *schema.ResourceData, values map[string]interface{}, diags diag.Diagnostics) diag.Diagnostics {
-	for k := range values {
-		setSingleValue(d, values, diags, k)
+func getLivePreRollConfigurationInput(livePreRollConfiguration *livePreRollConfigurationModel) *mediatailor.LivePreRollConfiguration {
+	input := &mediatailor.LivePreRollConfiguration{}
+	if livePreRollConfiguration != nil {
+		if livePreRollConfiguration.AdDecisionServerUrl != nil {
+			input.AdDecisionServerUrl = livePreRollConfiguration.AdDecisionServerUrl
+		}
+		if livePreRollConfiguration.MaxDurationSeconds != nil {
+			input.MaxDurationSeconds = livePreRollConfiguration.MaxDurationSeconds
+		}
 	}
-	return diags
+	return input
 }
 
-func setSingleValue(d *schema.ResourceData, values map[string]interface{}, diags diag.Diagnostics, name string) diag.Diagnostics {
-	err := d.Set(name, values[name])
-	if err != nil {
-		return diag.FromErr(err)
+func readPlaybackConfigToPlan(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
+	plan.PlaybackConfigurationArn = types.StringValue(*playbackConfiguration.PlaybackConfigurationArn)
+	plan.AdDecisionServerUrl = playbackConfiguration.AdDecisionServerUrl
+	// AVAIL SUPRESSION
+	if playbackConfiguration.AvailSuppression != nil {
+		plan = readAvailSuppression(plan, playbackConfiguration)
 	}
-	return diags
+	// BUMPER
+	if playbackConfiguration.Bumper != nil && (playbackConfiguration.Bumper.EndUrl != nil || playbackConfiguration.Bumper.StartUrl != nil) {
+		plan = readBumper(plan, playbackConfiguration)
+	}
+	// CDN CONFIGURATION
+	if playbackConfiguration.CdnConfiguration != nil {
+		plan = readCdnConfiguration(plan, playbackConfiguration)
+	}
+	// CONFIGURATION ALIASES
+	if playbackConfiguration.ConfigurationAliases != nil {
+		plan.ConfigurationAliases = playbackConfiguration.ConfigurationAliases
+	}
+	// DASH CONFIGURATION
+	if playbackConfiguration.DashConfiguration != nil {
+		plan = readDashConfiguration(plan, playbackConfiguration)
+	}
+
+	// HLS CONFIGURATION
+	if playbackConfiguration.HlsConfiguration != nil && playbackConfiguration.HlsConfiguration.ManifestEndpointPrefix != nil {
+		plan.HlsConfigurationManifestEndpointPrefix = types.StringValue(*playbackConfiguration.HlsConfiguration.ManifestEndpointPrefix)
+	}
+
+	// LOG CONFIGURATION
+	if playbackConfiguration.LogConfiguration != nil {
+		plan.LogConfigurationPercentEnabled = types.Int64Value(*playbackConfiguration.LogConfiguration.PercentEnabled)
+	} else {
+		plan.LogConfigurationPercentEnabled = types.Int64Value(0)
+	}
+
+	// LIVE PRE ROLL CONFIGURATION
+	if playbackConfiguration.LivePreRollConfiguration != nil && (playbackConfiguration.LivePreRollConfiguration.AdDecisionServerUrl != nil || playbackConfiguration.LivePreRollConfiguration.MaxDurationSeconds != nil) {
+		plan = readLivePreRollConfiguration(plan, playbackConfiguration)
+	}
+
+	// MANIFEST PROCESSING RULES
+	if playbackConfiguration.ManifestProcessingRules != nil {
+		plan = readManifestProcessingRules(plan, playbackConfiguration)
+	}
+
+	plan.Name, plan.PersonalizationThresholdSeconds, plan.PlaybackEndpointPrefix, plan.SessionInitializationEndpointPrefix, plan.SlateAdUrl, plan.TranscodeProfileName, plan.VideoContentSourceUrl, plan.Tags = readPlaybackConfigurationTemps(plan, playbackConfiguration)
+
+	plan.ID = types.StringValue(*playbackConfiguration.Name)
+
+	return plan
 }
 
-func deletePlaybackConfiguration(client *mediatailor.MediaTailor, name string) diag.Diagnostics {
-	_, err := client.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: &name})
-	if err != nil {
-		return diag.FromErr(err)
+func readPlaybackConfigurationTemps(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) (*string, *int64, types.String, types.String, *string, *string, *string, map[string]*string) {
+	plan.Name = playbackConfiguration.Name
+	// PERSONALIZATION THRESHOLD SECONDS
+	if playbackConfiguration.PersonalizationThresholdSeconds != nil {
+		plan.PersonalizationThresholdSeconds = playbackConfiguration.PersonalizationThresholdSeconds
 	}
-	return nil
+	// PLAYBACK ENDPOINT PREFIX
+	plan.PlaybackEndpointPrefix = types.StringValue(*playbackConfiguration.PlaybackEndpointPrefix)
+	// SESSION INITIALIZATION ENDPOINT PREFIX
+	plan.SessionInitializationEndpointPrefix = types.StringValue(*playbackConfiguration.SessionInitializationEndpointPrefix)
+	// SLATE AD URL
+	if playbackConfiguration.SlateAdUrl != nil {
+		plan.SlateAdUrl = playbackConfiguration.SlateAdUrl
+	}
+	// TRANSCODE PROFILE NAME
+	if playbackConfiguration.TranscodeProfileName != nil {
+		plan.TranscodeProfileName = playbackConfiguration.TranscodeProfileName
+	}
+	// VIDEO CONTENT SOURCE URL
+	if playbackConfiguration.VideoContentSourceUrl != nil {
+		plan.VideoContentSourceUrl = playbackConfiguration.VideoContentSourceUrl
+	}
+
+	// TAGS
+	if len(playbackConfiguration.Tags) > 0 {
+		plan.Tags = playbackConfiguration.Tags
+	}
+	return plan.Name, plan.PersonalizationThresholdSeconds, plan.PlaybackEndpointPrefix, plan.SessionInitializationEndpointPrefix, plan.SlateAdUrl, plan.TranscodeProfileName, plan.VideoContentSourceUrl, plan.Tags
+}
+
+func readAvailSuppression(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
+	if playbackConfiguration.AvailSuppression != nil {
+		plan.AvailSupression = &availSupressionModel{}
+		if playbackConfiguration.AvailSuppression.Mode != nil {
+			plan.AvailSupression.Mode = playbackConfiguration.AvailSuppression.Mode
+		}
+		if playbackConfiguration.AvailSuppression.Value != nil {
+			plan.AvailSupression.Value = playbackConfiguration.AvailSuppression.Value
+		}
+		if playbackConfiguration.AvailSuppression.FillPolicy != nil {
+			plan.AvailSupression.FillPolicy = playbackConfiguration.AvailSuppression.FillPolicy
+		}
+	}
+	return plan
+}
+
+func readBumper(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
+	if playbackConfiguration.Bumper != nil && (playbackConfiguration.Bumper.EndUrl != nil || playbackConfiguration.Bumper.StartUrl != nil) {
+		plan.Bumper = &bumperModel{}
+		if playbackConfiguration.Bumper.EndUrl != nil {
+			plan.Bumper.EndUrl = playbackConfiguration.Bumper.EndUrl
+		}
+		if playbackConfiguration.Bumper.StartUrl != nil {
+			plan.Bumper.StartUrl = playbackConfiguration.Bumper.StartUrl
+		}
+	}
+	return plan
+}
+
+func readCdnConfiguration(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
+	if playbackConfiguration.CdnConfiguration != nil {
+		plan.CdnConfiguration = &cdnConfigurationModel{}
+		if playbackConfiguration.CdnConfiguration.AdSegmentUrlPrefix != nil {
+			plan.CdnConfiguration.AdSegmentUrlPrefix = playbackConfiguration.CdnConfiguration.AdSegmentUrlPrefix
+		}
+		if playbackConfiguration.CdnConfiguration.ContentSegmentUrlPrefix != nil {
+			plan.CdnConfiguration.ContentSegmentUrlPrefix = playbackConfiguration.CdnConfiguration.ContentSegmentUrlPrefix
+		}
+	}
+	return plan
+}
+
+func readDashConfiguration(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
+	if playbackConfiguration.DashConfiguration != nil {
+		plan.DashConfiguration = &dashConfigurationModel{}
+		plan.DashConfiguration.ManifestEndpointPrefix = types.StringValue(*playbackConfiguration.DashConfiguration.MpdLocation)
+		if playbackConfiguration.DashConfiguration.MpdLocation != nil {
+			plan.DashConfiguration.MpdLocation = playbackConfiguration.DashConfiguration.MpdLocation
+		}
+		if playbackConfiguration.DashConfiguration.OriginManifestType != nil {
+			plan.DashConfiguration.OriginManifestType = playbackConfiguration.DashConfiguration.OriginManifestType
+		}
+	}
+	return plan
+}
+
+func readLivePreRollConfiguration(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
+	if playbackConfiguration.LivePreRollConfiguration != nil && (playbackConfiguration.LivePreRollConfiguration.AdDecisionServerUrl != nil || playbackConfiguration.LivePreRollConfiguration.MaxDurationSeconds != nil) {
+		plan.LivePreRollConfiguration = &livePreRollConfigurationModel{}
+		if playbackConfiguration.LivePreRollConfiguration.AdDecisionServerUrl != nil {
+			plan.LivePreRollConfiguration.AdDecisionServerUrl = playbackConfiguration.LivePreRollConfiguration.AdDecisionServerUrl
+		}
+		if playbackConfiguration.LivePreRollConfiguration.MaxDurationSeconds != nil {
+			plan.LivePreRollConfiguration.MaxDurationSeconds = playbackConfiguration.LivePreRollConfiguration.MaxDurationSeconds
+		}
+	}
+	return plan
+}
+
+func readManifestProcessingRules(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
+	if playbackConfiguration.ManifestProcessingRules != nil {
+		plan.ManifestProcessingRules = &manifestProcessingRulesModel{}
+		if playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough != nil && playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough.Enabled != nil {
+			plan.ManifestProcessingRules.AdMarkerPassthrough = &adMarkerPassthroughModel{}
+			plan.ManifestProcessingRules.AdMarkerPassthrough.Enabled = playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough.Enabled
+		}
+	}
+	return plan
 }

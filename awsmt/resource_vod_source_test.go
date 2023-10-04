@@ -2,228 +2,96 @@ package awsmt
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strings"
+	"regexp"
 	"testing"
 )
 
-func init() {
-	resource.AddTestSweepers("test_vod_source", &resource.Sweeper{
-		Name: "test_vod_source",
-		F: func(region string) error {
-			client, err := sharedClientForRegion(region)
-			if err != nil {
-				return fmt.Errorf("error getting client: %s", err)
-			}
-			conn := client.(*mediatailor.MediaTailor)
-			names := map[string]string{"test_source_location_basic": "vod_source_test_basic", "test_source_location_update": "vod_source_test_basic", "test_source_location_tags": "vod_source_test_basic", "vod_basic_sl": "vod_source_data_source_test"}
-			for k, v := range names {
-				_, err = conn.DeleteVodSource(&mediatailor.DeleteVodSourceInput{SourceLocationName: &k, VodSourceName: &v})
-				if err != nil {
-					if !strings.Contains(err.Error(), "NotFound") {
-						return err
-					}
-				}
-				_, err = conn.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: &k})
-				if err != nil {
-					if !strings.Contains(err.Error(), "NotFound") {
-						return err
-					}
-				}
-			}
-			return nil
-		},
-	})
-}
-
-func TestAccVodSourceResource_basic(t *testing.T) {
-	rName := "vod_source_test_basic"
-	resourceName := "awsmt_vod_source.test"
-	SourceLocationName := "test_source_location_basic"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: ProviderFactories,
-		CheckDestroy:      testAccCheckVodSourceDestroy,
+func TestAccVodSourceResourceBasic(t *testing.T) {
+	name := "vod_source_example"
+	path := "/"
+	path2 := "/test"
+	k1 := "Environment"
+	v1 := "dev"
+	k2 := "Testing"
+	v2 := "pass"
+	k3 := "Environment"
+	v3 := "prod"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVodSourceConfig(SourceLocationName, rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "source_location_name", SourceLocationName),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.source_group", "default"),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.type", "HLS"),
+				Config: basicVodSourceWithSourceLocation(name, path, k1, v1, k2, v2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_vod_source.test", "id", "test_source_location,vod_source_example"),
+					resource.TestMatchResourceAttr("awsmt_vod_source.test", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:vodSource\/.*$`)),
+					resource.TestMatchResourceAttr("awsmt_vod_source.test", "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr("awsmt_vod_source.test", "http_package_configurations.0.path", "/"),
+					resource.TestCheckResourceAttr("awsmt_vod_source.test", "http_package_configurations.0.source_group", "default"),
+					resource.TestCheckResourceAttr("awsmt_vod_source.test", "http_package_configurations.0.type", "HLS"),
+					resource.TestMatchResourceAttr("awsmt_vod_source.test", "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr("awsmt_vod_source.test", "name", "vod_source_example"),
+					resource.TestCheckResourceAttr("awsmt_vod_source.test", "source_location_name", "test_source_location"),
+					resource.TestCheckResourceAttr("awsmt_vod_source.test", "tags.Environment", "dev"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportStateVerify: true,
-				ImportState:       true,
-			},
-		},
-	})
-}
-
-func TestAccVodSourceResource_update(t *testing.T) {
-	rName := "vod_source_test_basic"
-	resourceName := "awsmt_vod_source.test"
-	SourceLocationName := "test_source_location_update"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: ProviderFactories,
-		CheckDestroy:      testAccCheckVodSourceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVodSourceConfig_update(SourceLocationName, rName, "/"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "source_location_name", SourceLocationName),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.source_group", "default"),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.type", "HLS"),
-				),
-			},
-			{
-				Config: testAccVodSourceConfig_update(SourceLocationName, rName, "/test"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "source_location_name", SourceLocationName),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.path", "/test"),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.source_group", "default"),
-					resource.TestCheckResourceAttr(resourceName, "http_package_configurations.0.type", "HLS"),
+				Config: basicVodSourceWithSourceLocation(name, path2, k3, v3, k2, v2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_vod_source.test", "id", "test_source_location,vod_source_example"),
+					resource.TestMatchResourceAttr("awsmt_vod_source.test", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:vodSource\/.*$`)),
+					resource.TestMatchResourceAttr("awsmt_vod_source.test", "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr("awsmt_vod_source.test", "http_package_configurations.0.path", "/test"),
+					resource.TestCheckResourceAttr("awsmt_vod_source.test", "http_package_configurations.0.source_group", "default"),
+					resource.TestCheckResourceAttr("awsmt_vod_source.test", "http_package_configurations.0.type", "HLS"),
+					resource.TestMatchResourceAttr("awsmt_vod_source.test", "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr("awsmt_vod_source.test", "name", "vod_source_example"),
+					resource.TestCheckResourceAttr("awsmt_vod_source.test", "source_location_name", "test_source_location"),
+					resource.TestCheckResourceAttr("awsmt_vod_source.test", "tags.Environment", "prod"),
+					resource.TestCheckResourceAttr("awsmt_vod_source.test", "tags.Testing", "pass"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccVodSourceResource_tags(t *testing.T) {
-	rName := "vod_source_test_basic"
-	resourceName := "awsmt_vod_source.test"
-	SourceLocationName := "test_source_location_tags"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: ProviderFactories,
-		CheckDestroy:      testAccCheckVodSourceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVodSourceConfig_tags(SourceLocationName, rName, "a", "b", "c", "d"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "source_location_name", SourceLocationName),
-					resource.TestCheckResourceAttr(resourceName, "tags.a", "b"),
-					resource.TestCheckResourceAttr(resourceName, "tags.c", "d"),
-				),
-			},
-			{
-				Config: testAccVodSourceConfig_tags(SourceLocationName, rName, "e", "f", "g", "h"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "source_location_name", SourceLocationName),
-					resource.TestCheckResourceAttr(resourceName, "tags.e", "f"),
-					resource.TestCheckResourceAttr(resourceName, "tags.g", "h"),
-				),
-			},
-		},
-	})
-}
+func basicVodSourceWithSourceLocation(name, path, k1, v1, k2, v2 string) string {
+	return fmt.Sprintf(`resource "awsmt_vod_source" "test" {
+  							http_package_configurations = [{
+								path = "%[2]s"
+								source_group = "default"
+    							type = "HLS"
+  							}]
+  							source_location_name = awsmt_source_location.test_source_location.name
+  							name = "%[1]s"
+							tags = {
+   		 						"%[3]s": "%[4]s",
+								"%[5]s": "%[6]s"
+							}
+						}
+						data "awsmt_vod_source" "data_test" {
+  							source_location_name = awsmt_source_location.test_source_location.name
+  							name = awsmt_vod_source.test.name
+						}
 
-func testAccCheckVodSourceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*mediatailor.MediaTailor)
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "awsmt_vod_source" {
-			continue
-		}
-
-		var resourceName string
-
-		if arn.IsARN(rs.Primary.ID) {
-			resourceArn, err := arn.Parse(rs.Primary.ID)
-			if err != nil {
-				return fmt.Errorf("error parsing resource arn: %s.\n%s", err, rs.Primary.ID)
-			}
-			arnSections := strings.Split(resourceArn.Resource, "/")
-			resourceName = arnSections[len(arnSections)-1]
-		} else {
-			resourceName = rs.Primary.ID
-		}
-
-		input := &mediatailor.DescribeVodSourceInput{VodSourceName: aws.String(resourceName), SourceLocationName: aws.String("vod-source-test")}
-		_, err := conn.DescribeVodSource(input)
-
-		if err != nil && strings.Contains(err.Error(), "NotFound") {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func testAccVodSourceConfig(sourceLocationName, vodSourceName string) string {
-	return fmt.Sprintf(`
-resource "awsmt_source_location" "example"{
-  name = "%[1]s"
-  http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
-}
-
-resource "awsmt_vod_source" "test" {
-  http_package_configurations {
-    path = "/"
-    source_group = "default"
-    type = "HLS"
-  }
-  source_location_name = awsmt_source_location.example.name
-  name = "%[2]s"
-}
-`, sourceLocationName, vodSourceName)
-}
-
-func testAccVodSourceConfig_update(sourceLocationName, vodSourceName, path string) string {
-	return fmt.Sprintf(`
-resource "awsmt_source_location" "example"{
-  name = "%[1]s"
-  http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
-}
-
-resource "awsmt_vod_source" "test" {
-  http_package_configurations {
-    path = "%[3]s"
-    source_group = "default"
-    type = "HLS"
-  }
-  source_location_name = awsmt_source_location.example.name
-  name = "%[2]s"
-}
-`, sourceLocationName, vodSourceName, path)
-}
-
-func testAccVodSourceConfig_tags(sourceLocationName, vodSourceName, k1, v1, k2, v2 string) string {
-	return fmt.Sprintf(`
-resource "awsmt_source_location" "example"{
-  name = "%[1]s"
-  http_configuration_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
-}
-
-resource "awsmt_vod_source" "test" {
-  http_package_configurations {
-    path = "%[3]s"
-    source_group = "default"
-    type = "HLS"
-  }
-  source_location_name = awsmt_source_location.example.name
-  tags = {
-    "%[3]s": "%[4]s",
-	"%[5]s": "%[6]s",
-  }
-  name = "%[2]s"
-}
-`, sourceLocationName, vodSourceName, k1, v1, k2, v2)
+						output "vod_source_out" {
+  							value = data.awsmt_vod_source.data_test
+						}
+						resource "awsmt_source_location" "test_source_location"{
+  							name = "test_source_location"
+  							http_configuration = {
+    							base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
+  							}
+  							default_segment_delivery_configuration = {
+    							base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
+  							}
+						}
+						data "awsmt_source_location" "test" {
+  							name = awsmt_source_location.test_source_location.name
+						}
+						output "awsmt_source_location" {
+  							value = data.awsmt_source_location.test
+						}
+						`, name, path, k1, v1, k2, v2)
 }

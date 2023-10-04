@@ -3,126 +3,189 @@ package awsmt
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/mediatailor"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"reflect"
 	"strings"
+
+	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
-func resourceLiveSource() *schema.Resource {
-	return &schema.Resource{
-		CreateContext: resourceLiveSourceCreate,
-		ReadContext:   resourceLiveSourceRead,
-		UpdateContext: resourceLiveSourceUpdate,
-		DeleteContext: resourceLiveSourceDelete,
-		Schema: map[string]*schema.Schema{
-			"arn":           &computedString,
-			"creation_time": &computedString,
-			"http_package_configurations": createRequiredList(map[string]*schema.Schema{
-				"path":         &requiredString,
-				"source_group": &requiredString,
-				"type": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice([]string{"DASH", "HLS"}, false),
-				},
-			}),
-			"last_modified_time":   &computedString,
-			"name":                 &requiredString,
-			"source_location_name": &requiredString,
-			"tags":                 &optionalTags,
-		},
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
-			customdiff.ForceNewIfChange("source_location_name", func(ctx context.Context, old, new, meta interface{}) bool { return old.(string) != new.(string) }),
-		),
-	}
+var (
+	_ resource.Resource                = &resourceLiveSource{}
+	_ resource.ResourceWithConfigure   = &resourceLiveSource{}
+	_ resource.ResourceWithImportState = &resourceLiveSource{}
+)
+
+func ResourceLiveSource() resource.Resource {
+	return &resourceLiveSource{}
 }
 
-func resourceLiveSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*mediatailor.MediaTailor)
+type resourceLiveSource struct {
+	client *mediatailor.MediaTailor
+}
 
-	params := getCreateLiveSourceInput(d)
-	liveSource, err := client.CreateLiveSource(&params)
+func (r *resourceLiveSource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_live_source"
+}
+
+func (r *resourceLiveSource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = buildResourceSchema()
+}
+
+func (r *resourceLiveSource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	r.client = req.ProviderData.(*mediatailor.MediaTailor)
+}
+
+func (r *resourceLiveSource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan liveSourceModel
+
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	input := liveSourceInput(plan)
+
+	liveSource, err := r.client.CreateLiveSource(&input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while creating the live source: %v", err))
+		resp.Diagnostics.AddError("Error while creating live source", err.Error())
+		return
 	}
-	d.SetId(aws.StringValue(liveSource.Arn))
 
-	return resourceLiveSourceRead(ctx, d, meta)
+	plan = readLiveSourceToPlan(plan, *liveSource)
+
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
-func resourceLiveSourceRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*mediatailor.MediaTailor)
-	liveSourceName := d.Get("name").(string)
-	sourceLocationName := d.Get("source_location_name").(string)
+func (r *resourceLiveSource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state liveSourceModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	if len(liveSourceName) == 0 && len(d.Id()) > 0 {
-		resourceArn, err := arn.Parse(d.Id())
+	var sourceLocationName, name string
+
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("source_location_name"), &sourceLocationName)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &name)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	input := &mediatailor.DescribeLiveSourceInput{}
+	input.LiveSourceName = &name
+	input.SourceLocationName = &sourceLocationName
+
+	liveSource, err := r.client.DescribeLiveSource(input)
+	if err != nil {
+		resp.Diagnostics.AddError("Error while describing live source", err.Error())
+		return
+	}
+
+	state = readLiveSourceToPlan(state, mediatailor.CreateLiveSourceOutput(*liveSource))
+
+	diags = resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+}
+
+func (r *resourceLiveSource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan liveSourceModel
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	input := &mediatailor.DescribeLiveSourceInput{}
+	input.LiveSourceName = plan.Name
+	input.SourceLocationName = plan.SourceLocationName
+
+	liveSource, err := r.client.DescribeLiveSource(input)
+	if err != nil {
+		resp.Diagnostics.AddError("Error while describing live source", err.Error())
+		return
+	}
+
+	oldTags := liveSource.Tags
+	newTags := plan.Tags
+
+	// Check if tags are different
+	if !reflect.DeepEqual(oldTags, newTags) {
+		err = updatesTags(r.client, oldTags, newTags, *liveSource.Arn)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error parsing the name from resource arn: %v", err))
+			resp.Diagnostics.AddError(
+				"Error while updating live source tags"+err.Error(),
+				err.Error(),
+			)
 		}
-		arnSections := strings.Split(resourceArn.Resource, "/")
-		liveSourceName = arnSections[len(arnSections)-1]
-		sourceLocationName = arnSections[len(arnSections)-2]
 	}
 
-	input := &mediatailor.DescribeLiveSourceInput{SourceLocationName: &(sourceLocationName), LiveSourceName: aws.String(liveSourceName)}
-
-	res, err := client.DescribeLiveSource(input)
+	updateInput := liveSourceUpdateInput(plan)
+	updatedLiveSource, err := r.client.UpdateLiveSource(&updateInput)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while reading the live source: %v", err))
+		resp.Diagnostics.AddError(
+			"Error while updating live source "+err.Error(),
+			err.Error(),
+		)
 	}
 
-	if err = setLiveSource(res, d); err != nil {
-		return diag.FromErr(err)
-	}
+	plan = readLiveSourceToPlan(plan, mediatailor.CreateLiveSourceOutput(*updatedLiveSource))
 
-	return nil
+	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
-func resourceLiveSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*mediatailor.MediaTailor)
-
-	if d.HasChange("tags") {
-		oldValue, newValue := d.GetChange("tags")
-
-		resourceName := d.Get("name").(string)
-		sourceLocationName := d.Get("source_location_name").(string)
-		res, err := client.DescribeLiveSource(&mediatailor.DescribeLiveSourceInput{SourceLocationName: &sourceLocationName, LiveSourceName: &resourceName})
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := updateTags(client, res.Arn, oldValue, newValue); err != nil {
-			return diag.FromErr(err)
-		}
+func (r *resourceLiveSource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state liveSourceModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	var params = getUpdateLiveSourceInput(d)
-	liveSource, err := client.UpdateLiveSource(&params)
+	params := &mediatailor.DeleteLiveSourceInput{}
+	params.LiveSourceName = state.Name
+	params.SourceLocationName = state.SourceLocationName
+
+	_, err := r.client.DeleteLiveSource(params)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while updating the live source: %v", err))
+		resp.Diagnostics.AddError(
+			"Error while deleting live source "+err.Error(),
+			err.Error(),
+		)
 	}
-	d.SetId(aws.StringValue(liveSource.Arn))
-
-	return resourceLiveSourceRead(ctx, d, meta)
 }
 
-func resourceLiveSourceDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*mediatailor.MediaTailor)
+func (r *resourceLiveSource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	idParts := strings.Split(req.ID, ",")
 
-	_, err := client.DeleteLiveSource(&mediatailor.DeleteLiveSourceInput{LiveSourceName: aws.String(d.Get("name").(string)), SourceLocationName: aws.String(d.Get("source_location_name").(string))})
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while deleting the resource: %v", err))
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		resp.Diagnostics.AddError(
+			"Unexpected Import Identifier",
+			fmt.Sprintf("Expected import identifier with format: source_location_name, name. Got: %q", req.ID),
+		)
+		return
 	}
 
-	return nil
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("source_location_name"), idParts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), idParts[1])...)
+
 }

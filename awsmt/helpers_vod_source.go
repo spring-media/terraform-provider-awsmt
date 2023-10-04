@@ -1,94 +1,106 @@
 package awsmt
 
 import (
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func setHttpPackageConfigurations(values []*mediatailor.HttpPackageConfiguration, d *schema.ResourceData) error {
-	var configurations []map[string]interface{}
-	for _, c := range values {
-		temp := map[string]interface{}{}
-		temp["path"] = c.Path
-		temp["source_group"] = c.SourceGroup
-		temp["type"] = c.Type
-		configurations = append(configurations, temp)
+func vodSourceInput(plan vodSourceModel) mediatailor.CreateVodSourceInput {
+	var input mediatailor.CreateVodSourceInput
+
+	input.HttpPackageConfigurations, input.VodSourceName, input.SourceLocationName = getBasicVodSourceInput(&plan)
+
+	if plan.Tags != nil && len(plan.Tags) > 0 {
+		input.Tags = plan.Tags
 	}
-	if err := d.Set("http_package_configurations", configurations); err != nil {
-		return fmt.Errorf("error while setting the http package configurations: %w", err)
-	}
-	return nil
+
+	return input
 }
 
-func setVodSource(values *mediatailor.DescribeVodSourceOutput, d *schema.ResourceData) error {
-	var errs []error
+func readVodSourceToPlan(plan vodSourceModel, vodSource mediatailor.CreateVodSourceOutput) vodSourceModel {
+	vodSourceName := *vodSource.VodSourceName
+	sourceLocationName := *vodSource.SourceLocationName
+	idNames := sourceLocationName + "," + vodSourceName
 
-	if values.Arn != nil {
-		errs = append(errs, d.Set("arn", values.Arn))
+	plan.ID = types.StringValue(idNames)
+
+	if vodSource.Arn != nil {
+		plan.Arn = types.StringValue(*vodSource.Arn)
 	}
-	if values.CreationTime != nil {
-		errs = append(errs, d.Set("creation_time", values.CreationTime.String()))
+
+	if vodSource.CreationTime != nil {
+		plan.CreationTime = types.StringValue((aws.TimeValue(vodSource.CreationTime)).String())
 	}
-	errs = append(errs, setHttpPackageConfigurations(values.HttpPackageConfigurations, d))
-	if values.LastModifiedTime != nil {
-		errs = append(errs, d.Set("last_modified_time", values.LastModifiedTime.String()))
-	}
-	if values.SourceLocationName != nil {
-		errs = append(errs, d.Set("source_location_name", values.SourceLocationName))
-	}
-	errs = append(errs, d.Set("tags", values.Tags))
-	if values.VodSourceName != nil {
-		errs = append(errs, d.Set("name", values.VodSourceName))
-	}
-	for _, e := range errs {
-		if e != nil {
-			return fmt.Errorf("the following error occured while setting the values: %w", e)
+
+	if vodSource.HttpPackageConfigurations != nil && len(vodSource.HttpPackageConfigurations) > 0 {
+		plan.HttpPackageConfigurations = []httpPackageConfigurationsModel{}
+		for _, httpPackageConfiguration := range vodSource.HttpPackageConfigurations {
+			httpPackageConfigurations := httpPackageConfigurationsModel{}
+			httpPackageConfigurations.Path = httpPackageConfiguration.Path
+			httpPackageConfigurations.SourceGroup = httpPackageConfiguration.SourceGroup
+			httpPackageConfigurations.Type = httpPackageConfiguration.Type
+			plan.HttpPackageConfigurations = append(plan.HttpPackageConfigurations, httpPackageConfigurations)
 		}
 	}
-	return nil
+
+	if vodSource.LastModifiedTime != nil {
+		plan.LastModifiedTime = types.StringValue((aws.TimeValue(vodSource.LastModifiedTime)).String())
+	}
+
+	if vodSource.VodSourceName != nil {
+		plan.Name = vodSource.VodSourceName
+	}
+
+	if vodSource.SourceLocationName != nil {
+		plan.SourceLocationName = vodSource.SourceLocationName
+	}
+
+	if len(vodSource.Tags) > 0 {
+		plan.Tags = vodSource.Tags
+	}
+
+	return plan
 }
 
-func getCreateVodSourceInput(d *schema.ResourceData) mediatailor.CreateVodSourceInput {
-	var vodSourceInputParams mediatailor.CreateVodSourceInput
+func vodSourceUpdateInput(plan vodSourceModel) mediatailor.UpdateVodSourceInput {
+	var input mediatailor.UpdateVodSourceInput
 
-	if c := getHttpPackageConfigurations(d); c != nil {
-		vodSourceInputParams.HttpPackageConfigurations = c
+	input.HttpPackageConfigurations, input.VodSourceName, input.SourceLocationName = getBasicVodSourceInput(&plan)
+
+	return input
+}
+
+func getBasicVodSourceInput(plan *vodSourceModel) ([]*mediatailor.HttpPackageConfiguration, *string, *string) {
+	var httpPackageConfigurations []*mediatailor.HttpPackageConfiguration
+	var vodSourceName *string
+	var sourceLocationName *string
+
+	if plan.HttpPackageConfigurations != nil && len(plan.HttpPackageConfigurations) > 0 {
+		httpPackageConfigurations = getHttpInput(plan.HttpPackageConfigurations)
 	}
 
-	if s, ok := d.GetOk("source_location_name"); ok {
-		vodSourceInputParams.SourceLocationName = aws.String(s.(string))
+	if plan.Name != nil {
+		vodSourceName = plan.Name
 	}
 
-	outputMap := make(map[string]*string)
-	if v, ok := d.GetOk("tags"); ok {
-		val := v.(map[string]interface{})
-		for k, value := range val {
-			temp := value.(string)
-			outputMap[k] = &temp
+	if plan.SourceLocationName != nil {
+		sourceLocationName = plan.SourceLocationName
+	}
+	return httpPackageConfigurations, vodSourceName, sourceLocationName
+}
+
+func getHttpInput(plan []httpPackageConfigurationsModel) []*mediatailor.HttpPackageConfiguration {
+	var input mediatailor.CreateVodSourceInput
+	if len(plan) > 0 {
+		input.HttpPackageConfigurations = []*mediatailor.HttpPackageConfiguration{}
+		for _, httpPackageConfiguration := range plan {
+			httpPackageConfigurations := &mediatailor.HttpPackageConfiguration{}
+			httpPackageConfigurations.Path = httpPackageConfiguration.Path
+			httpPackageConfigurations.SourceGroup = httpPackageConfiguration.SourceGroup
+			httpPackageConfigurations.Type = httpPackageConfiguration.Type
+			input.HttpPackageConfigurations = append(input.HttpPackageConfigurations, httpPackageConfigurations)
 		}
 	}
-	vodSourceInputParams.Tags = outputMap
-
-	if s, ok := d.GetOk("name"); ok {
-		vodSourceInputParams.VodSourceName = aws.String(s.(string))
-	}
-
-	return vodSourceInputParams
-}
-
-func getUpdateVodSourceInput(d *schema.ResourceData) mediatailor.UpdateVodSourceInput {
-	var updatedVodSourceParams mediatailor.UpdateVodSourceInput
-
-	if c := getHttpPackageConfigurations(d); c != nil {
-		updatedVodSourceParams.HttpPackageConfigurations = c
-	}
-	if s, ok := d.GetOk("source_location_name"); ok {
-		updatedVodSourceParams.SourceLocationName = aws.String(s.(string))
-	}
-	if s, ok := d.GetOk("name"); ok {
-		updatedVodSourceParams.VodSourceName = aws.String(s.(string))
-	}
-	return updatedVodSourceParams
+	return input.HttpPackageConfigurations
 }

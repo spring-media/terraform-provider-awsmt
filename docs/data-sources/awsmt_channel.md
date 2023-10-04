@@ -28,11 +28,14 @@ In addition to all arguments above, the following attributes are exported:
   - `vod_source_name` - The slate VOD source name. The VOD source must already exist in a source location before it can be used for slate.
 - `last_modified_time` - The timestamp of when the channel was last modified.
 - `outputs` – The channel's output properties.
-  - `dash_manifest_windows_seconds` - The total duration (in seconds) of each dash manifest.
-  - `dash_min_buffer_time_seconds` - Minimum amount of content (measured in seconds) that a player must keep available in the buffer.
-  - `dash_min_update_period_seconds` - Minimum amount of time (in seconds) that the player should wait before requesting updates to the manifest.
-  - `dash_suggested_presentation_delay_seconds` - Amount of time (in seconds) that the player should be from the live point at the end of the manifest.
-  - `hls_manifest_windows_seconds` - The total duration (in seconds) of each hls manifest.
+  - `dash_playlist_settings` - The configuration for DASH content.
+    - `manifest_windows_seconds` - The total duration (in seconds) of each dash manifest.
+    - `min_buffer_time_seconds` - Minimum amount of content (measured in seconds) that a player must keep available in the buffer.
+    - `min_update_period_seconds` - Minimum amount of time (in seconds) that the player should wait before requesting updates to the manifest.
+    - `suggested_presentation_delay_seconds` - Amount of time (in seconds) that the player should be from the live point at the end of the manifest.
+  - `hls_playlist_settings` - The configuration for HLS content.
+    - `manifest_windows_seconds` - The total duration (in seconds) of each hls manifest.
+    - `ad_markup_type` - Determines the type of SCTE 35 tags to use in ad markup. Can be DATERANGE (for live or VOD content) or SCTE35_ENHANCED (for VOD content only).
   - `manifest_name` - The name of the manifest for the channel. The name appears in the PlaybackUrl.
   - `playback_url` - The URL used for playback by content players.
 - `playback_mode` - The type of playback mode for this channel. Can be either LINEAR or LOOP.

@@ -2,49 +2,58 @@ package awsmt
 
 import (
 	"context"
-	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
+
 	"github.com/aws/aws-sdk-go/service/mediatailor"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
-func dataSourceVodSource() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: dataSourceVodSourceRead,
-		Schema: map[string]*schema.Schema{
-			"arn":           &computedString,
-			"creation_time": &computedString,
-			"http_package_configurations": createComputedList(map[string]*schema.Schema{
-				"path":         &computedString,
-				"source_group": &computedString,
-				"type":         &computedString,
-			}),
-			"last_modified_time":   &computedString,
-			"source_location_name": &requiredString,
-			"tags":                 &computedTags,
-			"name":                 &requiredString,
-		},
-	}
+var (
+	_ datasource.DataSource              = &dataSourceVodSource{}
+	_ datasource.DataSourceWithConfigure = &dataSourceVodSource{}
+)
+
+func DataSourceVodSource() datasource.DataSource {
+	return &dataSourceVodSource{}
 }
 
-func dataSourceVodSourceRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*mediatailor.MediaTailor)
-	resourceName := d.Get("name").(string)
-	sourceLocationName := d.Get("source_location_name").(string)
+type dataSourceVodSource struct {
+	client *mediatailor.MediaTailor
+}
 
-	input := &mediatailor.DescribeVodSourceInput{SourceLocationName: &(sourceLocationName), VodSourceName: aws.String(resourceName)}
+func (d *dataSourceVodSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_vod_source"
+}
 
-	res, err := client.DescribeVodSource(input)
+func (d *dataSourceVodSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = buildDatasourceSchema()
+}
+
+func (d *dataSourceVodSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	d.client = req.ProviderData.(*mediatailor.MediaTailor)
+}
+
+func (d *dataSourceVodSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data vodSourceModel
+	diags := req.Config.Get(ctx, &data)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	sourceLocationName := data.SourceLocationName
+	vodSourceName := data.Name
+
+	vodSource, err := d.client.DescribeVodSource(&mediatailor.DescribeVodSourceInput{SourceLocationName: sourceLocationName, VodSourceName: vodSourceName})
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error while reading the vod source: %v", err))
+		resp.Diagnostics.AddError("Error while describing vod source", err.Error())
+		return
 	}
 
-	d.SetId(fmt.Sprintf("%q/%q", *res.SourceLocationName, *res.VodSourceName))
+	data = readVodSourceToPlan(data, mediatailor.CreateVodSourceOutput(*vodSource))
 
-	if err = setVodSource(res, d); err != nil {
-		return diag.FromErr(err)
-	}
-
-	return nil
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

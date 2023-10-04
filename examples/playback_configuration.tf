@@ -1,19 +1,17 @@
 resource "awsmt_playback_configuration" "r1" {
   ad_decision_server_url = "https://exampleurl.com/"
-  avail_suppression {
+  avail_supression = {
     mode = "OFF"
   }
-  bumper {}
-  cdn_configuration {
+  cdn_configuration = {
     ad_segment_url_prefix = "https://exampleurl.com/"
   }
-  dash_configuration {
-    mpd_location = "DISABLED"
+  dash_configuration = {
+    mpd_location = "DISABLED",
     origin_manifest_type = "SINGLE_PERIOD"
   }
-  live_pre_roll_configuration {}
-  manifest_processing_rules {
-    ad_marker_passthrough{
+  manifest_processing_rules = {
+    ad_marker_passthrough = {
       enabled = "false"
     }
   }
@@ -24,7 +22,7 @@ resource "awsmt_playback_configuration" "r1" {
 }
 
 data "awsmt_playback_configuration" "test"{
-  name=awsmt_playback_configuration.r1.name
+  name = awsmt_playback_configuration.r1.name
 }
 
 output "playback_configuration_out" {
