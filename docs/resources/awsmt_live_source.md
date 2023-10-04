@@ -42,3 +42,4 @@ Live Sources can be imported using their Name and SourceLocationName in one stri
 
 ```sh
   $ terraform import awsmt_live_source.example name:example-live-source,example-source-location
+```
