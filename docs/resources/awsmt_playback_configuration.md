@@ -39,31 +39,32 @@ All the descriptions for the fields are from the [official AWS documentation](ht
 
 The following arguments are supported:
 
-- `ad_decision_server_url` - (Required) The URL for the ad decision server (ADS).
-- `avail_suppression` - (Optional) The configuration for avail suppression, also known as ad suppression.
-  - `mode` - (Optional) The ad suppression mode. Can either be "OFF" or "BEHIND_LIVE_EDGE".
-  - `value` - (Optional) Time value in HH:MM:SS format after which MediaTailor will not fill any ad breaks.
-- `bumper` - (Optional) The configuration for bumpers.
-  - `end_url` - (Optional) The URL for the end bumper asset.
-  - `start_url` - (Optional) The URL for the start bumper asset.
-- `cdn_configuration` - (Optional) The configuration for using a content delivery network (CDN) for content and ad segment management.
-  - `ad_segment_url_prefix` - (Optional) A non-default CDN to serve ads segments.
-  - `content_segment_url_prefix` - (Optional) A CDN to cache content segments.
-- `dash_configuration` - (Required) The configuration for DASH content.
-  - `mpd_location` - (Optional) Controls whether MediaTailor includes the Location tag in Dash manifest files. Can either be "DISABLED" or "EMT_DEFAULT.
-  - `origin_manifest_type` - (Optional) Controls whether MediaTailor handles manifest files as single-period or multi-period manifest files. Can either be "SINGLE_PERIOD" or "MULTI_PERIOD".
-- `live_pre_roll_configuration` - (Optional) The configuration for pre-roll ad insertion.
-  - `ad_decision_server_url` - (Optional) The URL for the ad decision server (ADS) for pre-roll ads.
-  - `max_duration_seconds` - (Optional) The maximum allowed duration for the pre-roll ad avail.
-- `manifest_processing_rules` – (Optional) The configuration for manifest processing rules
-  - `ad_marker_passthrough` – (Optional) For HLS, when set to true, MediaTailor passes through EXT-X-CUE-IN, EXT-X-CUE-OUT, and EXT-X-SPLICEPOINT-SCTE35 ad markers from the origin manifest to the MediaTailor personalized manifest.
-    - `enabled` - (Optional) Enables ad marker passthrough for your configuration.
-- `name` - (Required). <br/>The name of the desired playback configuration.
-- `personalization_threshold_seconds` - (Optional) Defines the maximum duration of underfilled ad time (in seconds) allowed in an ad break.
-- `slate_ad_url` - (Optional) The URL for a high-quality video asset to transcode and use to fill in time that's not used by ads.
-- `tags` - (Optional) Key-value mapping of resource tags.
-- `transcode_profile_name` - (Optional) The name that is used to associate this playback configuration with a custom transcode profile.
-- `video_content_source_url` - (Required) The URL prefix for the parent manifest for the stream, minus the asset ID.
+- `ad_decision_server_url` - The URL for the ad decision server (ADS).
+- `avail_suppression` - The configuration for avail suppression, also known as ad suppression.
+  - `fill_policy` - Defines the policy to apply to the avail suppression mode. Can be either full (BEHIND_LIVE_EDGE mode) or partial (AFTER_LIVE_EDGE).
+  - `mode` - The ad suppression mode. Can either be "OFF", "BEHIND_LIVE_EDGE" "AFTER_LIVE_EDGE".
+  - `value` - Time value in HH:MM:SS format after which MediaTailor will not fill any ad breaks.
+- `bumper` - The configuration for bumpers.
+  - `end_url` - The URL for the end bumper asset.
+  - `start_url` - The URL for the start bumper asset.
+- `cdn_configuration` - The configuration for using a content delivery network (CDN) for content and ad segment management.
+  - `ad_segment_url_prefix` - A non-default CDN to serve ads segments.
+  - `content_segment_url_prefix` - A CDN to cache content segments.
+- `configuration_aliases` - The player parameters and aliases used as dynamic variables during session initialization.
+- `dash_configuration` - The configuration for DASH content.
+  - `mpd_location` - Controls whether MediaTailor includes the Location tag in Dash manifest files. Can either be "DISABLED" or "EMT_DEFAULT.
+  - `origin_manifest_type` - Controls whether MediaTailor handles manifest files as single-period or multi-period manifest files. Can either be "SINGLE_PERIOD" or "MULTI_PERIOD".
+- `live_pre_roll_configuration` - The configuration for pre-roll ad insertion.
+  - `ad_decision_server_url` - The URL for the ad decision server (ADS) for pre-roll ads.
+  - `max_duration_seconds` - The maximum allowed duration for the pre-roll ad avail.
+- `manifest_processing_rules` – The configuration for manifest processing rules
+  - `ad_marker_passthrough` – For HLS, when set to true, MediaTailor passes through EXT-X-CUE-IN, EXT-X-CUE-OUT, and EXT-X-SPLICEPOINT-SCTE35 ad markers from the origin manifest to the MediaTailor personalized manifest.
+    - `enabled` - Enables ad marker passthrough for your configuration.
+- `personalization_threshold_seconds` - Defines the maximum duration of underfilled ad time (in seconds) allowed in an ad break.
+- `slate_ad_url` - The URL for a high-quality video asset to transcode and use to fill in time that's not used by ads.
+- `tags` - Key-value mapping of resource tags.
+- `transcode_profile_name` - The name that is used to associate this playback configuration with a custom transcode profile.
+- `video_content_source_url` - The URL prefix for the parent manifest for the stream, minus the asset ID.
 
 ## Attributes Reference
 
