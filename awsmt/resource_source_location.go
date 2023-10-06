@@ -39,7 +39,7 @@ func (r *resourceSourceLocation) Schema(_ context.Context, _ resource.SchemaRequ
 					"access_type": schema.StringAttribute{
 						Optional: true,
 						Validators: []validator.String{
-							stringvalidator.OneOf("S3_SIGV4"),
+							stringvalidator.OneOf("S3_SIGV4", "SECRETS_MANAGER_ACCESS_TOKEN"),
 						},
 					},
 					"smatc": schema.SingleNestedAttribute{
