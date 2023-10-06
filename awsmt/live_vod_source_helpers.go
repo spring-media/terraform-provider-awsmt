@@ -51,6 +51,21 @@ func buildDatasourceSchema() datasourceSchema.Schema {
 	}
 }
 
+func getHttpInput(plan []httpPackageConfigurationsModel) []*mediatailor.HttpPackageConfiguration {
+	var input mediatailor.CreateVodSourceInput
+	if len(plan) > 0 {
+		input.HttpPackageConfigurations = []*mediatailor.HttpPackageConfiguration{}
+		for _, httpPackageConfiguration := range plan {
+			httpPackageConfigurations := &mediatailor.HttpPackageConfiguration{}
+			httpPackageConfigurations.Path = httpPackageConfiguration.Path
+			httpPackageConfigurations.SourceGroup = httpPackageConfiguration.SourceGroup
+			httpPackageConfigurations.Type = httpPackageConfiguration.Type
+			input.HttpPackageConfigurations = append(input.HttpPackageConfigurations, httpPackageConfigurations)
+		}
+	}
+	return input.HttpPackageConfigurations
+}
+
 func buildResourceSchema() resourceSchema.Schema {
 	return resourceSchema.Schema{
 		Attributes: map[string]resourceSchema.Attribute{
