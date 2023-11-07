@@ -27,7 +27,6 @@ func TestAccPlaybackConfigurationDataSourceBasic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "dash_configuration.origin_manifest_type", "SINGLE_PERIOD"),
 					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "live_pre_roll_configuration.ad_decision_server_url", "https://exampleurl.com/"),
 					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "live_pre_roll_configuration.max_duration_seconds", "2"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "manifest_processing_rules.ad_marker_passthrough.enabled", "false"),
 					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "name", "example-playback-configuration-awsmt"),
 					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "personalization_threshold_seconds", "2"),
 					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "slate_ad_url", "https://exampleurl.com/"),

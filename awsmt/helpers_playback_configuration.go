@@ -71,13 +71,13 @@ func playbackConfigurationInput(plan playbackConfigurationModel) mediatailor.Put
 func getAvailSuppressionInput(availSuppression *availSupressionModel) *mediatailor.AvailSuppression {
 	params := &mediatailor.AvailSuppression{}
 	if availSuppression != nil {
-		if availSuppression.Mode != nil && *availSuppression.Mode != "" {
+		if availSuppression.Mode != nil {
 			params.Mode = availSuppression.Mode
 		}
-		if availSuppression.Value != nil && *availSuppression.Value != "" {
+		if availSuppression.Value != nil {
 			params.Value = availSuppression.Value
 		}
-		if availSuppression.FillPolicy != nil && *availSuppression.FillPolicy != "" {
+		if availSuppression.FillPolicy != nil {
 			params.FillPolicy = availSuppression.FillPolicy
 		}
 	}
@@ -220,7 +220,7 @@ func readPlaybackConfigurationTemps(plan playbackConfigurationModel, playbackCon
 }
 
 func readAvailSuppression(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
-	if playbackConfiguration.AvailSuppression != nil {
+	if playbackConfiguration.AvailSuppression != nil && *playbackConfiguration.AvailSuppression.Mode != "OFF" {
 		plan.AvailSupression = &availSupressionModel{}
 		if playbackConfiguration.AvailSuppression.Mode != nil {
 			plan.AvailSupression.Mode = playbackConfiguration.AvailSuppression.Mode
@@ -289,7 +289,7 @@ func readLivePreRollConfiguration(plan playbackConfigurationModel, playbackConfi
 }
 
 func readManifestProcessingRules(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
-	if playbackConfiguration.ManifestProcessingRules != nil {
+	if playbackConfiguration.ManifestProcessingRules != nil && *playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough.Enabled != false {
 		plan.ManifestProcessingRules = &manifestProcessingRulesModel{}
 		if playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough != nil && playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough.Enabled != nil {
 			plan.ManifestProcessingRules.AdMarkerPassthrough = &adMarkerPassthroughModel{}
