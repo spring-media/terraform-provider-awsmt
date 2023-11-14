@@ -2,6 +2,9 @@ package awsmt
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -25,7 +28,32 @@ func (d *dataSourceLiveSource) Metadata(_ context.Context, req datasource.Metada
 }
 
 func (d *dataSourceLiveSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = buildDatasourceSchema()
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":            computedString,
+			"arn":           computedString,
+			"creation_time": computedString,
+			"http_package_configurations": schema.ListNestedAttribute{
+				Computed: true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"path":         computedString,
+						"source_group": computedString,
+						"type": schema.StringAttribute{
+							Computed: true,
+							Validators: []validator.String{
+								stringvalidator.OneOf("HLS", "DASH"),
+							},
+						},
+					},
+				},
+			},
+			"last_modified_time":   computedString,
+			"name":                 requiredString,
+			"source_location_name": requiredString,
+			"tags":                 computedMap,
+		},
+	}
 }
 
 func (d *dataSourceLiveSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
