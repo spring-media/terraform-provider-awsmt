@@ -2,9 +2,11 @@ package awsmt
 
 import (
 	"context"
-
 	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 var (
@@ -25,7 +27,33 @@ func (d *dataSourceVodSource) Metadata(_ context.Context, req datasource.Metadat
 }
 
 func (d *dataSourceVodSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = buildDatasourceSchema()
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":            computedString,
+			"arn":           computedString,
+			"creation_time": computedString,
+			"http_package_configurations": schema.ListNestedAttribute{
+				Computed: true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"path":         computedString,
+						"source_group": computedString,
+						"type": schema.StringAttribute{
+							Computed: true,
+							Validators: []validator.String{
+								stringvalidator.OneOf("HLS", "DASH"),
+							},
+						},
+					},
+				},
+			},
+			"last_modified_time":                   computedString,
+			"name":                                 requiredString,
+			"source_location_name":                 requiredString,
+			"tags":                                 computedMap,
+			"ad_break_opportunities_offset_millis": computedMap,
+		},
+	}
 }
 
 func (d *dataSourceVodSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
@@ -53,7 +81,7 @@ func (d *dataSourceVodSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	data = readVodSourceToPlan(data, mediatailor.CreateVodSourceOutput(*vodSource))
+	data = readVodSourceToState(ctx, data, *vodSource)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
