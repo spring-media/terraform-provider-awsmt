@@ -1,6 +1,7 @@
 package awsmt
 
 import (
+	"context"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -24,6 +25,57 @@ func readVodSourceToPlan(plan vodSourceModel, vodSource mediatailor.CreateVodSou
 	idNames := sourceLocationName + "," + vodSourceName
 
 	plan.ID = types.StringValue(idNames)
+
+	if vodSource.Arn != nil {
+		plan.Arn = types.StringValue(*vodSource.Arn)
+	}
+
+	if vodSource.CreationTime != nil {
+		plan.CreationTime = types.StringValue((aws.TimeValue(vodSource.CreationTime)).String())
+	}
+
+	if vodSource.HttpPackageConfigurations != nil && len(vodSource.HttpPackageConfigurations) > 0 {
+		plan.HttpPackageConfigurations = []httpPackageConfigurationsModel{}
+		for _, httpPackageConfiguration := range vodSource.HttpPackageConfigurations {
+			httpPackageConfigurations := httpPackageConfigurationsModel{}
+			httpPackageConfigurations.Path = httpPackageConfiguration.Path
+			httpPackageConfigurations.SourceGroup = httpPackageConfiguration.SourceGroup
+			httpPackageConfigurations.Type = httpPackageConfiguration.Type
+			plan.HttpPackageConfigurations = append(plan.HttpPackageConfigurations, httpPackageConfigurations)
+		}
+	}
+
+	if vodSource.LastModifiedTime != nil {
+		plan.LastModifiedTime = types.StringValue((aws.TimeValue(vodSource.LastModifiedTime)).String())
+	}
+
+	if vodSource.VodSourceName != nil {
+		plan.Name = vodSource.VodSourceName
+	}
+
+	if vodSource.SourceLocationName != nil {
+		plan.SourceLocationName = vodSource.SourceLocationName
+	}
+
+	if len(vodSource.Tags) > 0 {
+		plan.Tags = vodSource.Tags
+	}
+
+	return plan
+}
+
+func readVodSourceToState(ctx context.Context, plan vodSourceModel, vodSource mediatailor.DescribeVodSourceOutput) vodSourceModel {
+	vodSourceName := *vodSource.VodSourceName
+	sourceLocationName := *vodSource.SourceLocationName
+	idNames := sourceLocationName + "," + vodSourceName
+
+	plan.ID = types.StringValue(idNames)
+
+	if vodSource.AdBreakOpportunities != nil {
+		for _, value := range vodSource.AdBreakOpportunities {
+			plan.AdBreakOpportunitiesOffsetMillis = append(plan.AdBreakOpportunitiesOffsetMillis, value.OffsetMillis)
+		}
+	}
 
 	if vodSource.Arn != nil {
 		plan.Arn = types.StringValue(*vodSource.Arn)

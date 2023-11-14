@@ -3,12 +3,15 @@ package awsmt
 import (
 	"context"
 	"fmt"
-	"reflect"
-	"strings"
-
 	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"reflect"
+	"strings"
 )
 
 var (
@@ -30,7 +33,36 @@ func (r *resourceVodSource) Metadata(_ context.Context, req resource.MetadataReq
 }
 
 func (r *resourceVodSource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = buildResourceSchema()
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":            computedString,
+			"arn":           computedString,
+			"creation_time": computedString,
+			"http_package_configurations": schema.ListNestedAttribute{
+				Required: true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"path":         requiredString,
+						"source_group": requiredString,
+						"type": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.OneOf("HLS", "DASH"),
+							},
+						},
+					},
+				},
+			},
+			"last_modified_time":   computedString,
+			"source_location_name": requiredString,
+			"tags":                 optionalMap,
+			"name":                 requiredString,
+			"ad_break_opportunities_offset_millis": schema.ListAttribute{
+				Optional:    true,
+				ElementType: types.Int64Type,
+			},
+		},
+	}
 }
 
 func (r *resourceVodSource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
@@ -94,7 +126,7 @@ func (r *resourceVodSource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	state = readVodSourceToPlan(state, mediatailor.CreateVodSourceOutput(*vodSource))
+	state = readVodSourceToState(ctx, state, *vodSource)
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
