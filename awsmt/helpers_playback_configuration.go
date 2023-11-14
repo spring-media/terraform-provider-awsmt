@@ -289,7 +289,7 @@ func readLivePreRollConfiguration(plan playbackConfigurationModel, playbackConfi
 }
 
 func readManifestProcessingRules(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
-	if playbackConfiguration.ManifestProcessingRules != nil && *playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough.Enabled != false {
+	if playbackConfiguration.ManifestProcessingRules != nil && *playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough.Enabled {
 		plan.ManifestProcessingRules = &manifestProcessingRulesModel{}
 		if playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough != nil && playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough.Enabled != nil {
 			plan.ManifestProcessingRules.AdMarkerPassthrough = &adMarkerPassthroughModel{}
