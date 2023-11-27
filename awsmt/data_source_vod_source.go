@@ -84,7 +84,7 @@ func (d *dataSourceVodSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	data = readVodSourceToState(ctx, data, *vodSource)
+	data = readVodSourceToState(data, *vodSource)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
