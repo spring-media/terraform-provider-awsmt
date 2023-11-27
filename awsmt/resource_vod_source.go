@@ -129,7 +129,7 @@ func (r *resourceVodSource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	state = readVodSourceToState(ctx, state, *vodSource)
+	state = readVodSourceToState(state, *vodSource)
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
