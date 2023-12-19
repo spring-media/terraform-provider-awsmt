@@ -126,6 +126,21 @@ func TestAccChannelResourceRunning(t *testing.T) {
 	})
 }
 
+func TestAccChannelResourceSTANDARD(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: standardTierChannel(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.awsmt_channel.test", "tier", "STANDARD"),
+				),
+			},
+		},
+	})
+}
+
 func basicChannel(name, state, mw_s, mbt_s, mup_s, spd_s, k1, v1, k2, v2 string) string {
 	return fmt.Sprintf(
 		`
@@ -214,4 +229,67 @@ func hlsChannel(mw_s string) string {
 					value = data.awsmt_channel.test
 				}
 				`, mw_s)
+}
+func standardTierChannel() string {
+	return `resource "awsmt_vod_source" "test" {
+		http_package_configurations = [{
+path = "/"
+source_group = "default"
+type = "HLS"
+}]
+source_location_name = awsmt_source_location.test_source_location.name
+name = "vod_source_example"
+tags = {"Environment": "dev"}
+}
+data "awsmt_vod_source" "data_test" {
+source_location_name = awsmt_source_location.test_source_location.name
+name = awsmt_vod_source.test.name
+}
+
+output "vod_source_out" {
+value = data.awsmt_vod_source.data_test
+}
+resource "awsmt_source_location" "test_source_location"{
+name = "test_source_location"
+http_configuration = {
+base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
+}
+default_segment_delivery_configuration = {
+base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
+}
+}
+data "awsmt_source_location" "test" {
+name = awsmt_source_location.test_source_location.name
+}
+output "awsmt_source_location" {
+value = data.awsmt_source_location.test
+}
+resource "awsmt_channel" "test"  {
+name = "test"
+channel_state = "STOPPED"
+outputs = [{
+manifest_name                = "default"
+source_group                 = "default"
+hls_playlist_settings = {
+ad_markup_type = ["DATERANGE"]
+manifest_window_seconds = 30
+}
+}]
+playback_mode = "LINEAR"
+filler_slate = {
+source_location_name = awsmt_source_location.test_source_location.name
+vod_source_name = awsmt_vod_source.test.name
+}
+policy = "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"AllowAnonymous\", \"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\": \"mediatailor:GetManifest\", \"Resource\": \"arn:aws:mediatailor:eu-central-1:319158032161:channel/test\"}]}"
+tier = "STANDARD"
+tags = {"Environment": "dev"}
+}
+
+data "awsmt_channel" "test" {
+name = awsmt_channel.test.name
+}
+output "channel_out" {
+value = data.awsmt_channel.test
+}
+`
 }
