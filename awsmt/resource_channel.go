@@ -106,7 +106,7 @@ func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"tier": schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
-					stringvalidator.OneOf("BASIC", "STANDARD"),
+					stringvalidator.OneOf([]string{"BASIC", "STANDARD"}...),
 				},
 			},
 		},
