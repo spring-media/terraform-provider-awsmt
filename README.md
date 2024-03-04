@@ -39,7 +39,7 @@ The tests require the following environment variables to be defined:
 ```bash
 export AWS_REGION=eu-central-1
 export AWS_PROFILE=as-nmt-ott-test
-export AWS_ACCOUNT_ID=319158032161
+export AWS_ACCOUNT_ID=985600762523
 ```
 
 Run `make clean sweep test` to execute both acceptance and unit tests.
