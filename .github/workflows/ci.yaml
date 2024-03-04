@@ -9,8 +9,7 @@ env:
 
 permissions:
   id-token: write
-  contents: read
-  repo: write
+  contents: write
 
 jobs:
   lint:
