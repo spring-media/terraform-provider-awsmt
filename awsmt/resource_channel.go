@@ -138,7 +138,7 @@ func (r *resourceChannel) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	if *plan.ChannelState == "RUNNING" {
+	if plan.ChannelState != nil && *plan.ChannelState == "RUNNING" {
 		_, err := r.client.StartChannel(&mediatailor.StartChannelInput{ChannelName: plan.Name})
 		if err != nil {
 			resp.Diagnostics.AddError("Error while starting the channel "+*channel.ChannelName, err.Error())
@@ -198,7 +198,9 @@ func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, re
 
 	state = readChannelToState(state, *channel)
 
-	state.ChannelState = channel.ChannelState
+	if state.ChannelState != nil {
+		state.ChannelState = channel.ChannelState
+	}
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -274,7 +276,9 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 		)
 	}
 
-	if (*previousState == "RUNNING" || *newState == "RUNNING") && *newState != "STOPPED" {
+	wasRunning := previousState != nil && *previousState == "RUNNING"
+	shouldRun := newState != nil && *newState == "RUNNING"
+	if wasRunning || shouldRun {
 		_, err := r.client.StartChannel(&mediatailor.StartChannelInput{ChannelName: channelName})
 		if err != nil {
 			resp.Diagnostics.AddError("Error while starting the channel "+*channelName, err.Error())
