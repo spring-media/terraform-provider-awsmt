@@ -278,7 +278,7 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 
 	wasRunning := previousState != nil && *previousState == "RUNNING"
 	shouldRun := newState != nil && *newState == "RUNNING"
-	if wasRunning || shouldRun {
+	if (newState == nil && wasRunning) || shouldRun {
 		_, err := r.client.StartChannel(&mediatailor.StartChannelInput{ChannelName: channelName})
 		if err != nil {
 			resp.Diagnostics.AddError("Error while starting the channel "+*channelName, err.Error())
