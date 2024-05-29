@@ -101,6 +101,38 @@ func TestAccChannelResourceErrors(t *testing.T) {
 	})
 }
 
+func TestAccChannelResourceNoState(t *testing.T) {
+	noStateChannel := `
+resource "awsmt_channel" "test"  {
+	name = "test"
+	outputs = [{
+		manifest_name                = "default"
+		source_group                 = "default"
+		hls_playlist_settings = {
+			ad_markup_type = ["DATERANGE"]
+			manifest_window_seconds = "30"
+		}
+	}]
+	playback_mode = "LOOP"
+	tier = "BASIC"
+	tags = {"Environment": "dev"}
+}
+`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: noStateChannel,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_channel.test", "name", "test"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccChannelResourceRunning(t *testing.T) {
 	mw_s := "30"
 	mw_s2 := "40"
