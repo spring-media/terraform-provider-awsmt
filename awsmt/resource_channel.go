@@ -74,8 +74,8 @@ func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, re
 						"hls_playlist_settings": schema.SingleNestedAttribute{
 							Optional: true,
 							Attributes: map[string]schema.Attribute{
-								"ad_markup_type":          optionalList,
-								"manifest_window_seconds": optionalInt64,
+								"ad_markup_type":          optionalUnknownList,
+								"manifest_window_seconds": optionalUnknownInt64,
 							},
 						},
 						"manifest_name": requiredString,

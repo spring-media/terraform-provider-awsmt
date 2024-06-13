@@ -2,6 +2,9 @@ package awsmt
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -39,14 +42,24 @@ var optionalInt64 = schema.Int64Attribute{
 	Optional: true,
 }
 
+var optionalUnknownInt64 = schema.Int64Attribute{
+	Optional: true,
+	PlanModifiers: []planmodifier.Int64{
+		int64planmodifier.UseStateForUnknown(),
+	},
+}
+
 var optionalMap = schema.MapAttribute{
 	Optional:    true,
 	ElementType: types.StringType,
 }
 
-var optionalList = schema.ListAttribute{
+var optionalUnknownList = schema.ListAttribute{
 	Optional:    true,
 	ElementType: types.StringType,
+	PlanModifiers: []planmodifier.List{
+		listplanmodifier.UseStateForUnknown(),
+	},
 }
 
 var optionalBool = schema.BoolAttribute{
