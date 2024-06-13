@@ -17,11 +17,13 @@ resource "awsmt_source_location" "example" {
     }
   }
   default_segment_delivery_configuration_url = "https://example.com"
-  http_configuration_url                     = "https://example.com"
-  segment_delivery_configurations {
+  http_configuration = {
+    base_url = "https://example.com"
+  }
+  segment_delivery_configurations = [{
     base_url = "https://example.com",
     name =     "example"
-  }
+  }]
   name = "example"
   tags = {
     "key": "value"
@@ -34,7 +36,7 @@ resource "awsmt_source_location" "example" {
 The following arguments are supported:
 
 - `access_configuration` - (Optional) The access configuration for the source location.
-  - `access_type` - (Required) The type of authentication used to access content from HttpConfiguration::BaseUrl on your source location. Valid values are `SECRETS_MANAGER_ACCESS_TOKEN` and `S3_SIGV$`.
+  - `access_type` - (Required) The type of authentication used to access content from HttpConfiguration::BaseUrl on your source location. Valid values are `SECRETS_MANAGER_ACCESS_TOKEN` and `S3_SIGV4`.
   - `smatc` - (Optional) Part of Secrets Manager Access Token Configuration. The Amazon Resource Name (ARN) of the AWS Secrets Manager secret that contains the access token.
     - `header_name` - (Optional) Part of Secrets Manager Access Token Configuration. The name of the HTTP header used to supply the access token in requests to the source location.
     - `secret_arn` - (Optional) Part of Secrets Manager Access Token Configuration. The Amazon Resource Name (ARN) of the AWS Secrets Manager secret that contains the access token.

@@ -7,13 +7,13 @@ Provides an Elemental MediaTailor Channel.
 ```terraform
 resource "awsmt_channel" "example" {
   name = "example-channel"
-  outputs {
+  outputs = [{
     manifest_name                = "default"
     source_group                 = "default"
     hls_playlist_settings = {
       manifest_windows_seconds = 30
     }
-  }
+  }]
   playback_mode = "LOOP"
   tier          = "BASIC"
 }
