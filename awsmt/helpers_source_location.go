@@ -46,7 +46,6 @@ func getAccessConfigurationInput(accessConfiguration *accessConfigurationModel) 
 			params.AccessType = accessConfiguration.AccessType
 		}
 		if accessConfiguration.SecretsManagerAccessTokenConfiguration != nil {
-			params.SecretsManagerAccessTokenConfiguration = &mediatailor.SecretsManagerAccessTokenConfiguration{}
 			params.SecretsManagerAccessTokenConfiguration = getSMATC(*accessConfiguration.SecretsManagerAccessTokenConfiguration)
 		}
 	}
