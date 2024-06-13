@@ -41,5 +41,5 @@ In addition to all arguments above, the following attributes are exported:
 VOD Sources can be imported using their Name and SourceLocationName as a string as identifier. For example:
 
 ```sh
-  $ terraform import awsmt_vod_source.example name:example-vod-source,example-source-location
+  $ terraform import awsmt_vod_source.example example-vod-source,example-source-location
 ```

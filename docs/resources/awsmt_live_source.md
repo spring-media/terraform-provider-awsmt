@@ -41,5 +41,5 @@ In addition to all arguments above, the following attributes are exported:
 Live Sources can be imported using their Name and SourceLocationName in one string as identifier. For example:
 
 ```shell
-  $ terraform import awsmt_live_source.example name:example-live-source,example-source-location
+  $ terraform import awsmt_live_source.example example-live-source,example-source-location
 ```

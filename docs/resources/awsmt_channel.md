@@ -60,5 +60,5 @@ In addition to all arguments above, the following attributes are exported:
 Channels can be imported using their Name as identifier. For example:
 
 ```shell
-  $ terraform import awsmt_channel.example name:example-channel
+  $ terraform import awsmt_channel.example example-channel
 ```
