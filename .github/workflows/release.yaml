@@ -21,10 +21,10 @@ jobs:
         with:
           gpg_private_key: ${{ secrets.TFREG_GPG_PRIVATE_KEY }}
           passphrase: ""
-      - uses: goreleaser/goreleaser-action@v3
+      - uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
-          args: release --rm-dist
+          args: release --clean
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           # GitHub sets this automatically
