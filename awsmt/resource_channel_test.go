@@ -158,6 +158,22 @@ func TestAccChannelResourceRunning(t *testing.T) {
 	})
 }
 
+func TestAccChannelValuesNotFlickering(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: hlsChannelNoManifestWindowSeconds(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_channel.test", "channel_state", "STOPPED"),
+					resource.TestCheckResourceAttr("data.awsmt_channel.test", "outputs.0.hls_playlist_settings.ad_markup_type", "[DATERANGE]"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccChannelResourceSTANDARD(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -234,6 +250,32 @@ func errorChannel() string {
 					value = data.awsmt_channel.test
 				}
 				`
+}
+
+func hlsChannelNoManifestWindowSeconds() string {
+	return fmt.Sprintf(`
+				resource "awsmt_channel" "test"  {
+  					name = "test"
+  					channel_state = "STOPPED"
+  					outputs = [{
+    					manifest_name                = "default"
+						source_group                 = "default"
+    					hls_playlist_settings = {
+							ad_markup_type = ["DATERANGE"]
+						}
+  					}]
+  					playback_mode = "LOOP"
+  					tier = "BASIC"
+					tags = {"Environment": "dev"}
+					}
+
+				data "awsmt_channel" "test" {
+  					name = awsmt_channel.test.name
+				}
+				output "channel_out" {
+					value = data.awsmt_channel.test
+				}
+				`)
 }
 
 func hlsChannel(mw_s string) string {
