@@ -253,7 +253,7 @@ func errorChannel() string {
 }
 
 func hlsChannelNoManifestWindowSeconds() string {
-	return fmt.Sprintf(`
+	return `
 				resource "awsmt_channel" "test"  {
   					name = "test"
   					channel_state = "STOPPED"
@@ -275,7 +275,7 @@ func hlsChannelNoManifestWindowSeconds() string {
 				output "channel_out" {
 					value = data.awsmt_channel.test
 				}
-				`)
+				`
 }
 
 func hlsChannel(mw_s string) string {
