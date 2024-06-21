@@ -138,9 +138,7 @@ func buildDashPlaylistSettings(settings *dashPlaylistSettingsModel) *mediatailor
 func buildHLSPlaylistSettings(settings *hlsPlaylistSettingsModel) *mediatailor.HlsPlaylistSettings {
 	hlsSettings := &mediatailor.HlsPlaylistSettings{}
 	if settings.AdMarkupType != nil && len(settings.AdMarkupType) > 0 {
-		for _, value := range settings.AdMarkupType {
-			hlsSettings.AdMarkupType = append(hlsSettings.AdMarkupType, value)
-		}
+		hlsSettings.AdMarkupType = append(hlsSettings.AdMarkupType, settings.AdMarkupType...)
 	} else if settings.AdMarkupType == nil {
 		temp := "DATERANGE"
 		hlsSettings.AdMarkupType = append(hlsSettings.AdMarkupType, &temp)
@@ -262,9 +260,7 @@ func readDashPlaylistConfigurationsToPlan(output *mediatailor.ResponseOutputItem
 func readHlsPlaylistConfigurationsToPlan(output *mediatailor.ResponseOutputItem, stateOutput outputsModel) *hlsPlaylistSettingsModel {
 	outputs := &hlsPlaylistSettingsModel{}
 	if stateOutput.HlsPlaylistSettings.AdMarkupType != nil && output.HlsPlaylistSettings.AdMarkupType != nil && len(output.HlsPlaylistSettings.AdMarkupType) > 0 {
-		for _, value := range output.HlsPlaylistSettings.AdMarkupType {
-			outputs.AdMarkupType = append(outputs.AdMarkupType, value)
-		}
+		outputs.AdMarkupType = append(outputs.AdMarkupType, output.HlsPlaylistSettings.AdMarkupType...)
 	}
 	if stateOutput.HlsPlaylistSettings.ManifestWindowSeconds != nil && output.HlsPlaylistSettings.ManifestWindowSeconds != nil {
 		outputs.ManifestWindowSeconds = output.HlsPlaylistSettings.ManifestWindowSeconds
@@ -275,9 +271,7 @@ func readHlsPlaylistConfigurationsToPlan(output *mediatailor.ResponseOutputItem,
 func readHlsPlaylistConfigurationsToPlanDS(output *mediatailor.ResponseOutputItem) *hlsPlaylistSettingsModel {
 	outputs := &hlsPlaylistSettingsModel{}
 	if output.HlsPlaylistSettings.AdMarkupType != nil && len(output.HlsPlaylistSettings.AdMarkupType) > 0 {
-		for _, value := range output.HlsPlaylistSettings.AdMarkupType {
-			outputs.AdMarkupType = append(outputs.AdMarkupType, value)
-		}
+		outputs.AdMarkupType = append(outputs.AdMarkupType, output.HlsPlaylistSettings.AdMarkupType...)
 	}
 	if output.HlsPlaylistSettings.ManifestWindowSeconds != nil {
 		outputs.ManifestWindowSeconds = output.HlsPlaylistSettings.ManifestWindowSeconds
