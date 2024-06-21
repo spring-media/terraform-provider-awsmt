@@ -1,6 +1,9 @@
 # Visit https://goreleaser.com for documentation on how to customize this
 # behavior.
 ---
+
+version: 2
+
 before:
   hooks:
     # this is just an example and not a requirement for provider
@@ -61,4 +64,12 @@ release:
   # uncomment this line:
   # draft: true
 changelog:
-  skip: true
+  filters:
+    exclude:
+      - "^test:"
+      - "^test\\("
+      - "merge conflict"
+      - Merge pull request
+      - Merge remote-tracking branch
+      - Merge branch
+      - go mod tidy
