@@ -130,7 +130,7 @@ func (r *resourceChannel) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	input := channelInput(plan)
+	input := buildChannelInput(plan)
 
 	channel, err := r.client.CreateChannel(&input)
 	if err != nil {
@@ -154,9 +154,9 @@ func (r *resourceChannel) Create(ctx context.Context, req resource.CreateRequest
 		}
 	}
 
-	plan = readChannelToPlan(plan, *channel)
+	newPlan := writeChannelToPlan(plan, *channel)
 
-	diags = resp.State.Set(ctx, plan)
+	diags = resp.State.Set(ctx, newPlan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -196,7 +196,7 @@ func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, re
 		state.Policy = jsontypes.NewNormalizedNull()
 	}
 
-	state = readChannelToState(state, *channel)
+	state = writeChannelToState(state, *channel)
 
 	if state.ChannelState != nil {
 		state.ChannelState = channel.ChannelState
@@ -267,7 +267,7 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 		)
 	}
 
-	var params = getUpdateChannelInput(plan)
+	var params = buildUpdateChannelInput(plan)
 	updatedChannel, err := r.client.UpdateChannel(&params)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -288,7 +288,7 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 
 	plan.ChannelState = newState
 
-	plan = readChannelToPlan(plan, mediatailor.CreateChannelOutput(*updatedChannel))
+	plan = writeChannelToPlan(plan, mediatailor.CreateChannelOutput(*updatedChannel))
 
 	// @ADR
 	// Context: The official AWS Mediatailor Go SDK states that the PlaybackMode is part of the UpdateChannelOutput,

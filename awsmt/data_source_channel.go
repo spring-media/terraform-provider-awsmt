@@ -122,7 +122,7 @@ func (d *dataSourceChannel) Read(ctx context.Context, req datasource.ReadRequest
 		data.ChannelState = channel.ChannelState
 	}
 
-	data = readChannelToState(data, *channel)
+	data = writeChannelToState(data, *channel)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

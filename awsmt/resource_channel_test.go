@@ -167,7 +167,7 @@ func TestAccChannelValuesNotFlickering(t *testing.T) {
 				Config: hlsChannelNoManifestWindowSeconds(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("awsmt_channel.test", "channel_state", "STOPPED"),
-					resource.TestCheckResourceAttr("data.awsmt_channel.test", "outputs.0.hls_playlist_settings.ad_markup_type", "[DATERANGE]"),
+					resource.TestCheckResourceAttr("data.awsmt_channel.test", "outputs.0.hls_playlist_settings.ad_markup_type.0", "DATERANGE"),
 				),
 			},
 		},
