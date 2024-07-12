@@ -10,7 +10,7 @@ type liveSourceModel struct {
 	LastModifiedTime          types.String                     `tfsdk:"last_modified_time"`
 	Name                      *string                          `tfsdk:"name"`
 	SourceLocationName        *string                          `tfsdk:"source_location_name"`
-	Tags                      map[string]*string               `tfsdk:"tags"`
+	Tags                      map[string]string                `tfsdk:"tags"`
 }
 
 type httpPackageConfigurationsModel struct {

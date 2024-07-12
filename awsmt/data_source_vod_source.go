@@ -2,11 +2,9 @@ package awsmt
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/service/mediatailor"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
 var (
@@ -19,7 +17,7 @@ func DataSourceVodSource() datasource.DataSource {
 }
 
 type dataSourceVodSource struct {
-	client *mediatailor.MediaTailor
+	client *mediatailor.Client
 }
 
 func (d *dataSourceVodSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -32,23 +30,9 @@ func (d *dataSourceVodSource) Metadata(_ context.Context, req datasource.Metadat
 func (d *dataSourceVodSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id":                   computedString,
-			"source_location_name": requiredString,
-			"http_package_configurations": schema.ListNestedAttribute{
-				Computed: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"path":         computedString,
-						"source_group": computedString,
-						"type": schema.StringAttribute{
-							Computed: true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("HLS", "DASH"),
-							},
-						},
-					},
-				},
-			},
+			"id":                                   computedString,
+			"source_location_name":                 requiredString,
+			"http_package_configurations":          httpPackageConfigurationsDataSourceSchema,
 			"creation_time":                        computedString,
 			"tags":                                 computedMap,
 			"last_modified_time":                   computedString,
@@ -64,7 +48,7 @@ func (d *dataSourceVodSource) Configure(_ context.Context, req datasource.Config
 		return
 	}
 
-	d.client = req.ProviderData.(clients).v1
+	d.client = req.ProviderData.(clients).v2
 }
 
 func (d *dataSourceVodSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -78,7 +62,7 @@ func (d *dataSourceVodSource) Read(ctx context.Context, req datasource.ReadReque
 	sourceLocationName := data.SourceLocationName
 	vodSourceName := data.Name
 
-	vodSource, err := d.client.DescribeVodSource(&mediatailor.DescribeVodSourceInput{SourceLocationName: sourceLocationName, VodSourceName: vodSourceName})
+	vodSource, err := d.client.DescribeVodSource(ctx, &mediatailor.DescribeVodSourceInput{SourceLocationName: sourceLocationName, VodSourceName: vodSourceName})
 	if err != nil {
 		resp.Diagnostics.AddError("Error while describing vod source", err.Error())
 		return

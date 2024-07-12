@@ -3,14 +3,11 @@ package awsmt
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/mediatailor"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"reflect"
 	"strings"
 )
 
@@ -25,7 +22,7 @@ func ResourceVodSource() resource.Resource {
 }
 
 type resourceVodSource struct {
-	client *mediatailor.MediaTailor
+	client *mediatailor.Client
 }
 
 func (r *resourceVodSource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -35,28 +32,14 @@ func (r *resourceVodSource) Metadata(_ context.Context, req resource.MetadataReq
 func (r *resourceVodSource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id":                   computedString,
-			"source_location_name": requiredString,
-			"http_package_configurations": schema.ListNestedAttribute{
-				Required: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"path":         requiredString,
-						"source_group": requiredString,
-						"type": schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("HLS", "DASH"),
-							},
-						},
-					},
-				},
-			},
-			"creation_time":      computedString,
-			"tags":               optionalMap,
-			"last_modified_time": computedString,
-			"arn":                computedString,
-			"name":               requiredString,
+			"id":                          computedStringWithStateForUnknown,
+			"source_location_name":        requiredString,
+			"http_package_configurations": httpPackageConfigurationsResourceSchema,
+			"creation_time":               computedStringWithStateForUnknown,
+			"tags":                        optionalMap,
+			"last_modified_time":          computedString,
+			"arn":                         computedStringWithStateForUnknown,
+			"name":                        requiredStringWithRequiresReplace,
 			"ad_break_opportunities_offset_millis": schema.ListAttribute{
 				Optional:    true,
 				ElementType: types.Int64Type,
@@ -70,7 +53,7 @@ func (r *resourceVodSource) Configure(_ context.Context, req resource.ConfigureR
 		return
 	}
 
-	r.client = req.ProviderData.(clients).v1
+	r.client = req.ProviderData.(clients).v2
 }
 
 func (r *resourceVodSource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -82,9 +65,9 @@ func (r *resourceVodSource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	input := vodSourceInput(plan)
+	input := getCreateVodSourceInput(plan)
 
-	vodSource, err := r.client.CreateVodSource(&input)
+	vodSource, err := r.client.CreateVodSource(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error while creating vod source", err.Error())
 		return
@@ -120,7 +103,7 @@ func (r *resourceVodSource) Read(ctx context.Context, req resource.ReadRequest, 
 	input.VodSourceName = &name
 	input.SourceLocationName = &sourceLocationName
 
-	vodSource, err := r.client.DescribeVodSource(input)
+	vodSource, err := r.client.DescribeVodSource(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error while describing vod source", "Could not describe the vod source: "+*input.SourceLocationName+" and "+*input.VodSourceName+": "+err.Error())
 		return
@@ -147,7 +130,7 @@ func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateReque
 	input.VodSourceName = plan.Name
 	input.SourceLocationName = plan.SourceLocationName
 
-	vodSource, err := r.client.DescribeVodSource(input)
+	vodSource, err := r.client.DescribeVodSource(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error while describing Vod source", err.Error())
 		return
@@ -156,19 +139,17 @@ func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateReque
 	oldTags := vodSource.Tags
 	newTags := plan.Tags
 
-	// Check if tags are different
-	if !reflect.DeepEqual(oldTags, newTags) {
-		err = updatesTags(r.client, oldTags, newTags, *vodSource.Arn)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error while updating vod source tags"+err.Error(),
-				err.Error(),
-			)
-		}
+	// Update tags
+	err = V2UpdatesTags(r.client, oldTags, newTags, *vodSource.Arn)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error while updating vod source tags"+err.Error(),
+			err.Error(),
+		)
 	}
 
 	updateInput := vodSourceUpdateInput(plan)
-	updatedVodSource, err := r.client.UpdateVodSource(&updateInput)
+	updatedVodSource, err := r.client.UpdateVodSource(ctx, &updateInput)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating vod source "+err.Error(),
@@ -197,7 +178,7 @@ func (r *resourceVodSource) Delete(ctx context.Context, req resource.DeleteReque
 	input.VodSourceName = state.Name
 	input.SourceLocationName = state.SourceLocationName
 
-	_, err := r.client.DeleteVodSource(input)
+	_, err := r.client.DeleteVodSource(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while deleting vod source "+err.Error(),

@@ -1,16 +1,15 @@
 package awsmt
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func liveSourceInput(plan liveSourceModel) mediatailor.CreateLiveSourceInput {
+func getLiveSourceInput(plan liveSourceModel) mediatailor.CreateLiveSourceInput {
 	var input mediatailor.CreateLiveSourceInput
 
 	if plan.HttpPackageConfigurations != nil && len(plan.HttpPackageConfigurations) > 0 {
-		input.HttpPackageConfigurations = getHttpInput(plan.HttpPackageConfigurations)
+		input.HttpPackageConfigurations = buildHttpPackageConfigurations(plan.HttpPackageConfigurations)
 	}
 
 	if plan.Name != nil {
@@ -40,13 +39,13 @@ func readLiveSourceToPlan(plan liveSourceModel, liveSource mediatailor.CreateLiv
 	}
 
 	if liveSource.CreationTime != nil {
-		plan.CreationTime = types.StringValue((aws.TimeValue(liveSource.CreationTime)).String())
+		plan.CreationTime = types.StringValue(liveSource.CreationTime.String())
 	}
 
 	plan.HttpPackageConfigurations = readHttpPackageConfigurations(liveSource.HttpPackageConfigurations)
 
 	if liveSource.LastModifiedTime != nil {
-		plan.LastModifiedTime = types.StringValue((aws.TimeValue(liveSource.LastModifiedTime)).String())
+		plan.LastModifiedTime = types.StringValue(liveSource.LastModifiedTime.String())
 	}
 
 	if liveSource.LiveSourceName != nil {
@@ -68,7 +67,7 @@ func liveSourceUpdateInput(plan liveSourceModel) mediatailor.UpdateLiveSourceInp
 	var input mediatailor.UpdateLiveSourceInput
 
 	if plan.HttpPackageConfigurations != nil && len(plan.HttpPackageConfigurations) > 0 {
-		input.HttpPackageConfigurations = getHttpInput(plan.HttpPackageConfigurations)
+		input.HttpPackageConfigurations = buildHttpPackageConfigurations(plan.HttpPackageConfigurations)
 	}
 
 	if plan.Name != nil {

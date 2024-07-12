@@ -3,13 +3,10 @@ package awsmt
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"reflect"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
@@ -25,7 +22,7 @@ func ResourceLiveSource() resource.Resource {
 }
 
 type resourceLiveSource struct {
-	client *mediatailor.MediaTailor
+	client *mediatailor.Client
 }
 
 func (r *resourceLiveSource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -35,28 +32,14 @@ func (r *resourceLiveSource) Metadata(_ context.Context, req resource.MetadataRe
 func (r *resourceLiveSource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id":            computedString,
-			"arn":           computedString,
-			"creation_time": computedString,
-			"http_package_configurations": schema.ListNestedAttribute{
-				Required: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"path":         requiredString,
-						"source_group": requiredString,
-						"type": schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("HLS", "DASH"),
-							},
-						},
-					},
-				},
-			},
-			"last_modified_time":   computedString,
-			"source_location_name": requiredString,
-			"tags":                 optionalMap,
-			"name":                 requiredString,
+			"id":                          computedStringWithStateForUnknown,
+			"arn":                         computedStringWithStateForUnknown,
+			"creation_time":               computedStringWithStateForUnknown,
+			"http_package_configurations": httpPackageConfigurationsResourceSchema,
+			"last_modified_time":          computedString,
+			"source_location_name":        requiredString,
+			"tags":                        optionalMap,
+			"name":                        requiredStringWithRequiresReplace,
 		},
 	}
 }
@@ -66,7 +49,7 @@ func (r *resourceLiveSource) Configure(_ context.Context, req resource.Configure
 		return
 	}
 
-	r.client = req.ProviderData.(clients).v1
+	r.client = req.ProviderData.(clients).v2
 }
 
 func (r *resourceLiveSource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -78,9 +61,9 @@ func (r *resourceLiveSource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	input := liveSourceInput(plan)
+	input := getLiveSourceInput(plan)
 
-	liveSource, err := r.client.CreateLiveSource(&input)
+	liveSource, err := r.client.CreateLiveSource(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error while creating live source", err.Error())
 		return
@@ -116,7 +99,7 @@ func (r *resourceLiveSource) Read(ctx context.Context, req resource.ReadRequest,
 	input.LiveSourceName = &name
 	input.SourceLocationName = &sourceLocationName
 
-	liveSource, err := r.client.DescribeLiveSource(input)
+	liveSource, err := r.client.DescribeLiveSource(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error while describing live source", err.Error())
 		return
@@ -143,7 +126,7 @@ func (r *resourceLiveSource) Update(ctx context.Context, req resource.UpdateRequ
 	input.LiveSourceName = plan.Name
 	input.SourceLocationName = plan.SourceLocationName
 
-	liveSource, err := r.client.DescribeLiveSource(input)
+	liveSource, err := r.client.DescribeLiveSource(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error while describing live source", err.Error())
 		return
@@ -152,19 +135,17 @@ func (r *resourceLiveSource) Update(ctx context.Context, req resource.UpdateRequ
 	oldTags := liveSource.Tags
 	newTags := plan.Tags
 
-	// Check if tags are different
-	if !reflect.DeepEqual(oldTags, newTags) {
-		err = updatesTags(r.client, oldTags, newTags, *liveSource.Arn)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error while updating live source tags"+err.Error(),
-				err.Error(),
-			)
-		}
+	// Update tags
+	err = V2UpdatesTags(r.client, oldTags, newTags, *liveSource.Arn)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error while updating live source tags"+err.Error(),
+			err.Error(),
+		)
 	}
 
 	updateInput := liveSourceUpdateInput(plan)
-	updatedLiveSource, err := r.client.UpdateLiveSource(&updateInput)
+	updatedLiveSource, err := r.client.UpdateLiveSource(ctx, &updateInput)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating live source "+err.Error(),
@@ -193,7 +174,7 @@ func (r *resourceLiveSource) Delete(ctx context.Context, req resource.DeleteRequ
 	params.LiveSourceName = state.Name
 	params.SourceLocationName = state.SourceLocationName
 
-	_, err := r.client.DeleteLiveSource(params)
+	_, err := r.client.DeleteLiveSource(ctx, params)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while deleting live source "+err.Error(),
