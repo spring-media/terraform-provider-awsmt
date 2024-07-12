@@ -107,7 +107,7 @@ func (d *dataSourcePlaybackConfiguration) Configure(_ context.Context, req datas
 		return
 	}
 
-	d.client = req.ProviderData.(*mediatailor.MediaTailor)
+	d.client = req.ProviderData.(clients).v1
 }
 
 func (d *dataSourcePlaybackConfiguration) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

@@ -64,7 +64,7 @@ func (d *dataSourceVodSource) Configure(_ context.Context, req datasource.Config
 		return
 	}
 
-	d.client = req.ProviderData.(*mediatailor.MediaTailor)
+	d.client = req.ProviderData.(clients).v1
 }
 
 func (d *dataSourceVodSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

@@ -2,6 +2,9 @@ package awsmt
 
 import (
 	"context"
+	v2 "github.com/aws/aws-sdk-go-v2/aws"
+	v2config "github.com/aws/aws-sdk-go-v2/config"
+	v2mt "github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
@@ -27,6 +30,11 @@ type awsmtProvider struct{}
 type awsmtProviderModel struct {
 	Profile types.String `tfsdk:"profile"`
 	Region  types.String `tfsdk:"region"`
+}
+
+type clients struct {
+	v1 *mediatailor.MediaTailor
+	v2 *v2mt.Client
 }
 
 func (p *awsmtProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -60,13 +68,15 @@ func (p *awsmtProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 	var region = "eu-central-1"
 	var profile = ""
+	var err error
+	// Old sdk version creation
+	var sess *session.Session
+	// New sdk version creation
+	var cfg v2.Config
 
 	if !config.Region.IsUnknown() || !config.Region.IsNull() {
 		region = config.Region.ValueString()
 	}
-
-	var sess *session.Session
-	var err error
 
 	if config.Profile.IsUnknown() || config.Profile.IsNull() || config.Profile.ValueString() == "" {
 		if os.Getenv("AWS_PROFILE") != "" {
@@ -79,6 +89,7 @@ func (p *awsmtProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	tflog.Debug(ctx, "Creating AWS client session")
 
 	if profile != "" {
+		// Old sdk
 		sess, err = session.NewSessionWithOptions(session.Options{
 			SharedConfigState: session.SharedConfigEnable,
 			Config: aws.Config{
@@ -86,8 +97,13 @@ func (p *awsmtProvider) Configure(ctx context.Context, req provider.ConfigureReq
 			},
 			Profile: profile,
 		})
+		// New sdk
+		cfg, err = v2config.LoadDefaultConfig(ctx, v2config.WithSharedConfigProfile(profile), v2config.WithRegion(region))
 	} else {
+		// Old sdk
 		sess, err = session.NewSession(&aws.Config{Region: aws.String(region)})
+		// New sdk
+		cfg, err = v2config.LoadDefaultConfig(ctx, v2config.WithRegion(region))
 	}
 
 	if err != nil {
@@ -95,7 +111,10 @@ func (p *awsmtProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		return
 	}
 
-	c := mediatailor.New(sess)
+	c := clients{
+		v1: mediatailor.New(sess),
+		v2: v2mt.NewFromConfig(cfg),
+	}
 
 	resp.DataSourceData = c
 	resp.ResourceData = c

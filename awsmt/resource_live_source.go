@@ -66,7 +66,7 @@ func (r *resourceLiveSource) Configure(_ context.Context, req resource.Configure
 		return
 	}
 
-	r.client = req.ProviderData.(*mediatailor.MediaTailor)
+	r.client = req.ProviderData.(clients).v1
 }
 
 func (r *resourceLiveSource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

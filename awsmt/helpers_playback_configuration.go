@@ -179,7 +179,10 @@ func readPlaybackConfigToPlan(plan playbackConfigurationModel, playbackConfigura
 
 	// MANIFEST PROCESSING RULES
 	if playbackConfiguration.ManifestProcessingRules != nil {
-		plan = readManifestProcessingRules(plan, playbackConfiguration)
+		var mpr = playbackConfiguration.ManifestProcessingRules
+		if mpr.AdMarkerPassthrough != nil && mpr.AdMarkerPassthrough.Enabled != nil && *mpr.AdMarkerPassthrough.Enabled {
+			plan.ManifestProcessingRules = &manifestProcessingRulesModel{AdMarkerPassthrough: &adMarkerPassthroughModel{Enabled: mpr.AdMarkerPassthrough.Enabled}}
+		}
 	}
 
 	plan.Name, plan.PersonalizationThresholdSeconds, plan.PlaybackEndpointPrefix, plan.SessionInitializationEndpointPrefix, plan.SlateAdUrl, plan.TranscodeProfileName, plan.VideoContentSourceUrl, plan.Tags = readPlaybackConfigurationTemps(plan, playbackConfiguration)
