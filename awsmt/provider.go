@@ -68,6 +68,8 @@ func (p *awsmtProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 	var region = "eu-central-1"
 	var profile = ""
+
+	var v1err error
 	var err error
 	// Old sdk version creation
 	var sess *session.Session
@@ -90,7 +92,7 @@ func (p *awsmtProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 	if profile != "" {
 		// Old sdk
-		sess, err = session.NewSessionWithOptions(session.Options{
+		sess, v1err = session.NewSessionWithOptions(session.Options{
 			SharedConfigState: session.SharedConfigEnable,
 			Config: aws.Config{
 				Region: aws.String(region),
@@ -101,12 +103,12 @@ func (p *awsmtProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		cfg, err = v2config.LoadDefaultConfig(ctx, v2config.WithSharedConfigProfile(profile), v2config.WithRegion(region))
 	} else {
 		// Old sdk
-		sess, err = session.NewSession(&aws.Config{Region: aws.String(region)})
+		sess, v1err = session.NewSession(&aws.Config{Region: aws.String(region)})
 		// New sdk
 		cfg, err = v2config.LoadDefaultConfig(ctx, v2config.WithRegion(region))
 	}
 
-	if err != nil {
+	if err != nil || v1err != nil {
 		resp.Diagnostics.AddError("Failed to Initialize Provider in Region", "unable to initialize provider in the specified region: "+err.Error())
 		return
 	}
