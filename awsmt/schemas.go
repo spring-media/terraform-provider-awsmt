@@ -28,9 +28,14 @@ var computedMap = schema.MapAttribute{
 	ElementType: types.StringType,
 }
 
-var computedList = schema.ListAttribute{
+var computedStringList = schema.ListAttribute{
 	Computed:    true,
 	ElementType: types.StringType,
+}
+
+var computedInt64List = schema.ListAttribute{
+	Computed:    true,
+	ElementType: types.Int64Type,
 }
 
 var computedBool = schema.BoolAttribute{

@@ -58,7 +58,7 @@ func (d *dataSourceChannel) Schema(_ context.Context, _ datasource.SchemaRequest
 						"hls_playlist_settings": schema.SingleNestedAttribute{
 							Computed: true,
 							Attributes: map[string]schema.Attribute{
-								"ad_markup_type":          computedList,
+								"ad_markup_type":          computedStringList,
 								"manifest_window_seconds": computedInt64,
 							},
 						},

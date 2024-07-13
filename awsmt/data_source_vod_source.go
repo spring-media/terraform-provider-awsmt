@@ -24,9 +24,6 @@ func (d *dataSourceVodSource) Metadata(_ context.Context, req datasource.Metadat
 	resp.TypeName = req.ProviderTypeName + "_vod_source"
 }
 
-// @ADR
-// Context: The schemas for the VOD Source and the LIVE source are almost identical, except for one field.
-// Decision: We decided to make the duplication undetectable for SonarCloud
 func (d *dataSourceVodSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -38,7 +35,7 @@ func (d *dataSourceVodSource) Schema(_ context.Context, _ datasource.SchemaReque
 			"last_modified_time":                   computedString,
 			"arn":                                  computedString,
 			"name":                                 requiredString,
-			"ad_break_opportunities_offset_millis": computedMap,
+			"ad_break_opportunities_offset_millis": computedInt64List,
 		},
 	}
 }
