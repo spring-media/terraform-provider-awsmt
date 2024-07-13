@@ -55,24 +55,20 @@ func (r *resourceLiveSource) Configure(_ context.Context, req resource.Configure
 func (r *resourceLiveSource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan liveSourceModel
 
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := getLiveSourceInput(plan)
-
-	liveSource, err := r.client.CreateLiveSource(ctx, &input)
+	liveSource, err := r.client.CreateLiveSource(ctx, getCreateLiveSourceInput(plan))
 	if err != nil {
 		resp.Diagnostics.AddError("Error while creating live source", err.Error())
 		return
 	}
 
-	plan = readLiveSourceToPlan(plan, *liveSource)
+	plan = readLiveSource(plan, *liveSource)
 
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -80,8 +76,8 @@ func (r *resourceLiveSource) Create(ctx context.Context, req resource.CreateRequ
 
 func (r *resourceLiveSource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state liveSourceModel
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -95,9 +91,10 @@ func (r *resourceLiveSource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	input := &mediatailor.DescribeLiveSourceInput{}
-	input.LiveSourceName = &name
-	input.SourceLocationName = &sourceLocationName
+	input := &mediatailor.DescribeLiveSourceInput{
+		LiveSourceName:     &name,
+		SourceLocationName: &sourceLocationName,
+	}
 
 	liveSource, err := r.client.DescribeLiveSource(ctx, input)
 	if err != nil {
@@ -105,10 +102,9 @@ func (r *resourceLiveSource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	state = readLiveSourceToPlan(state, mediatailor.CreateLiveSourceOutput(*liveSource))
+	state = readLiveSource(state, mediatailor.CreateLiveSourceOutput(*liveSource))
 
-	diags = resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -116,15 +112,16 @@ func (r *resourceLiveSource) Read(ctx context.Context, req resource.ReadRequest,
 
 func (r *resourceLiveSource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan liveSourceModel
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := &mediatailor.DescribeLiveSourceInput{}
-	input.LiveSourceName = plan.Name
-	input.SourceLocationName = plan.SourceLocationName
+	input := &mediatailor.DescribeLiveSourceInput{
+		LiveSourceName:     plan.Name,
+		SourceLocationName: plan.SourceLocationName,
+	}
 
 	liveSource, err := r.client.DescribeLiveSource(ctx, input)
 	if err != nil {
@@ -132,11 +129,8 @@ func (r *resourceLiveSource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	oldTags := liveSource.Tags
-	newTags := plan.Tags
-
 	// Update tags
-	err = V2UpdatesTags(r.client, oldTags, newTags, *liveSource.Arn)
+	err = V2UpdatesTags(r.client, liveSource.Tags, plan.Tags, *liveSource.Arn)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating live source tags"+err.Error(),
@@ -144,7 +138,7 @@ func (r *resourceLiveSource) Update(ctx context.Context, req resource.UpdateRequ
 		)
 	}
 
-	updateInput := liveSourceUpdateInput(plan)
+	updateInput := getUpdateLiveSourceInput(plan)
 	updatedLiveSource, err := r.client.UpdateLiveSource(ctx, &updateInput)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -153,10 +147,9 @@ func (r *resourceLiveSource) Update(ctx context.Context, req resource.UpdateRequ
 		)
 	}
 
-	plan = readLiveSourceToPlan(plan, mediatailor.CreateLiveSourceOutput(*updatedLiveSource))
+	plan = readLiveSource(plan, mediatailor.CreateLiveSourceOutput(*updatedLiveSource))
 
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -164,15 +157,16 @@ func (r *resourceLiveSource) Update(ctx context.Context, req resource.UpdateRequ
 
 func (r *resourceLiveSource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state liveSourceModel
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	params := &mediatailor.DeleteLiveSourceInput{}
-	params.LiveSourceName = state.Name
-	params.SourceLocationName = state.SourceLocationName
+	params := &mediatailor.DeleteLiveSourceInput{
+		LiveSourceName:     state.Name,
+		SourceLocationName: state.SourceLocationName,
+	}
 
 	_, err := r.client.DeleteLiveSource(ctx, params)
 	if err != nil {

@@ -19,7 +19,7 @@ func readHttpPackageConfigurations(configurations []awsTypes.HttpPackageConfigur
 	return httpPackageConfiguration
 }
 
-func buildHttpPackageConfigurations(plan []httpPackageConfigurationsModel) []awsTypes.HttpPackageConfiguration {
+func getHttpPackageConfigurations(plan []httpPackageConfigurationsModel) []awsTypes.HttpPackageConfiguration {
 	var tmp []awsTypes.HttpPackageConfiguration
 	if len(plan) > 0 {
 		for _, c := range plan {
