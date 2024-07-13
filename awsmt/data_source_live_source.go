@@ -49,8 +49,7 @@ func (d *dataSourceLiveSource) Configure(_ context.Context, req datasource.Confi
 
 func (d *dataSourceLiveSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data liveSourceModel
-	diags := req.Config.Get(ctx, &data)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -64,7 +63,7 @@ func (d *dataSourceLiveSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	data = readLiveSourceToPlan(data, mediatailor.CreateLiveSourceOutput(*liveSource))
+	data = readLiveSource(data, mediatailor.CreateLiveSourceOutput(*liveSource))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

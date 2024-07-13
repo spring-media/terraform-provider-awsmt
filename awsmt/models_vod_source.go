@@ -13,5 +13,5 @@ type vodSourceModel struct {
 	SourceLocationName               *string                          `tfsdk:"source_location_name"`
 	Tags                             map[string]string                `tfsdk:"tags"`
 	Name                             *string                          `tfsdk:"name"`
-	AdBreakOpportunitiesOffsetMillis []*int64                         `tfsdk:"ad_break_opportunities_offset_millis"`
+	AdBreakOpportunitiesOffsetMillis types.List                       `tfsdk:"ad_break_opportunities_offset_millis"`
 }

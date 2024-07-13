@@ -7,6 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"strings"
 )
@@ -41,8 +43,12 @@ func (r *resourceVodSource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"arn":                         computedStringWithStateForUnknown,
 			"name":                        requiredStringWithRequiresReplace,
 			"ad_break_opportunities_offset_millis": schema.ListAttribute{
+				Computed:    true,
 				Optional:    true,
 				ElementType: types.Int64Type,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 	}
@@ -59,15 +65,12 @@ func (r *resourceVodSource) Configure(_ context.Context, req resource.ConfigureR
 func (r *resourceVodSource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan vodSourceModel
 
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := getCreateVodSourceInput(plan)
-
-	vodSource, err := r.client.CreateVodSource(ctx, &input)
+	vodSource, err := r.client.CreateVodSource(ctx, getCreateVodSourceInput(plan))
 	if err != nil {
 		resp.Diagnostics.AddError("Error while creating vod source", err.Error())
 		return
@@ -75,8 +78,7 @@ func (r *resourceVodSource) Create(ctx context.Context, req resource.CreateReque
 
 	plan = readVodSourceToPlan(plan, *vodSource)
 
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -84,35 +86,33 @@ func (r *resourceVodSource) Create(ctx context.Context, req resource.CreateReque
 
 func (r *resourceVodSource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state vodSourceModel
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	var sourceLocationName, name string
-
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("source_location_name"), &sourceLocationName)...)
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("name"), &name)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := &mediatailor.DescribeVodSourceInput{}
-	input.VodSourceName = &name
-	input.SourceLocationName = &sourceLocationName
+	input := &mediatailor.DescribeVodSourceInput{
+		VodSourceName:      &name,
+		SourceLocationName: &sourceLocationName,
+	}
 
 	vodSource, err := r.client.DescribeVodSource(ctx, input)
 	if err != nil {
-		resp.Diagnostics.AddError("Error while describing vod source", "Could not describe the vod source: "+*input.SourceLocationName+" and "+*input.VodSourceName+": "+err.Error())
+		resp.Diagnostics.AddError("Error while describing vod source", "Could not describe the vod source: "+*input.SourceLocationName+":"+*input.VodSourceName+". "+err.Error())
 		return
 	}
 
 	state = readVodSourceToState(state, *vodSource)
 
-	diags = resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -120,15 +120,16 @@ func (r *resourceVodSource) Read(ctx context.Context, req resource.ReadRequest, 
 
 func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan vodSourceModel
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := &mediatailor.DescribeVodSourceInput{}
-	input.VodSourceName = plan.Name
-	input.SourceLocationName = plan.SourceLocationName
+	input := &mediatailor.DescribeVodSourceInput{
+		VodSourceName:      plan.Name,
+		SourceLocationName: plan.SourceLocationName,
+	}
 
 	vodSource, err := r.client.DescribeVodSource(ctx, input)
 	if err != nil {
@@ -136,11 +137,8 @@ func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	oldTags := vodSource.Tags
-	newTags := plan.Tags
-
 	// Update tags
-	err = V2UpdatesTags(r.client, oldTags, newTags, *vodSource.Arn)
+	err = V2UpdatesTags(r.client, vodSource.Tags, plan.Tags, *vodSource.Arn)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating vod source tags"+err.Error(),
@@ -148,7 +146,7 @@ func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateReque
 		)
 	}
 
-	updateInput := vodSourceUpdateInput(plan)
+	updateInput := getUpdateVodSourceInput(plan)
 	updatedVodSource, err := r.client.UpdateVodSource(ctx, &updateInput)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -159,8 +157,7 @@ func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateReque
 
 	plan = readVodSourceToPlan(plan, mediatailor.CreateVodSourceOutput(*updatedVodSource))
 
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -168,15 +165,16 @@ func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateReque
 
 func (r *resourceVodSource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state vodSourceModel
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := &mediatailor.DeleteVodSourceInput{}
-	input.VodSourceName = state.Name
-	input.SourceLocationName = state.SourceLocationName
+	input := &mediatailor.DeleteVodSourceInput{
+		VodSourceName:      state.Name,
+		SourceLocationName: state.SourceLocationName,
+	}
 
 	_, err := r.client.DeleteVodSource(ctx, input)
 	if err != nil {
