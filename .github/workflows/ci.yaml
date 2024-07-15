@@ -29,7 +29,7 @@ jobs:
 
   test:
     name: Test
-    needs: lint
+    needs: [lint, snyk]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
