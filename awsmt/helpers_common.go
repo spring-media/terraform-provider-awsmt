@@ -2,10 +2,14 @@ package awsmt
 
 import (
 	"context"
+	"fmt"
 	mediatailorV2 "github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"reflect"
+	"strings"
 )
 
 func untagResource(client *mediatailor.MediaTailor, oldTags map[string]*string, resourceArn string) error {
@@ -86,4 +90,19 @@ func tagsEqual(a, b map[string]string) bool {
 		}
 	}
 	return true
+}
+
+func importStateForContentSources(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	idParts := strings.Split(req.ID, ",")
+
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		resp.Diagnostics.AddError(
+			"Unexpected Import Identifier",
+			fmt.Sprintf("Expected import identifier with format: source_location_name,name. Got: %q", req.ID),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("source_location_name"), idParts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), idParts[1])...)
 }
