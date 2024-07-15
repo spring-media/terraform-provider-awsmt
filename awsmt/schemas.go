@@ -1,10 +1,13 @@
 package awsmt
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -25,9 +28,14 @@ var computedMap = schema.MapAttribute{
 	ElementType: types.StringType,
 }
 
-var computedList = schema.ListAttribute{
+var computedStringList = schema.ListAttribute{
 	Computed:    true,
 	ElementType: types.StringType,
+}
+
+var computedInt64List = schema.ListAttribute{
+	Computed:    true,
+	ElementType: types.Int64Type,
 }
 
 var computedBool = schema.BoolAttribute{
@@ -64,4 +72,50 @@ var optionalUnknownList = schema.ListAttribute{
 
 var optionalBool = schema.BoolAttribute{
 	Optional: true,
+}
+
+var computedStringWithStateForUnknown = schema.StringAttribute{
+	Computed: true,
+	PlanModifiers: []planmodifier.String{
+		stringplanmodifier.UseStateForUnknown(),
+	},
+}
+
+var requiredStringWithRequiresReplace = schema.StringAttribute{
+	Required: true,
+	PlanModifiers: []planmodifier.String{
+		stringplanmodifier.RequiresReplace(),
+	},
+}
+
+var httpPackageConfigurationsResourceSchema = schema.ListNestedAttribute{
+	Required: true,
+	NestedObject: schema.NestedAttributeObject{
+		Attributes: map[string]schema.Attribute{
+			"path":         requiredString,
+			"source_group": requiredString,
+			"type": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("HLS", "DASH"),
+				},
+			},
+		},
+	},
+}
+
+var httpPackageConfigurationsDataSourceSchema = schema.ListNestedAttribute{
+	Computed: true,
+	NestedObject: schema.NestedAttributeObject{
+		Attributes: map[string]schema.Attribute{
+			"path":         computedString,
+			"source_group": computedString,
+			"type": schema.StringAttribute{
+				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("HLS", "DASH"),
+				},
+			},
+		},
+	},
 }

@@ -179,7 +179,10 @@ func readPlaybackConfigToPlan(plan playbackConfigurationModel, playbackConfigura
 
 	// MANIFEST PROCESSING RULES
 	if playbackConfiguration.ManifestProcessingRules != nil {
-		plan = readManifestProcessingRules(plan, playbackConfiguration)
+		var mpr = playbackConfiguration.ManifestProcessingRules
+		if mpr.AdMarkerPassthrough != nil && mpr.AdMarkerPassthrough.Enabled != nil && *mpr.AdMarkerPassthrough.Enabled {
+			plan.ManifestProcessingRules = &manifestProcessingRulesModel{AdMarkerPassthrough: &adMarkerPassthroughModel{Enabled: mpr.AdMarkerPassthrough.Enabled}}
+		}
 	}
 
 	plan.Name, plan.PersonalizationThresholdSeconds, plan.PlaybackEndpointPrefix, plan.SessionInitializationEndpointPrefix, plan.SlateAdUrl, plan.TranscodeProfileName, plan.VideoContentSourceUrl, plan.Tags = readPlaybackConfigurationTemps(plan, playbackConfiguration)
@@ -283,17 +286,6 @@ func readLivePreRollConfiguration(plan playbackConfigurationModel, playbackConfi
 		}
 		if playbackConfiguration.LivePreRollConfiguration.MaxDurationSeconds != nil {
 			plan.LivePreRollConfiguration.MaxDurationSeconds = playbackConfiguration.LivePreRollConfiguration.MaxDurationSeconds
-		}
-	}
-	return plan
-}
-
-func readManifestProcessingRules(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
-	if playbackConfiguration.ManifestProcessingRules != nil && *playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough.Enabled {
-		plan.ManifestProcessingRules = &manifestProcessingRulesModel{}
-		if playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough != nil && playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough.Enabled != nil {
-			plan.ManifestProcessingRules.AdMarkerPassthrough = &adMarkerPassthroughModel{}
-			plan.ManifestProcessingRules.AdMarkerPassthrough.Enabled = playbackConfiguration.ManifestProcessingRules.AdMarkerPassthrough.Enabled
 		}
 	}
 	return plan

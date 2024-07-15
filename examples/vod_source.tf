@@ -4,13 +4,13 @@ resource "awsmt_vod_source" "test" {
     source_group = "default"
     type = "HLS"
   }]
-  source_location_name = awsmt_source_location.example.source_location_name
-  vod_source_name = "vod_source_example"
+  source_location_name = awsmt_source_location.example.name
+  name = "vod_source_example"
 }
 
 data "awsmt_vod_source" "data_test" {
-  source_location_name = awsmt_source_location.example.source_location_name
-  vod_source_name = awsmt_vod_source.test.vod_source_name
+  source_location_name = awsmt_source_location.example.name
+  name = awsmt_vod_source.test.name
 }
 
 output "vod_source_out" {
