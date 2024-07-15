@@ -8,6 +8,7 @@ import (
 )
 
 func TestAccVodSourceResourceBasic(t *testing.T) {
+	terraformResourceName := "awsmt_vod_source.vod_source_acc_test"
 	name := "vod_source_example"
 	path := "/"
 	path2 := "/test"
@@ -24,74 +25,95 @@ func TestAccVodSourceResourceBasic(t *testing.T) {
 			{
 				Config: basicVodSourceWithSourceLocation(name, path, k1, v1, k2, v2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("awsmt_vod_source.test", "id", "test_source_location,vod_source_example"),
-					resource.TestMatchResourceAttr("awsmt_vod_source.test", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:vodSource\/.*$`)),
-					resource.TestMatchResourceAttr("awsmt_vod_source.test", "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
-					resource.TestCheckResourceAttr("awsmt_vod_source.test", "http_package_configurations.0.path", "/"),
-					resource.TestCheckResourceAttr("awsmt_vod_source.test", "http_package_configurations.0.source_group", "default"),
-					resource.TestCheckResourceAttr("awsmt_vod_source.test", "http_package_configurations.0.type", "HLS"),
-					resource.TestMatchResourceAttr("awsmt_vod_source.test", "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
-					resource.TestCheckResourceAttr("awsmt_vod_source.test", "name", "vod_source_example"),
-					resource.TestCheckResourceAttr("awsmt_vod_source.test", "source_location_name", "test_source_location"),
-					resource.TestCheckResourceAttr("awsmt_vod_source.test", "tags.Environment", "dev"),
+					resource.TestCheckResourceAttr(terraformResourceName, "id", "test_source_location,vod_source_example"),
+					resource.TestMatchResourceAttr(terraformResourceName, "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:vodSource\/.*$`)),
+					resource.TestMatchResourceAttr(terraformResourceName, "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr(terraformResourceName, "http_package_configurations.0.path", "/"),
+					resource.TestCheckResourceAttr(terraformResourceName, "http_package_configurations.0.source_group", "default"),
+					resource.TestCheckResourceAttr(terraformResourceName, "http_package_configurations.0.type", "HLS"),
+					resource.TestMatchResourceAttr(terraformResourceName, "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr(terraformResourceName, "name", "vod_source_example"),
+					resource.TestCheckResourceAttr(terraformResourceName, "source_location_name", "test_source_location"),
+					resource.TestCheckResourceAttr(terraformResourceName, "tags.Environment", "dev"),
 				),
 			},
 			{
 				Config: basicVodSourceWithSourceLocation(name, path2, k3, v3, k2, v2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("awsmt_vod_source.test", "id", "test_source_location,vod_source_example"),
-					resource.TestMatchResourceAttr("awsmt_vod_source.test", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:vodSource\/.*$`)),
-					resource.TestMatchResourceAttr("awsmt_vod_source.test", "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
-					resource.TestCheckResourceAttr("awsmt_vod_source.test", "http_package_configurations.0.path", "/test"),
-					resource.TestCheckResourceAttr("awsmt_vod_source.test", "http_package_configurations.0.source_group", "default"),
-					resource.TestCheckResourceAttr("awsmt_vod_source.test", "http_package_configurations.0.type", "HLS"),
-					resource.TestMatchResourceAttr("awsmt_vod_source.test", "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
-					resource.TestCheckResourceAttr("awsmt_vod_source.test", "name", "vod_source_example"),
-					resource.TestCheckResourceAttr("awsmt_vod_source.test", "source_location_name", "test_source_location"),
-					resource.TestCheckResourceAttr("awsmt_vod_source.test", "tags.Environment", "prod"),
-					resource.TestCheckResourceAttr("awsmt_vod_source.test", "tags.Testing", "pass"),
+					resource.TestCheckResourceAttr(terraformResourceName, "id", "test_source_location,vod_source_example"),
+					resource.TestMatchResourceAttr(terraformResourceName, "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:vodSource\/.*$`)),
+					resource.TestMatchResourceAttr(terraformResourceName, "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr(terraformResourceName, "http_package_configurations.0.path", "/test"),
+					resource.TestCheckResourceAttr(terraformResourceName, "http_package_configurations.0.source_group", "default"),
+					resource.TestCheckResourceAttr(terraformResourceName, "http_package_configurations.0.type", "HLS"),
+					resource.TestMatchResourceAttr(terraformResourceName, "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr(terraformResourceName, "name", "vod_source_example"),
+					resource.TestCheckResourceAttr(terraformResourceName, "source_location_name", "test_source_location"),
+					resource.TestCheckResourceAttr(terraformResourceName, "tags.Environment", "prod"),
+					resource.TestCheckResourceAttr(terraformResourceName, "tags.Testing", "pass"),
 				),
 			},
 		},
 	})
 }
 
-func basicVodSourceWithSourceLocation(name, path, k1, v1, k2, v2 string) string {
-	return fmt.Sprintf(`resource "awsmt_vod_source" "test" {
-  							http_package_configurations = [{
-								path = "%[2]s"
-								source_group = "default"
-    							type = "HLS"
-  							}]
-  							source_location_name = awsmt_source_location.test_source_location.name
-  							name = "%[1]s"
-							tags = {
-   		 						"%[3]s": "%[4]s",
-								"%[5]s": "%[6]s"
-							}
-						}
-						data "awsmt_vod_source" "data_test" {
-  							source_location_name = awsmt_source_location.test_source_location.name
-  							name = awsmt_vod_source.test.name
-						}
+func TestAccVodSourceResourceCreationFailure(t *testing.T) {
+	name := "vod_source_failing"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      vodSourceWithoutSourceLocation(name),
+				ExpectError: regexp.MustCompile(`.*The specified source-location doesn't exist.*`),
+			},
+		},
+	})
+}
 
-						output "vod_source_out" {
-  							value = data.awsmt_vod_source.data_test
-						}
-						resource "awsmt_source_location" "test_source_location"{
-  							name = "test_source_location"
-  							http_configuration = {
-    							base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
-  							}
-  							default_segment_delivery_configuration = {
-    							base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
-  							}
-						}
-						data "awsmt_source_location" "test" {
-  							name = awsmt_source_location.test_source_location.name
-						}
-						output "awsmt_source_location" {
-  							value = data.awsmt_source_location.test
-						}
-						`, name, path, k1, v1, k2, v2)
+func basicVodSourceWithSourceLocation(name, path, k1, v1, k2, v2 string) string {
+	return fmt.Sprintf(`
+		resource "awsmt_source_location" "test_source_location"{
+			name = "test_source_location"
+			http_configuration = {
+				base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
+			}
+			default_segment_delivery_configuration = {
+				base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
+			}
+		}
+		resource "awsmt_vod_source" "vod_source_acc_test" {
+			http_package_configurations = [{
+				path = "%[2]s"
+				source_group = "default"
+				type = "HLS"
+			}]
+			source_location_name = awsmt_source_location.test_source_location.name
+			name = "%[1]s"
+			tags = {
+				"%[3]s": "%[4]s",
+				"%[5]s": "%[6]s"
+			}
+		}
+		data "awsmt_vod_source" "data_vod_source_acc_test" {
+			source_location_name = awsmt_source_location.test_source_location.name
+			name = awsmt_vod_source.vod_source_acc_test.name
+		}
+
+		output "vod_source_out" {
+			value = data.awsmt_vod_source.data_vod_source_acc_test
+		}`, name, path, k1, v1, k2, v2)
+}
+
+func vodSourceWithoutSourceLocation(name string) string {
+	return fmt.Sprintf(`
+		resource "awsmt_vod_source" "vod_source_acc_test" {
+			http_package_configurations = [{
+				path = "/"
+				source_group = "default"
+				type = "HLS"
+			}]
+			source_location_name = "unexisting_source_location"
+			name = "%[1]s"
+		}`, name)
 }
