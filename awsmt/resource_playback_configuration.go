@@ -2,12 +2,13 @@ package awsmt
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"reflect"
 )
 
 var (
@@ -21,7 +22,7 @@ func ResourcePlaybackConfiguration() resource.Resource {
 }
 
 type resourcePlaybackConfiguration struct {
-	client *mediatailor.MediaTailor
+	client *mediatailor.Client
 }
 
 func (r *resourcePlaybackConfiguration) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -37,8 +38,18 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
 					"fill_policy": optionalString,
-					"mode":        optionalString,
-					"value":       optionalString,
+					"mode": schema.StringAttribute{
+						Optional: true,
+						Validators: []validator.String{
+							stringvalidator.OneOf("OFF", "BEHIND_LIVE_EDGE", "AFTER_LIVE_EDGE"),
+						},
+					},
+					"value": schema.StringAttribute{
+						Optional: true,
+						Validators: []validator.String{
+							stringvalidator.OneOf("FULL_AVAIL_ONLY", "PARTIAL_AVAIL"),
+						},
+					},
 				},
 			},
 			"bumper": schema.SingleNestedAttribute{
@@ -65,8 +76,18 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 				Required: true,
 				Attributes: map[string]schema.Attribute{
 					"manifest_endpoint_prefix": computedString,
-					"mpd_location":             optionalString,
-					"origin_manifest_type":     optionalString,
+					"mpd_location": schema.StringAttribute{
+						Optional: true,
+						Validators: []validator.String{
+							stringvalidator.OneOf("DISABLED", "EMT_DEFAULT"),
+						},
+					},
+					"origin_manifest_type": schema.StringAttribute{
+						Optional: true,
+						Validators: []validator.String{
+							stringvalidator.OneOf("SINGLE_PERIOD", "MULTI_PERIOD"),
+						},
+					},
 				},
 			},
 			"hls_configuration_manifest_endpoint_prefix": computedStringWithStateForUnknown,
@@ -107,21 +128,20 @@ func (r *resourcePlaybackConfiguration) Configure(_ context.Context, req resourc
 		return
 	}
 
-	r.client = req.ProviderData.(clients).v1
+	r.client = req.ProviderData.(clients).v2
 }
 
 func (r *resourcePlaybackConfiguration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan playbackConfigurationModel
 
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := playbackConfigurationInput(plan)
+	input := getPutPlaybackConfigurationInput(plan)
 
-	playbackConfiguration, err := r.client.PutPlaybackConfiguration(&input)
+	playbackConfiguration, err := r.client.PutPlaybackConfiguration(context.TODO(), &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while creating playback configuration "+err.Error(),
@@ -130,10 +150,9 @@ func (r *resourcePlaybackConfiguration) Create(ctx context.Context, req resource
 		return
 	}
 
-	plan = readPlaybackConfigToPlan(plan, *playbackConfiguration)
+	plan = readPlaybackConfig(plan, *playbackConfiguration)
 
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -141,8 +160,8 @@ func (r *resourcePlaybackConfiguration) Create(ctx context.Context, req resource
 
 func (r *resourcePlaybackConfiguration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state playbackConfigurationModel
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -150,7 +169,7 @@ func (r *resourcePlaybackConfiguration) Read(ctx context.Context, req resource.R
 	name := state.Name
 
 	// Get the playback configuration
-	playbackConfiguration, err := r.client.GetPlaybackConfiguration(&mediatailor.GetPlaybackConfigurationInput{Name: name})
+	playbackConfiguration, err := r.client.GetPlaybackConfiguration(context.TODO(), &mediatailor.GetPlaybackConfigurationInput{Name: name})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while retrieving playback configuration "+err.Error(),
@@ -159,11 +178,10 @@ func (r *resourcePlaybackConfiguration) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	state = readPlaybackConfigToPlan(state, mediatailor.PutPlaybackConfigurationOutput(*playbackConfiguration))
+	state = readPlaybackConfig(state, mediatailor.PutPlaybackConfigurationOutput(*playbackConfiguration))
 
 	// Set refreshed state
-	diags = resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -172,8 +190,7 @@ func (r *resourcePlaybackConfiguration) Read(ctx context.Context, req resource.R
 func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan playbackConfigurationModel
 
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -182,7 +199,7 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 	name := plan.Name
 
 	// Get the playback configuration
-	playbackConfiguration, err := r.client.GetPlaybackConfiguration(&mediatailor.GetPlaybackConfigurationInput{Name: name})
+	playbackConfiguration, err := r.client.GetPlaybackConfiguration(context.TODO(), &mediatailor.GetPlaybackConfigurationInput{Name: name})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while retrieving playback configuration "+err.Error(),
@@ -197,24 +214,18 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 	// the PutPlaybackConfiguration method to add and update tags. We use this approach for every resource in the provider.
 	// Consequences: The Update function logic is now more complicated, but tag removal is supported.
 
-	oldTags := playbackConfiguration.Tags
-	newTags := plan.Tags
-
-	// Check if tags are different
-	if !reflect.DeepEqual(oldTags, newTags) {
-		err = untagResource(r.client, oldTags, *playbackConfiguration.PlaybackConfigurationArn)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error while untaging playback configuration tags"+err.Error(),
-				err.Error(),
-			)
-		}
+	err = V2UpdatesTags(r.client, playbackConfiguration.Tags, plan.Tags, *playbackConfiguration.PlaybackConfigurationArn)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error while untaging playback configuration tags"+err.Error(),
+			err.Error(),
+		)
 	}
 
-	input := playbackConfigurationInput(plan)
+	input := getPutPlaybackConfigurationInput(plan)
 
 	// Update the playback configuration
-	playbackConfigurationUpdate, err := r.client.PutPlaybackConfiguration(&input)
+	playbackConfigurationUpdate, err := r.client.PutPlaybackConfiguration(context.TODO(), &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating playback configuration "+err.Error(),
@@ -223,10 +234,9 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 		return
 	}
 
-	plan = readPlaybackConfigToPlan(plan, *playbackConfigurationUpdate)
+	plan = readPlaybackConfig(plan, *playbackConfigurationUpdate)
 
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -234,13 +244,13 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 
 func (r *resourcePlaybackConfiguration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state playbackConfigurationModel
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	name := state.Name
-	_, err := r.client.DeletePlaybackConfiguration(&mediatailor.DeletePlaybackConfigurationInput{Name: name})
+	_, err := r.client.DeletePlaybackConfiguration(context.TODO(), &mediatailor.DeletePlaybackConfigurationInput{Name: name})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while deleting playback configuration "+err.Error(),
