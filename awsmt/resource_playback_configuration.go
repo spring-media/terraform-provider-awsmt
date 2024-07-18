@@ -31,7 +31,7 @@ func (r *resourcePlaybackConfiguration) Metadata(_ context.Context, req resource
 func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id":                     computedString,
+			"id":                     computedStringWithStateForUnknown,
 			"ad_decision_server_url": requiredString,
 			"avail_suppression": schema.SingleNestedAttribute{
 				Optional: true,
@@ -69,8 +69,8 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 					"origin_manifest_type":     optionalString,
 				},
 			},
-			"hls_configuration_manifest_endpoint_prefix": computedString,
-			"log_configuration_percent_enabled":          computedInt64,
+			"hls_configuration_manifest_endpoint_prefix": computedStringWithStateForUnknown,
+			"log_configuration_percent_enabled":          computedInt64WithStateForUnknown,
 			"live_pre_roll_configuration": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
@@ -91,9 +91,9 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 			},
 			"name":                                   requiredString,
 			"personalization_threshold_seconds":      optionalInt64,
-			"playback_configuration_arn":             computedString,
-			"playback_endpoint_prefix":               computedString,
-			"session_initialization_endpoint_prefix": computedString,
+			"playback_configuration_arn":             computedStringWithStateForUnknown,
+			"playback_endpoint_prefix":               computedStringWithStateForUnknown,
+			"session_initialization_endpoint_prefix": computedStringWithStateForUnknown,
 			"slate_ad_url":                           optionalString,
 			"tags":                                   optionalMap,
 			"transcode_profile_name":                 optionalString,
