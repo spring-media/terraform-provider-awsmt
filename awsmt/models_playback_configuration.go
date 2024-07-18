@@ -14,8 +14,8 @@ type playbackConfigurationModel struct {
 	// Context: The Provider Framework does not allow computed blocks
 	// Decision: We decided to flatten the Log Configuration and the HLS Configuration blocks into the resource.
 	// Consequences: The schema of the object differs from that of the SDK.
-	HlsConfigurationManifestEndpointPrefix *string                        `tfsdk:"hls_configuration_manifest_endpoint_prefix"`
-	LogConfigurationPercentEnabled         *int32                         `tfsdk:"log_configuration_percent_enabled"`
+	HlsConfigurationManifestEndpointPrefix types.String                   `tfsdk:"hls_configuration_manifest_endpoint_prefix"`
+	LogConfigurationPercentEnabled         types.Int64                    `tfsdk:"log_configuration_percent_enabled"`
 	LivePreRollConfiguration               *livePreRollConfigurationModel `tfsdk:"live_pre_roll_configuration"`
 	ManifestProcessingRules                *manifestProcessingRulesModel  `tfsdk:"manifest_processing_rules"`
 	Name                                   *string                        `tfsdk:"name"`

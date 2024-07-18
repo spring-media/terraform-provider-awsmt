@@ -1,11 +1,13 @@
 package awsmt
 
 import (
-	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
+	awsTypes "github.com/aws/aws-sdk-go-v2/service/mediatailor/types"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func playbackConfigurationInput(plan playbackConfigurationModel) mediatailor.PutPlaybackConfigurationInput {
+func getPutPlaybackConfigurationInput(plan playbackConfigurationModel) mediatailor.PutPlaybackConfigurationInput {
 
 	input := &mediatailor.PutPlaybackConfigurationInput{}
 
@@ -36,8 +38,8 @@ func playbackConfigurationInput(plan playbackConfigurationModel) mediatailor.Put
 	}
 
 	if plan.ManifestProcessingRules != nil {
-		input.ManifestProcessingRules = &mediatailor.ManifestProcessingRules{
-			AdMarkerPassthrough: &mediatailor.AdMarkerPassthrough{
+		input.ManifestProcessingRules = &awsTypes.ManifestProcessingRules{
+			AdMarkerPassthrough: &awsTypes.AdMarkerPassthrough{
 				Enabled: plan.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
 			},
 		}
@@ -68,24 +70,39 @@ func playbackConfigurationInput(plan playbackConfigurationModel) mediatailor.Put
 	return *input
 }
 
-func getAvailSuppressionInput(availSuppression *availSuppressionModel) *mediatailor.AvailSuppression {
-	params := &mediatailor.AvailSuppression{}
+func getAvailSuppressionInput(availSuppression *availSuppressionModel) *awsTypes.AvailSuppression {
+	params := &awsTypes.AvailSuppression{}
 	if availSuppression != nil {
 		if availSuppression.Mode != nil {
-			params.Mode = availSuppression.Mode
+			var mode awsTypes.Mode
+			switch *availSuppression.Mode {
+			case "BEHIND_LIVE_EDGE":
+				mode = awsTypes.ModeBehindLiveEdge
+			case "AFTER_LIVE_EDGE":
+				mode = awsTypes.ModeAfterLiveEdge
+			default:
+				mode = awsTypes.ModeOff
+			}
+			params.Mode = mode
 		}
 		if availSuppression.Value != nil {
 			params.Value = availSuppression.Value
 		}
 		if availSuppression.FillPolicy != nil {
-			params.FillPolicy = availSuppression.FillPolicy
+			var policy awsTypes.FillPolicy
+			if *availSuppression.FillPolicy == "FULL_AVAIL_ONLY" {
+				policy = awsTypes.FillPolicyFullAvailOnly
+			} else {
+				policy = awsTypes.FillPolicyPartialAvail
+			}
+			params.FillPolicy = policy
 		}
 	}
 	return params
 }
 
-func getBumperInput(bumper *bumperModel) *mediatailor.Bumper {
-	params := &mediatailor.Bumper{}
+func getBumperInput(bumper *bumperModel) *awsTypes.Bumper {
+	params := &awsTypes.Bumper{}
 	if bumper != nil {
 		if bumper.EndUrl != nil && *bumper.EndUrl != "" {
 			params.EndUrl = bumper.EndUrl
@@ -97,8 +114,8 @@ func getBumperInput(bumper *bumperModel) *mediatailor.Bumper {
 	return params
 }
 
-func getCdnConfigurationInput(cdnConfiguration *cdnConfigurationModel) *mediatailor.CdnConfiguration {
-	params := &mediatailor.CdnConfiguration{}
+func getCdnConfigurationInput(cdnConfiguration *cdnConfigurationModel) *awsTypes.CdnConfiguration {
+	params := &awsTypes.CdnConfiguration{}
 	if cdnConfiguration != nil {
 		if cdnConfiguration.AdSegmentUrlPrefix != nil && *cdnConfiguration.AdSegmentUrlPrefix != "" {
 			params.AdSegmentUrlPrefix = cdnConfiguration.AdSegmentUrlPrefix
@@ -110,21 +127,27 @@ func getCdnConfigurationInput(cdnConfiguration *cdnConfigurationModel) *mediatai
 	return params
 }
 
-func getDashConfigurationInput(dashConfiguration *dashConfigurationModel) *mediatailor.DashConfigurationForPut {
-	input := &mediatailor.DashConfigurationForPut{}
+func getDashConfigurationInput(dashConfiguration *dashConfigurationModel) *awsTypes.DashConfigurationForPut {
+	input := &awsTypes.DashConfigurationForPut{}
 	if dashConfiguration != nil {
 		if dashConfiguration.MpdLocation != nil {
 			input.MpdLocation = dashConfiguration.MpdLocation
 		}
 		if dashConfiguration.OriginManifestType != nil {
-			input.OriginManifestType = dashConfiguration.OriginManifestType
+			var manifestType awsTypes.OriginManifestType
+			if *dashConfiguration.OriginManifestType == "SINGLE_PERIOD" {
+				manifestType = awsTypes.OriginManifestTypeSinglePeriod
+			} else {
+				manifestType = awsTypes.OriginManifestTypeMultiPeriod
+			}
+			input.OriginManifestType = manifestType
 		}
 	}
 	return input
 }
 
-func getLivePreRollConfigurationInput(livePreRollConfiguration *livePreRollConfigurationModel) *mediatailor.LivePreRollConfiguration {
-	input := &mediatailor.LivePreRollConfiguration{}
+func getLivePreRollConfigurationInput(livePreRollConfiguration *livePreRollConfigurationModel) *awsTypes.LivePreRollConfiguration {
+	input := &awsTypes.LivePreRollConfiguration{}
 	if livePreRollConfiguration != nil {
 		if livePreRollConfiguration.AdDecisionServerUrl != nil {
 			input.AdDecisionServerUrl = livePreRollConfiguration.AdDecisionServerUrl
@@ -136,7 +159,7 @@ func getLivePreRollConfigurationInput(livePreRollConfiguration *livePreRollConfi
 	return input
 }
 
-func readPlaybackConfigToPlan(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
+func readPlaybackConfig(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
 	plan.PlaybackConfigurationArn = types.StringValue(*playbackConfiguration.PlaybackConfigurationArn)
 	plan.AdDecisionServerUrl = playbackConfiguration.AdDecisionServerUrl
 	// AVAIL SUPPRESSION
@@ -167,7 +190,7 @@ func readPlaybackConfigToPlan(plan playbackConfigurationModel, playbackConfigura
 
 	// LOG CONFIGURATION
 	if playbackConfiguration.LogConfiguration != nil {
-		plan.LogConfigurationPercentEnabled = types.Int64Value(*playbackConfiguration.LogConfiguration.PercentEnabled)
+		plan.LogConfigurationPercentEnabled = types.Int64Value(int64(playbackConfiguration.LogConfiguration.PercentEnabled))
 	} else {
 		plan.LogConfigurationPercentEnabled = types.Int64Value(0)
 	}
@@ -180,7 +203,7 @@ func readPlaybackConfigToPlan(plan playbackConfigurationModel, playbackConfigura
 	// MANIFEST PROCESSING RULES
 	if playbackConfiguration.ManifestProcessingRules != nil {
 		var mpr = playbackConfiguration.ManifestProcessingRules
-		if mpr.AdMarkerPassthrough != nil && mpr.AdMarkerPassthrough.Enabled != nil && *mpr.AdMarkerPassthrough.Enabled {
+		if mpr.AdMarkerPassthrough != nil && mpr.AdMarkerPassthrough.Enabled {
 			plan.ManifestProcessingRules = &manifestProcessingRulesModel{AdMarkerPassthrough: &adMarkerPassthroughModel{Enabled: mpr.AdMarkerPassthrough.Enabled}}
 		}
 	}
@@ -192,7 +215,7 @@ func readPlaybackConfigToPlan(plan playbackConfigurationModel, playbackConfigura
 	return plan
 }
 
-func readPlaybackConfigurationTemps(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) (*string, *int64, types.String, types.String, *string, *string, *string, map[string]*string) {
+func readPlaybackConfigurationTemps(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) (*string, *int32, types.String, types.String, *string, *string, *string, map[string]string) {
 	plan.Name = playbackConfiguration.Name
 	// PERSONALIZATION THRESHOLD SECONDS
 	if playbackConfiguration.PersonalizationThresholdSeconds != nil {
@@ -223,16 +246,14 @@ func readPlaybackConfigurationTemps(plan playbackConfigurationModel, playbackCon
 }
 
 func readAvailSuppression(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
-	if playbackConfiguration.AvailSuppression != nil && *playbackConfiguration.AvailSuppression.Mode != "OFF" {
+	if playbackConfiguration.AvailSuppression != nil {
 		plan.AvailSuppression = &availSuppressionModel{}
-		if playbackConfiguration.AvailSuppression.Mode != nil {
-			plan.AvailSuppression.Mode = playbackConfiguration.AvailSuppression.Mode
-		}
+		plan.AvailSuppression.Mode = aws.String(string(playbackConfiguration.AvailSuppression.Mode))
 		if playbackConfiguration.AvailSuppression.Value != nil {
 			plan.AvailSuppression.Value = playbackConfiguration.AvailSuppression.Value
 		}
-		if playbackConfiguration.AvailSuppression.FillPolicy != nil {
-			plan.AvailSuppression.FillPolicy = playbackConfiguration.AvailSuppression.FillPolicy
+		if plan.AvailSuppression.FillPolicy != nil {
+			plan.AvailSuppression.FillPolicy = aws.String(string(playbackConfiguration.AvailSuppression.FillPolicy))
 		}
 	}
 	return plan
@@ -271,9 +292,7 @@ func readDashConfiguration(plan playbackConfigurationModel, playbackConfiguratio
 		if playbackConfiguration.DashConfiguration.MpdLocation != nil {
 			plan.DashConfiguration.MpdLocation = playbackConfiguration.DashConfiguration.MpdLocation
 		}
-		if playbackConfiguration.DashConfiguration.OriginManifestType != nil {
-			plan.DashConfiguration.OriginManifestType = playbackConfiguration.DashConfiguration.OriginManifestType
-		}
+		plan.DashConfiguration.OriginManifestType = aws.String(string(playbackConfiguration.DashConfiguration.OriginManifestType))
 	}
 	return plan
 }
