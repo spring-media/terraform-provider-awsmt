@@ -5,7 +5,7 @@ import "github.com/hashicorp/terraform-plugin-framework/types"
 type playbackConfigurationModel struct {
 	ID                   types.String                  `tfsdk:"id"`
 	AdDecisionServerUrl  *string                       `tfsdk:"ad_decision_server_url"`
-	AvailSupression      *availSupressionModel         `tfsdk:"avail_supression"`
+	AvailSuppression     *availSuppressionModel        `tfsdk:"avail_suppression"`
 	Bumper               *bumperModel                  `tfsdk:"bumper"`
 	CdnConfiguration     *cdnConfigurationModel        `tfsdk:"cdn_configuration"`
 	ConfigurationAliases map[string]map[string]*string `tfsdk:"configuration_aliases"`
@@ -29,7 +29,7 @@ type playbackConfigurationModel struct {
 	VideoContentSourceUrl                  *string                        `tfsdk:"video_content_source_url"`
 }
 
-type availSupressionModel struct {
+type availSuppressionModel struct {
 	FillPolicy *string `tfsdk:"fill_policy"`
 	Mode       *string `tfsdk:"mode"`
 	Value      *string `tfsdk:"value"`

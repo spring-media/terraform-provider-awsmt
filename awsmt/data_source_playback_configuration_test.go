@@ -16,9 +16,9 @@ func TestAccPlaybackConfigurationDataSourceBasic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "id", "example-playback-configuration-awsmt"),
 					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "ad_decision_server_url", "https://exampleurl.com/"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "avail_supression.fill_policy", "FULL_AVAIL_ONLY"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "avail_supression.mode", "BEHIND_LIVE_EDGE"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "avail_supression.value", "00:00:00"),
+					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "avail_suppression.fill_policy", "FULL_AVAIL_ONLY"),
+					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "avail_suppression.mode", "BEHIND_LIVE_EDGE"),
+					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "avail_suppression.value", "00:00:00"),
 					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "bumper.end_url", "https://wxample.com/endbumper"),
 					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "bumper.start_url", "https://wxample.com/startbumper"),
 					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "cdn_configuration.ad_segment_url_prefix", "https://exampleurl.com/"),
@@ -55,7 +55,7 @@ func TestAccPlaybackConfigurationDataSourceErrors(t *testing.T) {
 func playbackConfigDS() string {
 	return `resource "awsmt_playback_configuration" "r1" {
   							ad_decision_server_url = "https://exampleurl.com/"
-  							avail_supression = {
+  							avail_suppression = {
 								fill_policy = "FULL_AVAIL_ONLY"
     							mode = "BEHIND_LIVE_EDGE"
 								value = "00:00:00"
@@ -101,7 +101,7 @@ func playbackConfigDS() string {
 func plabackConfigDSError() string {
 	return `resource "awsmt_playback_configuration" "r1" {
   							ad_decision_server_url = "https://exampleurl.com/"
-  							avail_supression = {
+  							avail_suppression = {
 								fill_policy = "FULL_AVAIL_ONLY"
     							mode = "BEHIND_LIVE_EDGE"
 								value = "00:00:00"

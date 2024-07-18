@@ -36,9 +36,9 @@ func TestAccPlaybackConfigurationResource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "id", "example-playback-configuration-awsmt"),
 					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "ad_decision_server_url", "https://exampleurl.com/"),
-					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "avail_supression.fill_policy", "FULL_AVAIL_ONLY"),
-					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "avail_supression.mode", "BEHIND_LIVE_EDGE"),
-					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "avail_supression.value", "00:00:00"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "avail_suppression.fill_policy", "FULL_AVAIL_ONLY"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "avail_suppression.mode", "BEHIND_LIVE_EDGE"),
+					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "avail_suppression.value", "00:00:00"),
 					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "bumper.end_url", "https://wxample.com/endbumper"),
 					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "bumper.start_url", "https://wxample.com/startbumper"),
 					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "cdn_configuration.ad_segment_url_prefix", "https://exampleurl.com/"),
@@ -83,7 +83,7 @@ func TestAccPlaybackConfigurationResource(t *testing.T) {
 func basicPlaybackConfiguration(name, ad_url, bumper_e, bumper_s, cdn_url, max_d, p_s, k1, v1, k2, v2 string) string {
 	return fmt.Sprintf(`resource "awsmt_playback_configuration" "r1" {
   							ad_decision_server_url = "%[2]s"
-  							avail_supression = {
+  							avail_suppression = {
 								fill_policy = "FULL_AVAIL_ONLY"
     							mode = "BEHIND_LIVE_EDGE"
 								value = "00:00:00"

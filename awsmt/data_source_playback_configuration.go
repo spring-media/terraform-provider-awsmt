@@ -30,7 +30,7 @@ func (d *dataSourcePlaybackConfiguration) Schema(_ context.Context, _ datasource
 		Attributes: map[string]schema.Attribute{
 			"id":                     computedString,
 			"ad_decision_server_url": computedString,
-			"avail_supression": schema.SingleNestedAttribute{
+			"avail_suppression": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"fill_policy": computedString,

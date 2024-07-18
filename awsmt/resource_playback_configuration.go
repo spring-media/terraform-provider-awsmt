@@ -33,7 +33,7 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 		Attributes: map[string]schema.Attribute{
 			"id":                     computedString,
 			"ad_decision_server_url": requiredString,
-			"avail_supression": schema.SingleNestedAttribute{
+			"avail_suppression": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
 					"fill_policy": optionalString,

@@ -11,8 +11,8 @@ func playbackConfigurationInput(plan playbackConfigurationModel) mediatailor.Put
 
 	input.AdDecisionServerUrl = plan.AdDecisionServerUrl
 
-	if plan.AvailSupression != nil {
-		input.AvailSuppression = getAvailSuppressionInput(plan.AvailSupression)
+	if plan.AvailSuppression != nil {
+		input.AvailSuppression = getAvailSuppressionInput(plan.AvailSuppression)
 	}
 
 	if plan.Bumper != nil {
@@ -68,7 +68,7 @@ func playbackConfigurationInput(plan playbackConfigurationModel) mediatailor.Put
 	return *input
 }
 
-func getAvailSuppressionInput(availSuppression *availSupressionModel) *mediatailor.AvailSuppression {
+func getAvailSuppressionInput(availSuppression *availSuppressionModel) *mediatailor.AvailSuppression {
 	params := &mediatailor.AvailSuppression{}
 	if availSuppression != nil {
 		if availSuppression.Mode != nil {
@@ -139,7 +139,7 @@ func getLivePreRollConfigurationInput(livePreRollConfiguration *livePreRollConfi
 func readPlaybackConfigToPlan(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
 	plan.PlaybackConfigurationArn = types.StringValue(*playbackConfiguration.PlaybackConfigurationArn)
 	plan.AdDecisionServerUrl = playbackConfiguration.AdDecisionServerUrl
-	// AVAIL SUPRESSION
+	// AVAIL SUPPRESSION
 	if playbackConfiguration.AvailSuppression != nil {
 		plan = readAvailSuppression(plan, playbackConfiguration)
 	}
@@ -224,15 +224,15 @@ func readPlaybackConfigurationTemps(plan playbackConfigurationModel, playbackCon
 
 func readAvailSuppression(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
 	if playbackConfiguration.AvailSuppression != nil && *playbackConfiguration.AvailSuppression.Mode != "OFF" {
-		plan.AvailSupression = &availSupressionModel{}
+		plan.AvailSuppression = &availSuppressionModel{}
 		if playbackConfiguration.AvailSuppression.Mode != nil {
-			plan.AvailSupression.Mode = playbackConfiguration.AvailSuppression.Mode
+			plan.AvailSuppression.Mode = playbackConfiguration.AvailSuppression.Mode
 		}
 		if playbackConfiguration.AvailSuppression.Value != nil {
-			plan.AvailSupression.Value = playbackConfiguration.AvailSuppression.Value
+			plan.AvailSuppression.Value = playbackConfiguration.AvailSuppression.Value
 		}
 		if playbackConfiguration.AvailSuppression.FillPolicy != nil {
-			plan.AvailSupression.FillPolicy = playbackConfiguration.AvailSuppression.FillPolicy
+			plan.AvailSuppression.FillPolicy = playbackConfiguration.AvailSuppression.FillPolicy
 		}
 	}
 	return plan
