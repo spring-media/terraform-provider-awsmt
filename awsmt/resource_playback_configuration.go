@@ -75,7 +75,7 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 			"dash_configuration": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
-					"manifest_endpoint_prefix": computedString,
+					"manifest_endpoint_prefix": computedStringWithStateForUnknown,
 					"mpd_location": schema.StringAttribute{
 						Optional: true,
 						Validators: []validator.String{
@@ -101,6 +101,7 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 			},
 			"manifest_processing_rules": schema.SingleNestedAttribute{
 				Optional: true,
+				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"ad_marker_passthrough": schema.SingleNestedAttribute{
 						Optional: true,
