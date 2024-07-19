@@ -37,19 +37,19 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 			"avail_suppression": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
-					"fill_policy": optionalString,
+					"fill_policy": schema.StringAttribute{
+						Optional: true,
+						Validators: []validator.String{
+							stringvalidator.OneOf("FULL_AVAIL_ONLY", "PARTIAL_AVAIL"),
+						},
+					},
 					"mode": schema.StringAttribute{
 						Optional: true,
 						Validators: []validator.String{
 							stringvalidator.OneOf("OFF", "BEHIND_LIVE_EDGE", "AFTER_LIVE_EDGE"),
 						},
 					},
-					"value": schema.StringAttribute{
-						Optional: true,
-						Validators: []validator.String{
-							stringvalidator.OneOf("FULL_AVAIL_ONLY", "PARTIAL_AVAIL"),
-						},
-					},
+					"value": optionalString,
 				},
 			},
 			"bumper": schema.SingleNestedAttribute{
