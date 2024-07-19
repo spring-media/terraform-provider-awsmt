@@ -140,9 +140,9 @@ func (r *resourcePlaybackConfiguration) Create(ctx context.Context, req resource
 		return
 	}
 
-	input := getPutPlaybackConfigurationInput(plan)
+	p := putPlaybackConfigurationInputBuilder{input: &mediatailor.PutPlaybackConfigurationInput{}, model: plan}
 
-	playbackConfiguration, err := r.client.PutPlaybackConfiguration(context.TODO(), &input)
+	playbackConfiguration, err := r.client.PutPlaybackConfiguration(context.TODO(), p.getInput())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while creating playback configuration "+err.Error(),
@@ -151,9 +151,9 @@ func (r *resourcePlaybackConfiguration) Create(ctx context.Context, req resource
 		return
 	}
 
-	plan = readPlaybackConfig(plan, *playbackConfiguration)
+	m := putPlaybackConfigurationModelbuilder{model: &plan, output: *playbackConfiguration}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, m.getModel())...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -179,10 +179,10 @@ func (r *resourcePlaybackConfiguration) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	state = readPlaybackConfig(state, mediatailor.PutPlaybackConfigurationOutput(*playbackConfiguration))
+	m := putPlaybackConfigurationModelbuilder{model: &state, output: mediatailor.PutPlaybackConfigurationOutput(*playbackConfiguration)}
 
 	// Set refreshed state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, m.getModel())...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -223,10 +223,10 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 		)
 	}
 
-	input := getPutPlaybackConfigurationInput(plan)
+	p := putPlaybackConfigurationInputBuilder{input: &mediatailor.PutPlaybackConfigurationInput{}, model: plan}
 
 	// Update the playback configuration
-	playbackConfigurationUpdate, err := r.client.PutPlaybackConfiguration(context.TODO(), &input)
+	playbackConfigurationUpdate, err := r.client.PutPlaybackConfiguration(context.TODO(), p.getInput())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating playback configuration "+err.Error(),
@@ -235,9 +235,9 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 		return
 	}
 
-	plan = readPlaybackConfig(plan, *playbackConfigurationUpdate)
+	m := putPlaybackConfigurationModelbuilder{model: &plan, output: *playbackConfigurationUpdate}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, m.getModel())...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
