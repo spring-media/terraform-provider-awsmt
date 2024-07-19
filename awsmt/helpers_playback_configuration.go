@@ -191,12 +191,11 @@ func (m *putPlaybackConfigurationModelbuilder) addAvailSuppressionToModel() {
 		return
 	}
 	m.model.AvailSuppression = &availSuppressionModel{}
+
 	m.model.AvailSuppression.Mode = aws.String(string(m.output.AvailSuppression.Mode))
+	m.model.AvailSuppression.FillPolicy = aws.String(string(m.output.AvailSuppression.FillPolicy))
 	if m.output.AvailSuppression.Value != nil {
 		m.model.AvailSuppression.Value = m.output.AvailSuppression.Value
-	}
-	if m.model.AvailSuppression.FillPolicy != nil {
-		m.model.AvailSuppression.FillPolicy = aws.String(string(m.output.AvailSuppression.FillPolicy))
 	}
 }
 
