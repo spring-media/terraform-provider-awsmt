@@ -1,292 +1,320 @@
 package awsmt
 
 import (
-	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
+	awsTypes "github.com/aws/aws-sdk-go-v2/service/mediatailor/types"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func playbackConfigurationInput(plan playbackConfigurationModel) mediatailor.PutPlaybackConfigurationInput {
-
-	input := &mediatailor.PutPlaybackConfigurationInput{}
-
-	input.AdDecisionServerUrl = plan.AdDecisionServerUrl
-
-	if plan.AvailSupression != nil {
-		input.AvailSuppression = getAvailSuppressionInput(plan.AvailSupression)
-	}
-
-	if plan.Bumper != nil {
-		input.Bumper = getBumperInput(plan.Bumper)
-	}
-
-	if plan.CdnConfiguration != nil {
-		input.CdnConfiguration = getCdnConfigurationInput(plan.CdnConfiguration)
-	}
-
-	if plan.ConfigurationAliases != nil {
-		input.ConfigurationAliases = plan.ConfigurationAliases
-	}
-
-	if plan.DashConfiguration != nil {
-		input.DashConfiguration = getDashConfigurationInput(plan.DashConfiguration)
-	}
-
-	if plan.LivePreRollConfiguration != nil {
-		input.LivePreRollConfiguration = getLivePreRollConfigurationInput(plan.LivePreRollConfiguration)
-	}
-
-	if plan.ManifestProcessingRules != nil {
-		input.ManifestProcessingRules = &mediatailor.ManifestProcessingRules{
-			AdMarkerPassthrough: &mediatailor.AdMarkerPassthrough{
-				Enabled: plan.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
-			},
-		}
-	}
-
-	input.Name = plan.Name
-
-	if plan.PersonalizationThresholdSeconds != nil {
-		input.PersonalizationThresholdSeconds = plan.PersonalizationThresholdSeconds
-	}
-
-	if plan.SlateAdUrl != nil && *plan.SlateAdUrl != "" {
-		input.SlateAdUrl = plan.SlateAdUrl
-	}
-
-	if plan.Tags != nil {
-		input.Tags = plan.Tags
-	}
-
-	if plan.TranscodeProfileName != nil && *plan.TranscodeProfileName != "" {
-		input.TranscodeProfileName = plan.TranscodeProfileName
-	}
-
-	if plan.VideoContentSourceUrl != nil && *plan.VideoContentSourceUrl != "" {
-		input.VideoContentSourceUrl = plan.VideoContentSourceUrl
-	}
-
-	return *input
+type putPlaybackConfigurationInputBuilder struct {
+	model playbackConfigurationModel
+	input *mediatailor.PutPlaybackConfigurationInput
 }
 
-func getAvailSuppressionInput(availSuppression *availSupressionModel) *mediatailor.AvailSuppression {
-	params := &mediatailor.AvailSuppression{}
-	if availSuppression != nil {
-		if availSuppression.Mode != nil {
-			params.Mode = availSuppression.Mode
-		}
-		if availSuppression.Value != nil {
-			params.Value = availSuppression.Value
-		}
-		if availSuppression.FillPolicy != nil {
-			params.FillPolicy = availSuppression.FillPolicy
-		}
-	}
-	return params
+type putPlaybackConfigurationModelbuilder struct {
+	model      *playbackConfigurationModel
+	output     mediatailor.PutPlaybackConfigurationOutput
+	isResource bool
 }
 
-func getBumperInput(bumper *bumperModel) *mediatailor.Bumper {
-	params := &mediatailor.Bumper{}
-	if bumper != nil {
-		if bumper.EndUrl != nil && *bumper.EndUrl != "" {
-			params.EndUrl = bumper.EndUrl
-		}
-		if bumper.StartUrl != nil && *bumper.StartUrl != "" {
-			params.StartUrl = bumper.StartUrl
-		}
-	}
-	return params
+func (i *putPlaybackConfigurationInputBuilder) getInput() *mediatailor.PutPlaybackConfigurationInput {
+
+	i.addAvailSuppressionToInput()
+	i.addBumperToInput()
+	i.addCdnConfigurationToInput()
+	i.addDashConfigurationToInput()
+	i.addLivePreRollConfigurationToInput()
+	i.addManifestProcessingRulesToInput()
+	i.addOptionalFieldsToInput()
+	i.addRequiredFieldsToInput()
+
+	return i.input
 }
 
-func getCdnConfigurationInput(cdnConfiguration *cdnConfigurationModel) *mediatailor.CdnConfiguration {
-	params := &mediatailor.CdnConfiguration{}
-	if cdnConfiguration != nil {
-		if cdnConfiguration.AdSegmentUrlPrefix != nil && *cdnConfiguration.AdSegmentUrlPrefix != "" {
-			params.AdSegmentUrlPrefix = cdnConfiguration.AdSegmentUrlPrefix
-		}
-		if cdnConfiguration.ContentSegmentUrlPrefix != nil && *cdnConfiguration.ContentSegmentUrlPrefix != "" {
-			params.ContentSegmentUrlPrefix = cdnConfiguration.ContentSegmentUrlPrefix
-		}
+func (i *putPlaybackConfigurationInputBuilder) addAvailSuppressionToInput() {
+	if i.model.AvailSuppression == nil {
+		return
 	}
-	return params
+	temp := &awsTypes.AvailSuppression{}
+	if i.model.AvailSuppression.Mode != nil {
+		var mode awsTypes.Mode
+		switch *i.model.AvailSuppression.Mode {
+		case "BEHIND_LIVE_EDGE":
+			mode = awsTypes.ModeBehindLiveEdge
+		case "AFTER_LIVE_EDGE":
+			mode = awsTypes.ModeAfterLiveEdge
+		default:
+			mode = awsTypes.ModeOff
+		}
+		temp.Mode = mode
+	}
+	if i.model.AvailSuppression.Value != nil {
+		temp.Value = i.model.AvailSuppression.Value
+	}
+	if i.model.AvailSuppression.FillPolicy != nil {
+		var policy awsTypes.FillPolicy
+		if *i.model.AvailSuppression.FillPolicy == "FULL_AVAIL_ONLY" {
+			policy = awsTypes.FillPolicyFullAvailOnly
+		} else {
+			policy = awsTypes.FillPolicyPartialAvail
+		}
+		temp.FillPolicy = policy
+	}
+	i.input.AvailSuppression = temp
 }
 
-func getDashConfigurationInput(dashConfiguration *dashConfigurationModel) *mediatailor.DashConfigurationForPut {
-	input := &mediatailor.DashConfigurationForPut{}
-	if dashConfiguration != nil {
-		if dashConfiguration.MpdLocation != nil {
-			input.MpdLocation = dashConfiguration.MpdLocation
-		}
-		if dashConfiguration.OriginManifestType != nil {
-			input.OriginManifestType = dashConfiguration.OriginManifestType
-		}
+func (i *putPlaybackConfigurationInputBuilder) addBumperToInput() {
+	if i.model.Bumper == nil {
+		return
 	}
-	return input
+	temp := &awsTypes.Bumper{}
+	if i.model.Bumper.EndUrl != nil {
+		temp.EndUrl = i.model.Bumper.EndUrl
+	}
+	if i.model.Bumper.StartUrl != nil {
+		temp.StartUrl = i.model.Bumper.StartUrl
+	}
+	i.input.Bumper = temp
+
 }
 
-func getLivePreRollConfigurationInput(livePreRollConfiguration *livePreRollConfigurationModel) *mediatailor.LivePreRollConfiguration {
-	input := &mediatailor.LivePreRollConfiguration{}
-	if livePreRollConfiguration != nil {
-		if livePreRollConfiguration.AdDecisionServerUrl != nil {
-			input.AdDecisionServerUrl = livePreRollConfiguration.AdDecisionServerUrl
+func (i *putPlaybackConfigurationInputBuilder) addCdnConfigurationToInput() {
+	if i.model.CdnConfiguration == nil {
+		return
+	}
+	temp := &awsTypes.CdnConfiguration{}
+	if i.model.CdnConfiguration != nil {
+		if i.model.CdnConfiguration.AdSegmentUrlPrefix != nil {
+			temp.AdSegmentUrlPrefix = i.model.CdnConfiguration.AdSegmentUrlPrefix
 		}
-		if livePreRollConfiguration.MaxDurationSeconds != nil {
-			input.MaxDurationSeconds = livePreRollConfiguration.MaxDurationSeconds
+		if i.model.CdnConfiguration.ContentSegmentUrlPrefix != nil {
+			temp.ContentSegmentUrlPrefix = i.model.CdnConfiguration.ContentSegmentUrlPrefix
 		}
 	}
-	return input
+	i.input.CdnConfiguration = temp
 }
 
-func readPlaybackConfigToPlan(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
-	plan.PlaybackConfigurationArn = types.StringValue(*playbackConfiguration.PlaybackConfigurationArn)
-	plan.AdDecisionServerUrl = playbackConfiguration.AdDecisionServerUrl
-	// AVAIL SUPRESSION
-	if playbackConfiguration.AvailSuppression != nil {
-		plan = readAvailSuppression(plan, playbackConfiguration)
+func (i *putPlaybackConfigurationInputBuilder) addDashConfigurationToInput() {
+	if i.model.DashConfiguration == nil {
+		return
 	}
-	// BUMPER
-	if playbackConfiguration.Bumper != nil && (playbackConfiguration.Bumper.EndUrl != nil || playbackConfiguration.Bumper.StartUrl != nil) {
-		plan = readBumper(plan, playbackConfiguration)
+	temp := &awsTypes.DashConfigurationForPut{}
+	if i.model.DashConfiguration.MpdLocation != nil {
+		temp.MpdLocation = i.model.DashConfiguration.MpdLocation
 	}
-	// CDN CONFIGURATION
-	if playbackConfiguration.CdnConfiguration != nil {
-		plan = readCdnConfiguration(plan, playbackConfiguration)
+	if i.model.DashConfiguration.OriginManifestType != nil {
+		var manifestType awsTypes.OriginManifestType
+		if *i.model.DashConfiguration.OriginManifestType == "SINGLE_PERIOD" {
+			manifestType = awsTypes.OriginManifestTypeSinglePeriod
+		} else {
+			manifestType = awsTypes.OriginManifestTypeMultiPeriod
+		}
+		temp.OriginManifestType = manifestType
 	}
-	// CONFIGURATION ALIASES
-	if playbackConfiguration.ConfigurationAliases != nil {
-		plan.ConfigurationAliases = playbackConfiguration.ConfigurationAliases
+	i.input.DashConfiguration = temp
+}
+
+func (i *putPlaybackConfigurationInputBuilder) addLivePreRollConfigurationToInput() {
+	if i.model.LivePreRollConfiguration == nil {
+		return
 	}
-	// DASH CONFIGURATION
-	if playbackConfiguration.DashConfiguration != nil {
-		plan = readDashConfiguration(plan, playbackConfiguration)
+	temp := &awsTypes.LivePreRollConfiguration{}
+	if i.model.LivePreRollConfiguration.AdDecisionServerUrl != nil {
+		temp.AdDecisionServerUrl = i.model.LivePreRollConfiguration.AdDecisionServerUrl
+	}
+	if i.model.LivePreRollConfiguration.MaxDurationSeconds != nil {
+		temp.MaxDurationSeconds = i.model.LivePreRollConfiguration.MaxDurationSeconds
+	}
+	i.input.LivePreRollConfiguration = temp
+}
+
+func (i *putPlaybackConfigurationInputBuilder) addManifestProcessingRulesToInput() {
+	if i.model.ManifestProcessingRules == nil {
+		return
+	}
+	temp := &awsTypes.ManifestProcessingRules{}
+	if i.model.ManifestProcessingRules.AdMarkerPassthrough != nil {
+		temp.AdMarkerPassthrough = &awsTypes.AdMarkerPassthrough{
+			Enabled: i.model.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
+		}
+	}
+	i.input.ManifestProcessingRules = temp
+}
+
+func (i *putPlaybackConfigurationInputBuilder) addOptionalFieldsToInput() {
+	if i.model.ConfigurationAliases != nil {
+		i.input.ConfigurationAliases = i.model.ConfigurationAliases
 	}
 
-	// HLS CONFIGURATION
-	if playbackConfiguration.HlsConfiguration != nil && playbackConfiguration.HlsConfiguration.ManifestEndpointPrefix != nil {
-		plan.HlsConfigurationManifestEndpointPrefix = types.StringValue(*playbackConfiguration.HlsConfiguration.ManifestEndpointPrefix)
+	if i.model.PersonalizationThresholdSeconds != nil {
+		i.input.PersonalizationThresholdSeconds = i.model.PersonalizationThresholdSeconds
 	}
 
-	// LOG CONFIGURATION
-	if playbackConfiguration.LogConfiguration != nil {
-		plan.LogConfigurationPercentEnabled = types.Int64Value(*playbackConfiguration.LogConfiguration.PercentEnabled)
+	if i.model.SlateAdUrl != nil {
+		i.input.SlateAdUrl = i.model.SlateAdUrl
+	}
+
+	if i.model.Tags != nil {
+		i.input.Tags = i.model.Tags
+	}
+
+	if i.model.TranscodeProfileName != nil {
+		i.input.TranscodeProfileName = i.model.TranscodeProfileName
+	}
+
+	if i.model.VideoContentSourceUrl != nil {
+		i.input.VideoContentSourceUrl = i.model.VideoContentSourceUrl
+	}
+}
+
+func (i *putPlaybackConfigurationInputBuilder) addRequiredFieldsToInput() {
+	i.input.AdDecisionServerUrl = i.model.AdDecisionServerUrl
+	i.input.Name = i.model.Name
+}
+
+func (m *putPlaybackConfigurationModelbuilder) getModel() playbackConfigurationModel {
+
+	m.addAvailSuppressionToModel()
+	m.addBumperToModel()
+	m.addCdnConfigurationToModel()
+	m.addDashConfigurationToModel()
+	m.addOptionalFieldsToModel()
+	m.addLivePreRollConfigurationToModel()
+	m.addManifestProcessingRulesToModel()
+	m.addRequiredFieldsToModel()
+
+	return *m.model
+}
+
+func (m *putPlaybackConfigurationModelbuilder) addAvailSuppressionToModel() {
+	if m.output.AvailSuppression == nil {
+		return
+	}
+	if m.model.AvailSuppression == nil && m.isResource {
+		return
+	}
+	m.model.AvailSuppression = &availSuppressionModel{}
+
+	m.model.AvailSuppression.Mode = aws.String(string(m.output.AvailSuppression.Mode))
+	m.model.AvailSuppression.FillPolicy = aws.String(string(m.output.AvailSuppression.FillPolicy))
+	if m.output.AvailSuppression.Value != nil {
+		m.model.AvailSuppression.Value = m.output.AvailSuppression.Value
+	}
+}
+
+func (m *putPlaybackConfigurationModelbuilder) addBumperToModel() {
+	if m.output.Bumper == nil || (m.output.Bumper.EndUrl == nil || m.output.Bumper.StartUrl == nil) {
+		return
+	}
+	m.model.Bumper = &bumperModel{}
+	if m.output.Bumper.EndUrl != nil {
+		m.model.Bumper.EndUrl = m.output.Bumper.EndUrl
+	}
+	if m.output.Bumper.StartUrl != nil {
+		m.model.Bumper.StartUrl = m.output.Bumper.StartUrl
+	}
+}
+
+func (m *putPlaybackConfigurationModelbuilder) addCdnConfigurationToModel() {
+	if m.output.CdnConfiguration == nil {
+		return
+	}
+	if m.model.CdnConfiguration == nil && m.isResource {
+		return
+	}
+	m.model.CdnConfiguration = &cdnConfigurationModel{}
+	if m.output.CdnConfiguration.AdSegmentUrlPrefix != nil {
+		m.model.CdnConfiguration.AdSegmentUrlPrefix = m.output.CdnConfiguration.AdSegmentUrlPrefix
+	}
+	if m.output.CdnConfiguration.ContentSegmentUrlPrefix != nil {
+		m.model.CdnConfiguration.ContentSegmentUrlPrefix = m.output.CdnConfiguration.ContentSegmentUrlPrefix
+	}
+}
+
+func (m *putPlaybackConfigurationModelbuilder) addDashConfigurationToModel() {
+	if m.output.DashConfiguration == nil {
+		return
+	}
+	if m.model.DashConfiguration == nil && m.isResource {
+		return
+	}
+	m.model.DashConfiguration = &dashConfigurationModel{}
+	m.model.DashConfiguration.ManifestEndpointPrefix = types.StringValue(*m.output.DashConfiguration.MpdLocation)
+	if m.output.DashConfiguration.MpdLocation != nil {
+		m.model.DashConfiguration.MpdLocation = m.output.DashConfiguration.MpdLocation
+	}
+	m.model.DashConfiguration.OriginManifestType = aws.String(string(m.output.DashConfiguration.OriginManifestType))
+}
+
+func (m *putPlaybackConfigurationModelbuilder) addLivePreRollConfigurationToModel() {
+	if m.output.LivePreRollConfiguration == nil || (m.output.LivePreRollConfiguration.AdDecisionServerUrl == nil || m.output.LivePreRollConfiguration.MaxDurationSeconds == nil) {
+		return
+	}
+	m.model.LivePreRollConfiguration = &livePreRollConfigurationModel{}
+	if m.output.LivePreRollConfiguration.AdDecisionServerUrl != nil {
+		m.model.LivePreRollConfiguration.AdDecisionServerUrl = m.output.LivePreRollConfiguration.AdDecisionServerUrl
+	}
+	if m.output.LivePreRollConfiguration.MaxDurationSeconds != nil {
+		m.model.LivePreRollConfiguration.MaxDurationSeconds = m.output.LivePreRollConfiguration.MaxDurationSeconds
+	}
+}
+
+func (m *putPlaybackConfigurationModelbuilder) addManifestProcessingRulesToModel() {
+	if m.output.ManifestProcessingRules == nil || m.output.ManifestProcessingRules.AdMarkerPassthrough == nil {
+		return
+	}
+	if m.model.ManifestProcessingRules == nil && m.isResource {
+		return
+	}
+	m.model.ManifestProcessingRules = &manifestProcessingRulesModel{
+		AdMarkerPassthrough: &adMarkerPassthroughModel{
+			Enabled: m.output.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
+		},
+	}
+}
+
+func (m *putPlaybackConfigurationModelbuilder) addRequiredFieldsToModel() {
+	m.model.AdDecisionServerUrl = m.output.AdDecisionServerUrl
+	m.model.ID = types.StringValue(*m.output.Name)
+	m.model.Name = m.output.Name
+	m.model.PlaybackConfigurationArn = types.StringValue(*m.output.PlaybackConfigurationArn)
+	m.model.PlaybackEndpointPrefix = types.StringValue(*m.output.PlaybackEndpointPrefix)
+	m.model.SessionInitializationEndpointPrefix = types.StringValue(*m.output.SessionInitializationEndpointPrefix)
+}
+
+func (m *putPlaybackConfigurationModelbuilder) addOptionalFieldsToModel() {
+	if m.output.ConfigurationAliases != nil {
+		m.model.ConfigurationAliases = m.output.ConfigurationAliases
+	}
+
+	if m.output.HlsConfiguration != nil && m.output.HlsConfiguration.ManifestEndpointPrefix != nil {
+		m.model.HlsConfigurationManifestEndpointPrefix = types.StringValue(*m.output.HlsConfiguration.ManifestEndpointPrefix)
+	}
+
+	if m.output.LogConfiguration != nil {
+		m.model.LogConfigurationPercentEnabled = types.Int64Value(int64(m.output.LogConfiguration.PercentEnabled))
 	} else {
-		plan.LogConfigurationPercentEnabled = types.Int64Value(0)
+		m.model.LogConfigurationPercentEnabled = types.Int64Value(0)
 	}
 
-	// LIVE PRE ROLL CONFIGURATION
-	if playbackConfiguration.LivePreRollConfiguration != nil && (playbackConfiguration.LivePreRollConfiguration.AdDecisionServerUrl != nil || playbackConfiguration.LivePreRollConfiguration.MaxDurationSeconds != nil) {
-		plan = readLivePreRollConfiguration(plan, playbackConfiguration)
+	if m.output.PersonalizationThresholdSeconds != nil {
+		m.model.PersonalizationThresholdSeconds = m.output.PersonalizationThresholdSeconds
 	}
 
-	// MANIFEST PROCESSING RULES
-	if playbackConfiguration.ManifestProcessingRules != nil {
-		var mpr = playbackConfiguration.ManifestProcessingRules
-		if mpr.AdMarkerPassthrough != nil && mpr.AdMarkerPassthrough.Enabled != nil && *mpr.AdMarkerPassthrough.Enabled {
-			plan.ManifestProcessingRules = &manifestProcessingRulesModel{AdMarkerPassthrough: &adMarkerPassthroughModel{Enabled: mpr.AdMarkerPassthrough.Enabled}}
-		}
+	if m.output.SlateAdUrl != nil {
+		m.model.SlateAdUrl = m.output.SlateAdUrl
 	}
 
-	plan.Name, plan.PersonalizationThresholdSeconds, plan.PlaybackEndpointPrefix, plan.SessionInitializationEndpointPrefix, plan.SlateAdUrl, plan.TranscodeProfileName, plan.VideoContentSourceUrl, plan.Tags = readPlaybackConfigurationTemps(plan, playbackConfiguration)
-
-	plan.ID = types.StringValue(*playbackConfiguration.Name)
-
-	return plan
-}
-
-func readPlaybackConfigurationTemps(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) (*string, *int64, types.String, types.String, *string, *string, *string, map[string]*string) {
-	plan.Name = playbackConfiguration.Name
-	// PERSONALIZATION THRESHOLD SECONDS
-	if playbackConfiguration.PersonalizationThresholdSeconds != nil {
-		plan.PersonalizationThresholdSeconds = playbackConfiguration.PersonalizationThresholdSeconds
-	}
-	// PLAYBACK ENDPOINT PREFIX
-	plan.PlaybackEndpointPrefix = types.StringValue(*playbackConfiguration.PlaybackEndpointPrefix)
-	// SESSION INITIALIZATION ENDPOINT PREFIX
-	plan.SessionInitializationEndpointPrefix = types.StringValue(*playbackConfiguration.SessionInitializationEndpointPrefix)
-	// SLATE AD URL
-	if playbackConfiguration.SlateAdUrl != nil {
-		plan.SlateAdUrl = playbackConfiguration.SlateAdUrl
-	}
-	// TRANSCODE PROFILE NAME
-	if playbackConfiguration.TranscodeProfileName != nil {
-		plan.TranscodeProfileName = playbackConfiguration.TranscodeProfileName
-	}
-	// VIDEO CONTENT SOURCE URL
-	if playbackConfiguration.VideoContentSourceUrl != nil {
-		plan.VideoContentSourceUrl = playbackConfiguration.VideoContentSourceUrl
+	if m.output.VideoContentSourceUrl != nil {
+		m.model.VideoContentSourceUrl = m.output.VideoContentSourceUrl
 	}
 
-	// TAGS
-	if len(playbackConfiguration.Tags) > 0 {
-		plan.Tags = playbackConfiguration.Tags
+	if m.output.TranscodeProfileName != nil {
+		m.model.TranscodeProfileName = m.output.TranscodeProfileName
 	}
-	return plan.Name, plan.PersonalizationThresholdSeconds, plan.PlaybackEndpointPrefix, plan.SessionInitializationEndpointPrefix, plan.SlateAdUrl, plan.TranscodeProfileName, plan.VideoContentSourceUrl, plan.Tags
-}
 
-func readAvailSuppression(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
-	if playbackConfiguration.AvailSuppression != nil && *playbackConfiguration.AvailSuppression.Mode != "OFF" {
-		plan.AvailSupression = &availSupressionModel{}
-		if playbackConfiguration.AvailSuppression.Mode != nil {
-			plan.AvailSupression.Mode = playbackConfiguration.AvailSuppression.Mode
-		}
-		if playbackConfiguration.AvailSuppression.Value != nil {
-			plan.AvailSupression.Value = playbackConfiguration.AvailSuppression.Value
-		}
-		if playbackConfiguration.AvailSuppression.FillPolicy != nil {
-			plan.AvailSupression.FillPolicy = playbackConfiguration.AvailSuppression.FillPolicy
-		}
+	if len(m.output.Tags) > 0 {
+		m.model.Tags = m.output.Tags
 	}
-	return plan
-}
-
-func readBumper(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
-	if playbackConfiguration.Bumper != nil && (playbackConfiguration.Bumper.EndUrl != nil || playbackConfiguration.Bumper.StartUrl != nil) {
-		plan.Bumper = &bumperModel{}
-		if playbackConfiguration.Bumper.EndUrl != nil {
-			plan.Bumper.EndUrl = playbackConfiguration.Bumper.EndUrl
-		}
-		if playbackConfiguration.Bumper.StartUrl != nil {
-			plan.Bumper.StartUrl = playbackConfiguration.Bumper.StartUrl
-		}
-	}
-	return plan
-}
-
-func readCdnConfiguration(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
-	if playbackConfiguration.CdnConfiguration != nil {
-		plan.CdnConfiguration = &cdnConfigurationModel{}
-		if playbackConfiguration.CdnConfiguration.AdSegmentUrlPrefix != nil {
-			plan.CdnConfiguration.AdSegmentUrlPrefix = playbackConfiguration.CdnConfiguration.AdSegmentUrlPrefix
-		}
-		if playbackConfiguration.CdnConfiguration.ContentSegmentUrlPrefix != nil {
-			plan.CdnConfiguration.ContentSegmentUrlPrefix = playbackConfiguration.CdnConfiguration.ContentSegmentUrlPrefix
-		}
-	}
-	return plan
-}
-
-func readDashConfiguration(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
-	if playbackConfiguration.DashConfiguration != nil {
-		plan.DashConfiguration = &dashConfigurationModel{}
-		plan.DashConfiguration.ManifestEndpointPrefix = types.StringValue(*playbackConfiguration.DashConfiguration.MpdLocation)
-		if playbackConfiguration.DashConfiguration.MpdLocation != nil {
-			plan.DashConfiguration.MpdLocation = playbackConfiguration.DashConfiguration.MpdLocation
-		}
-		if playbackConfiguration.DashConfiguration.OriginManifestType != nil {
-			plan.DashConfiguration.OriginManifestType = playbackConfiguration.DashConfiguration.OriginManifestType
-		}
-	}
-	return plan
-}
-
-func readLivePreRollConfiguration(plan playbackConfigurationModel, playbackConfiguration mediatailor.PutPlaybackConfigurationOutput) playbackConfigurationModel {
-	if playbackConfiguration.LivePreRollConfiguration != nil && (playbackConfiguration.LivePreRollConfiguration.AdDecisionServerUrl != nil || playbackConfiguration.LivePreRollConfiguration.MaxDurationSeconds != nil) {
-		plan.LivePreRollConfiguration = &livePreRollConfigurationModel{}
-		if playbackConfiguration.LivePreRollConfiguration.AdDecisionServerUrl != nil {
-			plan.LivePreRollConfiguration.AdDecisionServerUrl = playbackConfiguration.LivePreRollConfiguration.AdDecisionServerUrl
-		}
-		if playbackConfiguration.LivePreRollConfiguration.MaxDurationSeconds != nil {
-			plan.LivePreRollConfiguration.MaxDurationSeconds = playbackConfiguration.LivePreRollConfiguration.MaxDurationSeconds
-		}
-	}
-	return plan
 }

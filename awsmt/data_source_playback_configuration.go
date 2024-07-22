@@ -2,7 +2,7 @@ package awsmt
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -18,7 +18,7 @@ func DataSourcePlaybackConfiguration() datasource.DataSource {
 }
 
 type dataSourcePlaybackConfiguration struct {
-	client *mediatailor.MediaTailor
+	client *mediatailor.Client
 }
 
 func (d *dataSourcePlaybackConfiguration) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -30,7 +30,7 @@ func (d *dataSourcePlaybackConfiguration) Schema(_ context.Context, _ datasource
 		Attributes: map[string]schema.Attribute{
 			"id":                     computedString,
 			"ad_decision_server_url": computedString,
-			"avail_supression": schema.SingleNestedAttribute{
+			"avail_suppression": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
 					"fill_policy": computedString,
@@ -107,20 +107,20 @@ func (d *dataSourcePlaybackConfiguration) Configure(_ context.Context, req datas
 		return
 	}
 
-	d.client = req.ProviderData.(clients).v1
+	d.client = req.ProviderData.(clients).v2
 }
 
 func (d *dataSourcePlaybackConfiguration) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data playbackConfigurationModel
-	diags := req.Config.Get(ctx, &data)
-	resp.Diagnostics.Append(diags...)
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	name := data.Name
 
-	playbackConfiguration, err := d.client.GetPlaybackConfiguration(&mediatailor.GetPlaybackConfigurationInput{Name: name})
+	playbackConfiguration, err := d.client.GetPlaybackConfiguration(context.TODO(), &mediatailor.GetPlaybackConfigurationInput{Name: name})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while retrieving the playback configuration "+err.Error(),
@@ -129,7 +129,7 @@ func (d *dataSourcePlaybackConfiguration) Read(ctx context.Context, req datasour
 		return
 	}
 
-	data = readPlaybackConfigToPlan(data, mediatailor.PutPlaybackConfigurationOutput(*playbackConfiguration))
+	m := putPlaybackConfigurationModelbuilder{model: &data, output: mediatailor.PutPlaybackConfigurationOutput(*playbackConfiguration), isResource: false}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, m.getModel())...)
 }

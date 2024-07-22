@@ -1,10 +1,10 @@
 resource "awsmt_source_location" "example" {
   name = "examplesourcelocation"
   http_configuration = {
-    hc_base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
+    base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
   }
   default_segment_delivery_configuration = {
-    dsdc_base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
+    base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
   }
 }
 

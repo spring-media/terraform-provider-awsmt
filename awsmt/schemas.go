@@ -23,6 +23,13 @@ var computedInt64 = schema.Int64Attribute{
 	Computed: true,
 }
 
+var computedInt64WithStateForUnknown = schema.Int64Attribute{
+	Computed: true,
+	PlanModifiers: []planmodifier.Int64{
+		int64planmodifier.UseStateForUnknown(),
+	},
+}
+
 var computedMap = schema.MapAttribute{
 	Computed:    true,
 	ElementType: types.StringType,
@@ -68,10 +75,6 @@ var optionalUnknownList = schema.ListAttribute{
 	PlanModifiers: []planmodifier.List{
 		listplanmodifier.UseStateForUnknown(),
 	},
-}
-
-var optionalBool = schema.BoolAttribute{
-	Optional: true,
 }
 
 var computedStringWithStateForUnknown = schema.StringAttribute{
