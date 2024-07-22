@@ -1,7 +1,8 @@
 resource "awsmt_playback_configuration" "r1" {
   ad_decision_server_url = "https://exampleurl.com/"
   avail_suppression = {
-    mode = "OFF"
+    mode = "AFTER_LIVE_EDGE"
+    fill_policy = "FULL_AVAIL_ONLY"
   }
   cdn_configuration = {
     ad_segment_url_prefix = "https://exampleurl.com/"
