@@ -7,6 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -73,7 +75,7 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 				},
 			},
 			"dash_configuration": schema.SingleNestedAttribute{
-				Required: true,
+				Optional: true,
 				Attributes: map[string]schema.Attribute{
 					"manifest_endpoint_prefix": computedStringWithStateForUnknown,
 					"mpd_location": schema.StringAttribute{
@@ -101,12 +103,17 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 			},
 			"manifest_processing_rules": schema.SingleNestedAttribute{
 				Optional: true,
-				Computed: true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
 				Attributes: map[string]schema.Attribute{
 					"ad_marker_passthrough": schema.SingleNestedAttribute{
 						Optional: true,
 						Attributes: map[string]schema.Attribute{
-							"enabled": optionalBool,
+							"enabled": schema.BoolAttribute{
+								Optional: true,
+								Computed: true,
+							},
 						},
 					},
 				},
@@ -151,7 +158,7 @@ func (r *resourcePlaybackConfiguration) Create(ctx context.Context, req resource
 		return
 	}
 
-	m := putPlaybackConfigurationModelbuilder{model: &plan, output: *playbackConfiguration}
+	m := putPlaybackConfigurationModelbuilder{model: &plan, output: *playbackConfiguration, isResource: true}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, m.getModel())...)
 	if resp.Diagnostics.HasError() {
@@ -179,7 +186,7 @@ func (r *resourcePlaybackConfiguration) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	m := putPlaybackConfigurationModelbuilder{model: &state, output: mediatailor.PutPlaybackConfigurationOutput(*playbackConfiguration)}
+	m := putPlaybackConfigurationModelbuilder{model: &state, output: mediatailor.PutPlaybackConfigurationOutput(*playbackConfiguration), isResource: true}
 
 	// Set refreshed state
 	resp.Diagnostics.Append(resp.State.Set(ctx, m.getModel())...)
@@ -218,7 +225,7 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 	err = V2UpdatesTags(r.client, playbackConfiguration.Tags, plan.Tags, *playbackConfiguration.PlaybackConfigurationArn)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error while untaging playback configuration tags"+err.Error(),
+			"Error while updating playback configuration tags"+err.Error(),
 			err.Error(),
 		)
 	}
@@ -235,7 +242,7 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 		return
 	}
 
-	m := putPlaybackConfigurationModelbuilder{model: &plan, output: *playbackConfigurationUpdate}
+	m := putPlaybackConfigurationModelbuilder{model: &plan, output: *playbackConfigurationUpdate, isResource: true}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, m.getModel())...)
 	if resp.Diagnostics.HasError() {

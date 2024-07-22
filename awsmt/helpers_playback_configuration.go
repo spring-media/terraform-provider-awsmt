@@ -13,8 +13,9 @@ type putPlaybackConfigurationInputBuilder struct {
 }
 
 type putPlaybackConfigurationModelbuilder struct {
-	model  *playbackConfigurationModel
-	output mediatailor.PutPlaybackConfigurationOutput
+	model      *playbackConfigurationModel
+	output     mediatailor.PutPlaybackConfigurationOutput
+	isResource bool
 }
 
 func (i *putPlaybackConfigurationInputBuilder) getInput() *mediatailor.PutPlaybackConfigurationInput {
@@ -190,6 +191,9 @@ func (m *putPlaybackConfigurationModelbuilder) addAvailSuppressionToModel() {
 	if m.output.AvailSuppression == nil {
 		return
 	}
+	if m.model.AvailSuppression == nil && m.isResource {
+		return
+	}
 	m.model.AvailSuppression = &availSuppressionModel{}
 
 	m.model.AvailSuppression.Mode = aws.String(string(m.output.AvailSuppression.Mode))
@@ -216,6 +220,9 @@ func (m *putPlaybackConfigurationModelbuilder) addCdnConfigurationToModel() {
 	if m.output.CdnConfiguration == nil {
 		return
 	}
+	if m.model.CdnConfiguration == nil && m.isResource {
+		return
+	}
 	m.model.CdnConfiguration = &cdnConfigurationModel{}
 	if m.output.CdnConfiguration.AdSegmentUrlPrefix != nil {
 		m.model.CdnConfiguration.AdSegmentUrlPrefix = m.output.CdnConfiguration.AdSegmentUrlPrefix
@@ -227,6 +234,9 @@ func (m *putPlaybackConfigurationModelbuilder) addCdnConfigurationToModel() {
 
 func (m *putPlaybackConfigurationModelbuilder) addDashConfigurationToModel() {
 	if m.output.DashConfiguration == nil {
+		return
+	}
+	if m.model.DashConfiguration == nil && m.isResource {
 		return
 	}
 	m.model.DashConfiguration = &dashConfigurationModel{}
@@ -252,6 +262,9 @@ func (m *putPlaybackConfigurationModelbuilder) addLivePreRollConfigurationToMode
 
 func (m *putPlaybackConfigurationModelbuilder) addManifestProcessingRulesToModel() {
 	if m.output.ManifestProcessingRules == nil || m.output.ManifestProcessingRules.AdMarkerPassthrough == nil {
+		return
+	}
+	if m.model.ManifestProcessingRules == nil && m.isResource {
 		return
 	}
 	m.model.ManifestProcessingRules = &manifestProcessingRulesModel{

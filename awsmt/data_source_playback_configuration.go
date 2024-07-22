@@ -129,7 +129,7 @@ func (d *dataSourcePlaybackConfiguration) Read(ctx context.Context, req datasour
 		return
 	}
 
-	m := putPlaybackConfigurationModelbuilder{model: &data, output: mediatailor.PutPlaybackConfigurationOutput(*playbackConfiguration)}
+	m := putPlaybackConfigurationModelbuilder{model: &data, output: mediatailor.PutPlaybackConfigurationOutput(*playbackConfiguration), isResource: false}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, m.getModel())...)
 }
