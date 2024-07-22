@@ -77,10 +77,6 @@ var optionalUnknownList = schema.ListAttribute{
 	},
 }
 
-var optionalBool = schema.BoolAttribute{
-	Optional: true,
-}
-
 var computedStringWithStateForUnknown = schema.StringAttribute{
 	Computed: true,
 	PlanModifiers: []planmodifier.String{
