@@ -3,6 +3,7 @@ package awsmt
 import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"regexp"
 	"testing"
 )
 
@@ -34,6 +35,22 @@ func TestAccPlaybackConfigurationMinimal(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_url", adUrl2),
 					resource.TestCheckResourceAttr(resourceName, "video_content_source_url", videoSourceUrl2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccPlaybackConfigurationCreationFail(t *testing.T) {
+	name := "test-acc-playback-configuration-delete"
+	adUrl := "invalid"
+	videoSourceUrl := "https://www.bar.at"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      minimalPlaybackConfiguration(name, adUrl, videoSourceUrl),
+				ExpectError: regexp.MustCompile(`.*AdDecisionServerUrl requires a valid URL.*`),
 			},
 		},
 	})
