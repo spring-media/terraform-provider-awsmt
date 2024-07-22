@@ -56,6 +56,32 @@ func TestAccPlaybackConfigurationCreationFail(t *testing.T) {
 	})
 }
 
+func TestAccPlaybackConfigurationUpdateFail(t *testing.T) {
+	resourceName := "awsmt_playback_configuration.r2"
+	name := "test-acc-playback-configuration-delete"
+	adUrl := "https://www.buzz.com"
+	adUrl2 := "invalid"
+	videoSourceUrl := "https://www.bar.at"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: minimalPlaybackConfiguration(name, adUrl, videoSourceUrl),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_url", adUrl),
+				),
+			},
+			{
+				Config:      minimalPlaybackConfiguration(name, adUrl2, videoSourceUrl),
+				ExpectError: regexp.MustCompile(`.*AdDecisionServerUrl requires a valid URL.*`),
+			},
+		},
+	})
+}
+
 func TestAccPlaybackConfigurationResource(t *testing.T) {
 	name := "example-playback-configuration-awsmt"
 	adUrl := "https://exampleurl.com/"
