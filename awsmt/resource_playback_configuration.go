@@ -159,7 +159,7 @@ func (r *resourcePlaybackConfiguration) Create(ctx context.Context, req resource
 
 	p := putPlaybackConfigurationInputBuilder{input: &mediatailor.PutPlaybackConfigurationInput{}, model: plan}
 
-	playbackConfiguration, err := r.client.PutPlaybackConfiguration(context.TODO(), p.getInput())
+	_, err := r.client.PutPlaybackConfiguration(context.TODO(), p.getInput())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while creating playback configuration "+err.Error(),
@@ -168,7 +168,7 @@ func (r *resourcePlaybackConfiguration) Create(ctx context.Context, req resource
 		return
 	}
 
-	playbackConfiguration, err = setLogPercentage(r.client, plan)
+	playbackConfiguration, err := setLogPercentage(r.client, plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while setting the log percentage "+err.Error(),
@@ -252,7 +252,7 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 	p := putPlaybackConfigurationInputBuilder{input: &mediatailor.PutPlaybackConfigurationInput{}, model: plan}
 
 	// Update the playback configuration
-	playbackConfigurationUpdate, err := r.client.PutPlaybackConfiguration(context.TODO(), p.getInput())
+	_, err = r.client.PutPlaybackConfiguration(context.TODO(), p.getInput())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating playback configuration "+err.Error(),
@@ -261,7 +261,7 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 		return
 	}
 
-	playbackConfigurationUpdate, err = setLogPercentage(r.client, plan)
+	playbackConfigurationUpdate, err := setLogPercentage(r.client, plan)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while setting the log percentage "+err.Error(),
