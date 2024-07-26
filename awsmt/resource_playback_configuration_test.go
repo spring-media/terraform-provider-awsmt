@@ -40,6 +40,37 @@ func TestAccPlaybackConfigurationMinimal(t *testing.T) {
 	})
 }
 
+func TestAccPlaybackConfigurationLogPercentage(t *testing.T) {
+	resourceName := "awsmt_playback_configuration.r3"
+	name := "test-acc-playback-configuration-log-percentage"
+	adUrl := "https://www.foo.de/"
+	videoSourceUrl := "https://www.bar.at"
+	p1 := "5"
+	p2 := "8"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: logPercentagePlaybackConfiguration(name, adUrl, videoSourceUrl, p1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration_percent_enabled", p1),
+				),
+			},
+			{
+				Config: logPercentagePlaybackConfiguration(name, adUrl, videoSourceUrl, p2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration_percent_enabled", p2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccPlaybackConfigurationCreationFail(t *testing.T) {
 	name := "test-acc-playback-configuration-delete"
 	adUrl := "invalid"
@@ -164,6 +195,18 @@ func minimalPlaybackConfiguration(name, adUrl, videoSourceUrl string) string {
 			video_content_source_url = "%[3]s"
 		}
 		`, name, adUrl, videoSourceUrl,
+	)
+}
+
+func logPercentagePlaybackConfiguration(name, adUrl, videoSourceUrl, logPercentage string) string {
+	return fmt.Sprintf(`
+		resource "awsmt_playback_configuration" "r3" {
+			ad_decision_server_url = "%[2]s"
+			name = "%[1]s"
+			video_content_source_url = "%[3]s"
+			log_configuration_percent_enabled = %[4]s"
+		}
+		`, name, adUrl, videoSourceUrl, logPercentage,
 	)
 }
 

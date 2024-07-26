@@ -1,6 +1,7 @@
 package awsmt
 
 import (
+	"context"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	awsTypes "github.com/aws/aws-sdk-go-v2/service/mediatailor/types"
@@ -17,6 +18,8 @@ type putPlaybackConfigurationModelbuilder struct {
 	output     mediatailor.PutPlaybackConfigurationOutput
 	isResource bool
 }
+
+// Input Builder functions
 
 func (i *putPlaybackConfigurationInputBuilder) getInput() *mediatailor.PutPlaybackConfigurationInput {
 
@@ -173,6 +176,8 @@ func (i *putPlaybackConfigurationInputBuilder) addRequiredFieldsToInput() {
 	i.input.Name = i.model.Name
 }
 
+// Model Builder functions
+
 func (m *putPlaybackConfigurationModelbuilder) getModel() playbackConfigurationModel {
 
 	m.addAvailSuppressionToModel()
@@ -293,9 +298,9 @@ func (m *putPlaybackConfigurationModelbuilder) addOptionalFieldsToModel() {
 	}
 
 	if m.output.LogConfiguration != nil {
-		m.model.LogConfigurationPercentEnabled = types.Int64Value(int64(m.output.LogConfiguration.PercentEnabled))
-	} else {
-		m.model.LogConfigurationPercentEnabled = types.Int64Value(0)
+		if !m.isResource && m.model.LogConfigurationPercentEnabled == types.Int64Value(0) {
+			m.model.LogConfigurationPercentEnabled = types.Int64Value(int64(m.output.LogConfiguration.PercentEnabled))
+		}
 	}
 
 	if m.output.PersonalizationThresholdSeconds != nil {
@@ -317,4 +322,23 @@ func (m *putPlaybackConfigurationModelbuilder) addOptionalFieldsToModel() {
 	if len(m.output.Tags) > 0 {
 		m.model.Tags = m.output.Tags
 	}
+}
+
+// Log percentage configuration helper
+func setLogPercentage(client *mediatailor.Client, model playbackConfigurationModel) (*mediatailor.PutPlaybackConfigurationOutput, error) {
+	_, err := client.ConfigureLogsForPlaybackConfiguration(context.TODO(), &mediatailor.ConfigureLogsForPlaybackConfigurationInput{
+		PlaybackConfigurationName: model.Name,
+		PercentEnabled:            int32(model.LogConfigurationPercentEnabled.ValueInt64()),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	playbackConfiguration, err := client.GetPlaybackConfiguration(context.TODO(), &mediatailor.GetPlaybackConfigurationInput{Name: model.Name})
+	if err != nil {
+		return nil, err
+	}
+	output := mediatailor.PutPlaybackConfigurationOutput(*playbackConfiguration)
+	return &output, nil
 }
