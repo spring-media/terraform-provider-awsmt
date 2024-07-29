@@ -204,7 +204,7 @@ func logPercentagePlaybackConfiguration(name, adUrl, videoSourceUrl, logPercenta
 			ad_decision_server_url = "%[2]s"
 			name = "%[1]s"
 			video_content_source_url = "%[3]s"
-			log_configuration_percent_enabled = %[4]s"
+			log_configuration_percent_enabled = "%[4]s"
 		}
 		`, name, adUrl, videoSourceUrl, logPercentage,
 	)
