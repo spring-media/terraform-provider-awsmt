@@ -298,7 +298,9 @@ func (m *putPlaybackConfigurationModelbuilder) addOptionalFieldsToModel() {
 	}
 
 	if m.output.LogConfiguration != nil {
-		if !m.isResource && m.model.LogConfigurationPercentEnabled == types.Int64Value(0) {
+		if m.isResource && int(m.model.LogConfigurationPercentEnabled.ValueInt64()) > 0 {
+			m.model.LogConfigurationPercentEnabled = types.Int64Value(int64(m.output.LogConfiguration.PercentEnabled))
+		} else if !m.isResource {
 			m.model.LogConfigurationPercentEnabled = types.Int64Value(int64(m.output.LogConfiguration.PercentEnabled))
 		}
 	}
