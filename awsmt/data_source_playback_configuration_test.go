@@ -45,7 +45,7 @@ func TestAccPlaybackConfigurationDataSourceErrors(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      plabackConfigDSError(),
+				Config:      playbackConfigDSError(),
 				ExpectError: regexp.MustCompile("Error while retrieving the playback configuration "),
 			},
 		},
@@ -98,7 +98,7 @@ func playbackConfigDS() string {
 						`
 }
 
-func plabackConfigDSError() string {
+func playbackConfigDSError() string {
 	return `resource "awsmt_playback_configuration" "r1" {
   							ad_decision_server_url = "https://exampleurl.com/"
   							avail_suppression = {

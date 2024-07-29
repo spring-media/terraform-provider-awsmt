@@ -3,10 +3,12 @@ package awsmt
 import (
 	"context"
 	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -93,7 +95,15 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 				},
 			},
 			"hls_configuration_manifest_endpoint_prefix": computedStringWithStateForUnknown,
-			"log_configuration_percent_enabled":          computedInt64WithStateForUnknown,
+			"log_configuration_percent_enabled": schema.Int64Attribute{
+				Optional: true,
+				Validators: []validator.Int64{
+					int64validator.Between(0, 100),
+				},
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
+			},
 			"live_pre_roll_configuration": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
@@ -149,10 +159,19 @@ func (r *resourcePlaybackConfiguration) Create(ctx context.Context, req resource
 
 	p := putPlaybackConfigurationInputBuilder{input: &mediatailor.PutPlaybackConfigurationInput{}, model: plan}
 
-	playbackConfiguration, err := r.client.PutPlaybackConfiguration(context.TODO(), p.getInput())
+	_, err := r.client.PutPlaybackConfiguration(context.TODO(), p.getInput())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while creating playback configuration "+err.Error(),
+			err.Error(),
+		)
+		return
+	}
+
+	playbackConfiguration, err := setLogPercentage(r.client, plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error while setting the log percentage "+err.Error(),
 			err.Error(),
 		)
 		return
@@ -233,10 +252,19 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 	p := putPlaybackConfigurationInputBuilder{input: &mediatailor.PutPlaybackConfigurationInput{}, model: plan}
 
 	// Update the playback configuration
-	playbackConfigurationUpdate, err := r.client.PutPlaybackConfiguration(context.TODO(), p.getInput())
+	_, err = r.client.PutPlaybackConfiguration(context.TODO(), p.getInput())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating playback configuration "+err.Error(),
+			err.Error(),
+		)
+		return
+	}
+
+	playbackConfigurationUpdate, err := setLogPercentage(r.client, plan)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error while setting the log percentage "+err.Error(),
 			err.Error(),
 		)
 		return

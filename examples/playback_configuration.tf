@@ -16,6 +16,7 @@ resource "awsmt_playback_configuration" "r1" {
       enabled = "false"
     }
   }
+  log_configuration_percent_enabled = 5
   name                              = "example-playback-configuration-awsmt"
   personalization_threshold_seconds = 2
   tags                              = { "Environment" : "dev" }
