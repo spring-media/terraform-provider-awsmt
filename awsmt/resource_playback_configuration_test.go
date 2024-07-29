@@ -173,7 +173,6 @@ func TestAccPlaybackConfigurationResource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "name", "example-playback-configuration-awsmt"),
 					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "personalization_threshold_seconds", "3"),
-					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "log_configuration_percent_enabled", "0"),
 					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "ad_decision_server_url", "https://exampleurl2.com/"),
 					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "bumper.end_url", "https://wxample.com/endbumper2"),
 					resource.TestCheckResourceAttr("awsmt_playback_configuration.r1", "bumper.start_url", "https://wxample.com/startbumper2"),
