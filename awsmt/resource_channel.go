@@ -2,7 +2,6 @@ package awsmt
 
 import (
 	"context"
-	"fmt"
 	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	awsTypes "github.com/aws/aws-sdk-go-v2/service/mediatailor/types"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
@@ -291,8 +290,7 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 
 func (r *resourceChannel) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state channelModel
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -324,25 +322,4 @@ func (r *resourceChannel) Delete(ctx context.Context, req resource.DeleteRequest
 
 func (r *resourceChannel) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
-}
-
-func handlePolicyUpdate(context context.Context, client *mediatailor.Client, plan channelModel) error {
-	var normalizedOldPolicy jsontypes.Normalized
-
-	oldPolicy, err := client.GetChannelPolicy(context, &mediatailor.GetChannelPolicyInput{ChannelName: plan.Name})
-	if err != nil && !strings.Contains(err.Error(), "NotFound") {
-		return fmt.Errorf("error getting policy %v", err)
-	}
-
-	if oldPolicy != nil && oldPolicy.Policy != nil {
-		normalizedOldPolicy = jsontypes.NewNormalizedPointerValue(oldPolicy.Policy)
-	} else {
-		normalizedOldPolicy = jsontypes.NewNormalizedNull()
-	}
-
-	plan, err = updatePolicy(&plan, plan.Name, normalizedOldPolicy, plan.Policy, client)
-	if err != nil {
-		return fmt.Errorf("error updating policy %v", err)
-	}
-	return nil
 }

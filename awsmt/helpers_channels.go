@@ -2,12 +2,14 @@ package awsmt
 
 import (
 	"context"
+	"fmt"
 	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	awsTypes "github.com/aws/aws-sdk-go-v2/service/mediatailor/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -169,6 +171,27 @@ func stopChannel(state awsTypes.ChannelState, channelName *string, client *media
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func handlePolicyUpdate(context context.Context, client *mediatailor.Client, plan channelModel) error {
+	var normalizedOldPolicy jsontypes.Normalized
+
+	oldPolicy, err := client.GetChannelPolicy(context, &mediatailor.GetChannelPolicyInput{ChannelName: plan.Name})
+	if err != nil && !strings.Contains(err.Error(), "NotFound") {
+		return fmt.Errorf("error getting policy %v", err)
+	}
+
+	if oldPolicy != nil && oldPolicy.Policy != nil {
+		normalizedOldPolicy = jsontypes.NewNormalizedPointerValue(oldPolicy.Policy)
+	} else {
+		normalizedOldPolicy = jsontypes.NewNormalizedNull()
+	}
+
+	plan, err = updatePolicy(&plan, plan.Name, normalizedOldPolicy, plan.Policy, client)
+	if err != nil {
+		return fmt.Errorf("error updating policy %v", err)
 	}
 	return nil
 }
