@@ -189,7 +189,6 @@ func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, re
 
 	if policy != nil && policy.Policy != nil {
 		state.Policy = jsontypes.NewNormalizedPointerValue(policy.Policy)
-
 	} else {
 		state.Policy = jsontypes.NewNormalizedNull()
 	}
@@ -251,8 +250,7 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 		)
 	}
 
-	var params = getUpdateChannelInput(plan)
-	updatedChannel, err := r.client.UpdateChannel(ctx, params)
+	updatedChannel, err := r.client.UpdateChannel(ctx, getUpdateChannelInput(plan))
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating channel "+*channel.ChannelName+err.Error(),
@@ -273,14 +271,6 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 	plan.ChannelState = newState
 
 	plan = writeChannelToPlan(plan, mediatailor.CreateChannelOutput(*updatedChannel))
-
-	// @ADR
-	// Context: The official AWS Mediatailor Go SDK states that the PlaybackMode is part of the UpdateChannelOutput,
-	// but it is not. As tested, the PlaybackMode is only returned when describing a channel.
-	// Decision: We decided to use the previous API call to describe the channel and get the PlaybackMode from there.
-	// Consequences: The PlaybackMode is not updated when updating the channel.
-
-	plan.PlaybackMode = channel.PlaybackMode
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 	if resp.Diagnostics.HasError() {
