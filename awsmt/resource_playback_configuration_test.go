@@ -1,6 +1,7 @@
 package awsmt
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"regexp"
@@ -34,6 +35,55 @@ func TestAccPlaybackConfigurationMinimal(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_url", adUrl2),
 					resource.TestCheckResourceAttr(resourceName, "video_content_source_url", videoSourceUrl2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPlaybackConfigurationConfigurationAliases(t *testing.T) {
+	resourceName := "awsmt_playback_configuration.r4"
+	name := "test-acc-playback-configuration-minimal"
+	adUrl := "https://www.foo.de/"
+	videoSourceUrl := "https://www.bar.at"
+	aliases := map[string]map[string]string{
+		"player_params.foo": {
+			"player_params.bar": "player_params.boo",
+		},
+	}
+	aliases2 := map[string]map[string]string{
+		"player_params.foo": {
+			"player_params.bar": "player_params.buzz",
+		},
+	}
+
+	aliasesJson, _ := json.Marshal(aliases)
+	aliases2Json, _ := json.Marshal(aliases2)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: configurationAliasesPlaybackConfiguration(name, adUrl, videoSourceUrl, string(aliasesJson)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_url", adUrl),
+					resource.TestCheckResourceAttr(resourceName, "video_content_source_url", videoSourceUrl),
+					resource.TestCheckResourceAttr(resourceName, "configuration_aliases.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_aliases.player_params.foo.player_params.bar", "player_params.boo"),
+				),
+			},
+			{
+				Config: configurationAliasesPlaybackConfiguration(name, adUrl, videoSourceUrl, string(aliases2Json)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_url", adUrl),
+					resource.TestCheckResourceAttr(resourceName, "video_content_source_url", videoSourceUrl),
+					resource.TestCheckResourceAttr(resourceName, "configuration_aliases.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_aliases.player_params.foo.player_params.bar", "player_params.buzz"),
 				),
 			},
 		},
@@ -194,6 +244,18 @@ func minimalPlaybackConfiguration(name, adUrl, videoSourceUrl string) string {
 			video_content_source_url = "%[3]s"
 		}
 		`, name, adUrl, videoSourceUrl,
+	)
+}
+
+func configurationAliasesPlaybackConfiguration(name, adUrl, videoSourceUrl, configAliases string) string {
+	return fmt.Sprintf(`
+		resource "awsmt_playback_configuration" "r4" {
+			ad_decision_server_url = "%[2]s"
+			name = "%[1]s"
+			video_content_source_url = "%[3]s"
+			configuration_aliases = %[4]s
+		}
+		`, name, adUrl, videoSourceUrl, configAliases,
 	)
 }
 
