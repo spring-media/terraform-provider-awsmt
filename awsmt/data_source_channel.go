@@ -91,8 +91,7 @@ func (d *dataSourceChannel) Configure(_ context.Context, req datasource.Configur
 
 func (d *dataSourceChannel) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data channelModel
-	diags := req.Config.Get(ctx, &data)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -114,7 +113,7 @@ func (d *dataSourceChannel) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	if policy.Policy != nil {
+	if policy != nil && policy.Policy != nil {
 		data.Policy = jsontypes.NewNormalizedPointerValue(policy.Policy)
 	}
 
