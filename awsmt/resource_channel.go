@@ -188,7 +188,7 @@ func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, re
 		)
 	}
 
-	if policy.Policy != nil {
+	if policy != nil && policy.Policy != nil {
 		state.Policy = jsontypes.NewNormalizedPointerValue(policy.Policy)
 
 	} else {
