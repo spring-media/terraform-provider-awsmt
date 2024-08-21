@@ -390,3 +390,10 @@ func writeChannelToState(model channelModel, channel mediatailor.DescribeChannel
 
 	return model
 }
+
+// helper functions to simplify update function logic
+func shouldStartChannel(previousState awsTypes.ChannelState, newState *string) bool {
+	wasRunning := previousState == awsTypes.ChannelStateRunning
+	shouldRun := newState != nil && *newState == "RUNNING"
+	return (newState == nil && wasRunning) || shouldRun
+}

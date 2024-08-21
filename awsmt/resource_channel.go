@@ -3,7 +3,6 @@ package awsmt
 import (
 	"context"
 	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
-	awsTypes "github.com/aws/aws-sdk-go-v2/service/mediatailor/types"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -238,7 +237,7 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 	err = stopChannel(previousState, channelName, r.client)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error while stopping running channel "+*channelName+err.Error(),
+			"Error while stopping running channel "+*channelName+" "+err.Error(),
 			err.Error(),
 		)
 	}
@@ -253,14 +252,12 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 	updatedChannel, err := r.client.UpdateChannel(ctx, getUpdateChannelInput(plan))
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error while updating channel "+*channel.ChannelName+err.Error(),
+			"Error while updating channel "+*channel.ChannelName+" "+err.Error(),
 			err.Error(),
 		)
 	}
 
-	wasRunning := previousState == awsTypes.ChannelStateRunning
-	shouldRun := newState != nil && *newState == "RUNNING"
-	if (newState == nil && wasRunning) || shouldRun {
+	if shouldStartChannel(previousState, newState) {
 		_, err := r.client.StartChannel(ctx, &mediatailor.StartChannelInput{ChannelName: channelName})
 		if err != nil {
 			resp.Diagnostics.AddError("Error while starting the channel "+*channelName, err.Error())
@@ -269,7 +266,6 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	plan.ChannelState = newState
-
 	plan = writeChannelToPlan(plan, mediatailor.CreateChannelOutput(*updatedChannel))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
