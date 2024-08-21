@@ -2,7 +2,7 @@ package awsmt
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -23,7 +23,7 @@ func ResourceChannel() resource.Resource {
 }
 
 type resourceChannel struct {
-	client *mediatailor.MediaTailor
+	client *mediatailor.Client
 }
 
 func (r *resourceChannel) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -118,28 +118,27 @@ func (r *resourceChannel) Configure(_ context.Context, req resource.ConfigureReq
 		return
 	}
 
-	r.client = req.ProviderData.(clients).v1
+	r.client = req.ProviderData.(clients).v2
 }
 
 func (r *resourceChannel) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan channelModel
 
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := buildChannelInput(plan)
+	input := getCreateChannelInput(plan)
 
-	channel, err := r.client.CreateChannel(&input)
+	channel, err := r.client.CreateChannel(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Error while creating channel "+*input.ChannelName, err.Error())
 		return
 	}
 
 	if plan.ChannelState != nil && *plan.ChannelState == "RUNNING" {
-		_, err := r.client.StartChannel(&mediatailor.StartChannelInput{ChannelName: plan.Name})
+		_, err := r.client.StartChannel(ctx, &mediatailor.StartChannelInput{ChannelName: plan.Name})
 		if err != nil {
 			resp.Diagnostics.AddError("Error while starting the channel "+*channel.ChannelName, err.Error())
 			return
@@ -156,8 +155,7 @@ func (r *resourceChannel) Create(ctx context.Context, req resource.CreateRequest
 
 	newPlan := writeChannelToPlan(plan, *channel)
 
-	diags = resp.State.Set(ctx, newPlan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, newPlan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -167,13 +165,12 @@ func (r *resourceChannel) Create(ctx context.Context, req resource.CreateRequest
 func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state channelModel
 
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	channel, err := r.client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: state.Name})
+	channel, err := r.client.DescribeChannel(ctx, &mediatailor.DescribeChannelInput{ChannelName: state.Name})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while describing channel "+err.Error(),
@@ -181,7 +178,7 @@ func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, re
 		)
 	}
 
-	policy, err := r.client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: state.Name})
+	policy, err := r.client.GetChannelPolicy(ctx, &mediatailor.GetChannelPolicyInput{ChannelName: state.Name})
 	if err != nil && !strings.Contains(err.Error(), "NotFound") {
 		resp.Diagnostics.AddError(
 			"Error while getting channel policy "+err.Error(),
@@ -189,9 +186,8 @@ func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, re
 		)
 	}
 
-	if policy.Policy != nil {
+	if policy != nil && policy.Policy != nil {
 		state.Policy = jsontypes.NewNormalizedPointerValue(policy.Policy)
-
 	} else {
 		state.Policy = jsontypes.NewNormalizedNull()
 	}
@@ -199,11 +195,11 @@ func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, re
 	state = writeChannelToState(state, *channel)
 
 	if state.ChannelState != nil {
-		state.ChannelState = channel.ChannelState
+		channelState := string(channel.ChannelState)
+		state.ChannelState = &channelState
 	}
 
-	diags = resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -212,15 +208,14 @@ func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, re
 
 func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan channelModel
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	channelName := plan.Name
 
-	channel, err := r.client.DescribeChannel(&mediatailor.DescribeChannelInput{ChannelName: channelName})
+	channel, err := r.client.DescribeChannel(ctx, &mediatailor.DescribeChannelInput{ChannelName: channelName})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while describing channel "+err.Error(),
@@ -228,7 +223,7 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 		)
 	}
 
-	err = updatesTags(r.client, channel.Tags, plan.Tags, *channel.Arn)
+	err = V2UpdatesTags(r.client, channel.Tags, plan.Tags, *channel.Arn)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating channel tags"+err.Error(),
@@ -242,44 +237,28 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 	err = stopChannel(previousState, channelName, r.client)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error while stopping running channel "+*channelName+err.Error(),
+			"Error while stopping running channel "+*channelName+" "+err.Error(),
 			err.Error(),
 		)
 	}
 
-	oldPolicy, err := r.client.GetChannelPolicy(&mediatailor.GetChannelPolicyInput{ChannelName: channelName})
-	if err != nil && !strings.Contains(err.Error(), "NotFound") {
-		resp.Diagnostics.AddError(
-			"Error while getting channel policy "+err.Error(),
-			err.Error(),
-		)
-	}
-
-	policy := jsontypes.NewNormalizedPointerValue(oldPolicy.Policy)
-
-	newPolicy := plan.Policy
-
-	plan, err = updatePolicy(&plan, channelName, policy, newPolicy, r.client)
-	if err != nil {
+	if err := handlePolicyUpdate(ctx, r.client, plan); err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating channel policy "+err.Error(),
 			err.Error(),
 		)
 	}
 
-	var params = buildUpdateChannelInput(plan)
-	updatedChannel, err := r.client.UpdateChannel(&params)
+	updatedChannel, err := r.client.UpdateChannel(ctx, getUpdateChannelInput(plan))
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error while updating channel "+*channel.ChannelName+err.Error(),
+			"Error while updating channel "+*channel.ChannelName+" "+err.Error(),
 			err.Error(),
 		)
 	}
 
-	wasRunning := previousState != nil && *previousState == "RUNNING"
-	shouldRun := newState != nil && *newState == "RUNNING"
-	if (newState == nil && wasRunning) || shouldRun {
-		_, err := r.client.StartChannel(&mediatailor.StartChannelInput{ChannelName: channelName})
+	if shouldStartChannel(previousState, newState) {
+		_, err := r.client.StartChannel(ctx, &mediatailor.StartChannelInput{ChannelName: channelName})
 		if err != nil {
 			resp.Diagnostics.AddError("Error while starting the channel "+*channelName, err.Error())
 			return
@@ -287,19 +266,9 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	plan.ChannelState = newState
-
 	plan = writeChannelToPlan(plan, mediatailor.CreateChannelOutput(*updatedChannel))
 
-	// @ADR
-	// Context: The official AWS Mediatailor Go SDK states that the PlaybackMode is part of the UpdateChannelOutput,
-	// but it is not. As tested, the PlaybackMode is only returned when describing a channel.
-	// Decision: We decided to use the previous API call to describe the channel and get the PlaybackMode from there.
-	// Consequences: The PlaybackMode is not updated when updating the channel.
-
-	plan.PlaybackMode = channel.PlaybackMode
-
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -307,13 +276,12 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 
 func (r *resourceChannel) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state channelModel
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if _, err := r.client.StopChannel(&mediatailor.StopChannelInput{ChannelName: state.Name}); err != nil {
+	if _, err := r.client.StopChannel(ctx, &mediatailor.StopChannelInput{ChannelName: state.Name}); err != nil {
 		resp.Diagnostics.AddError(
 			"error while stopping the channel "+err.Error(),
 			err.Error(),
@@ -321,7 +289,7 @@ func (r *resourceChannel) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	if _, err := r.client.DeleteChannelPolicy(&mediatailor.DeleteChannelPolicyInput{ChannelName: state.Name}); err != nil {
+	if _, err := r.client.DeleteChannelPolicy(ctx, &mediatailor.DeleteChannelPolicyInput{ChannelName: state.Name}); err != nil {
 		resp.Diagnostics.AddError(
 			"error while deleting the channel policy "+err.Error(),
 			err.Error(),
@@ -329,7 +297,7 @@ func (r *resourceChannel) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	if _, err := r.client.DeleteChannel(&mediatailor.DeleteChannelInput{ChannelName: state.Name}); err != nil {
+	if _, err := r.client.DeleteChannel(ctx, &mediatailor.DeleteChannelInput{ChannelName: state.Name}); err != nil {
 		resp.Diagnostics.AddError(
 			"error while deleting the channel "+err.Error(),
 			err.Error(),

@@ -15,17 +15,18 @@ func testAccPreCheck(t *testing.T) {
 }
 
 func TestAccChannelResourceBasic(t *testing.T) {
+	resourceName := "awsmt_channel.test"
 	name := "test"
-	state_stopped := "STOPPED"
-	state_running := "RUNNING"
-	mw_s := "30"
-	mw_s2 := "40"
-	mbt_s := "2"
-	mbt_s2 := "3"
-	mup_s := "2"
-	mup_s2 := "3"
-	spd_s := "2"
-	spd_s2 := "3"
+	stateStopped := "STOPPED"
+	stateRunning := "RUNNING"
+	manifestWindowSeconds := "30"
+	manifestWindowSeconds2 := "40"
+	minBufferTimeSeconds := "2"
+	minBufferTimeSeconds2 := "3"
+	minUpdatePeriodSeconds := "2"
+	minUpdatePeriodSeconds2 := "3"
+	PresentationDelaySeconds := "2"
+	presentationDelaySeconds2 := "3"
 	k1 := "Environment"
 	v1 := "dev"
 	k2 := "Testing"
@@ -37,51 +38,51 @@ func TestAccChannelResourceBasic(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: basicChannel(name, state_stopped, mw_s, mbt_s, mup_s, spd_s, k1, v1, k2, v2),
+				Config: basicChannel(name, stateStopped, manifestWindowSeconds, minBufferTimeSeconds, minUpdatePeriodSeconds, PresentationDelaySeconds, k1, v1, k2, v2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("awsmt_channel.test", "id", "test"),
-					resource.TestMatchResourceAttr("awsmt_channel.test", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:channel\/.*$`)),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "name", "test"),
-					resource.TestMatchResourceAttr("awsmt_channel.test", "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
-					resource.TestMatchResourceAttr("awsmt_channel.test", "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "channel_state", "STOPPED"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "playback_mode", "LOOP"),
-					resource.TestMatchResourceAttr("awsmt_channel.test", "policy", regexp.MustCompile(`mediatailor:GetManifest`)),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "tier", "BASIC"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "tags.Environment", "dev"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "outputs.0.manifest_name", "default"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "outputs.0.source_group", "default"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "outputs.0.dash_playlist_settings.manifest_window_seconds", "30"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "outputs.0.dash_playlist_settings.min_buffer_time_seconds", "2"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "outputs.0.dash_playlist_settings.min_update_period_seconds", "2"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "outputs.0.dash_playlist_settings.suggested_presentation_delay_seconds", "2"),
+					resource.TestCheckResourceAttr(resourceName, "id", "test"),
+					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:channel\/.*$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", "test"),
+					resource.TestMatchResourceAttr(resourceName, "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestMatchResourceAttr(resourceName, "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr(resourceName, "channel_state", "STOPPED"),
+					resource.TestCheckResourceAttr(resourceName, "playback_mode", "LOOP"),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`mediatailor:GetManifest`)),
+					resource.TestCheckResourceAttr(resourceName, "tier", "BASIC"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "dev"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.0.manifest_name", "default"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.0.source_group", "default"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.0.dash_playlist_settings.manifest_window_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.0.dash_playlist_settings.min_buffer_time_seconds", "2"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.0.dash_playlist_settings.min_update_period_seconds", "2"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.0.dash_playlist_settings.suggested_presentation_delay_seconds", "2"),
 				),
 			},
 			// ImportState testing
 			{
-				ResourceName: "awsmt_channel.test",
+				ResourceName: resourceName,
 				ImportState:  true,
 			},
 			// Update and Read testing
 			{
-				Config: basicChannel(name, state_running, mw_s2, mbt_s2, mup_s2, spd_s2, k3, v3, k2, v2),
+				Config: basicChannel(name, stateRunning, manifestWindowSeconds2, minBufferTimeSeconds2, minUpdatePeriodSeconds2, presentationDelaySeconds2, k3, v3, k2, v2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("awsmt_channel.test", "id", "test"),
-					resource.TestMatchResourceAttr("awsmt_channel.test", "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:channel\/.*$`)),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "name", "test"),
-					resource.TestMatchResourceAttr("awsmt_channel.test", "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
-					resource.TestMatchResourceAttr("awsmt_channel.test", "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "channel_state", "RUNNING"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "playback_mode", "LOOP"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "tier", "BASIC"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "tags.Environment", "prod"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "tags.Testing", "pass"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "outputs.0.manifest_name", "default"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "outputs.0.source_group", "default"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "outputs.0.dash_playlist_settings.manifest_window_seconds", "40"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "outputs.0.dash_playlist_settings.min_buffer_time_seconds", "3"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "outputs.0.dash_playlist_settings.min_update_period_seconds", "3"),
-					resource.TestCheckResourceAttr("awsmt_channel.test", "outputs.0.dash_playlist_settings.suggested_presentation_delay_seconds", "3"),
+					resource.TestCheckResourceAttr(resourceName, "id", "test"),
+					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:channel\/.*$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", "test"),
+					resource.TestMatchResourceAttr(resourceName, "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestMatchResourceAttr(resourceName, "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr(resourceName, "channel_state", "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "playback_mode", "LOOP"),
+					resource.TestCheckResourceAttr(resourceName, "tier", "BASIC"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "prod"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Testing", "pass"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.0.manifest_name", "default"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.0.source_group", "default"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.0.dash_playlist_settings.manifest_window_seconds", "40"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.0.dash_playlist_settings.min_buffer_time_seconds", "3"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.0.dash_playlist_settings.min_update_period_seconds", "3"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.0.dash_playlist_settings.suggested_presentation_delay_seconds", "3"),
 				),
 			},
 		},
@@ -134,21 +135,21 @@ resource "awsmt_channel" "test"  {
 }
 
 func TestAccChannelResourceRunning(t *testing.T) {
-	mw_s := "30"
-	mw_s2 := "40"
+	manifestWindowSeconds := "30"
+	manifestWindowSeconds2 := "40"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: hlsChannel(mw_s),
+				Config: hlsChannel(manifestWindowSeconds),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("awsmt_channel.test", "channel_state", "RUNNING"),
 					resource.TestCheckResourceAttr("data.awsmt_channel.test", "outputs.0.hls_playlist_settings.manifest_window_seconds", "30"),
 				),
 			},
 			{
-				Config: hlsChannel(mw_s2),
+				Config: hlsChannel(manifestWindowSeconds2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("awsmt_channel.test", "channel_state", "RUNNING"),
 					resource.TestCheckResourceAttr("data.awsmt_channel.test", "outputs.0.hls_playlist_settings.manifest_window_seconds", "40"),
@@ -189,7 +190,7 @@ func TestAccChannelResourceSTANDARD(t *testing.T) {
 	})
 }
 
-func basicChannel(name, state, mw_s, mbt_s, mup_s, spd_s, k1, v1, k2, v2 string) string {
+func basicChannel(name, state, manifestWindowSeconds, minBufferTimeSeconds, minUpdatePeriodSeconds, presentationDelaySeconds, k1, v1, k2, v2 string) string {
 	return fmt.Sprintf(
 		`
 				resource "awsmt_channel" "test"  {
@@ -220,7 +221,7 @@ func basicChannel(name, state, mw_s, mbt_s, mup_s, spd_s, k1, v1, k2, v2 string)
 				output "channel_out" {
 					value = data.awsmt_channel.test
 				}
-				`, name, state, mw_s, mbt_s, mup_s, spd_s, k1, v1, k2, v2,
+				`, name, state, manifestWindowSeconds, minBufferTimeSeconds, minUpdatePeriodSeconds, presentationDelaySeconds, k1, v1, k2, v2,
 	)
 }
 
@@ -304,66 +305,73 @@ func hlsChannel(mw_s string) string {
 				}
 				`, mw_s)
 }
+
 func standardTierChannel() string {
 	return `resource "awsmt_vod_source" "test" {
-		http_package_configurations = [{
-path = "/"
-source_group = "default"
-type = "HLS"
-}]
-source_location_name = awsmt_source_location.test_source_location.name
-name = "vod_source_example"
-tags = {"Environment": "dev"}
-}
-data "awsmt_vod_source" "data_test" {
-source_location_name = awsmt_source_location.test_source_location.name
-name = awsmt_vod_source.test.name
-}
+				http_package_configurations = [{
+					path = "/"
+					source_group = "default"
+					type = "HLS"
+				}]
+				source_location_name = awsmt_source_location.test_source_location.name
+				name = "vod_source_example"
+				tags = {"Environment": "dev"}
+				}
 
-output "vod_source_out" {
-value = data.awsmt_vod_source.data_test
-}
-resource "awsmt_source_location" "test_source_location"{
-name = "test_source_location"
-http_configuration = {
-base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
-}
-default_segment_delivery_configuration = {
-base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
-}
-}
-data "awsmt_source_location" "test" {
-name = awsmt_source_location.test_source_location.name
-}
-output "awsmt_source_location" {
-value = data.awsmt_source_location.test
-}
-resource "awsmt_channel" "test"  {
-name = "test"
-channel_state = "STOPPED"
-outputs = [{
-manifest_name                = "default"
-source_group                 = "default"
-hls_playlist_settings = {
-ad_markup_type = ["DATERANGE"]
-manifest_window_seconds = 30
-}
-}]
-playback_mode = "LINEAR"
-filler_slate = {
-source_location_name = awsmt_source_location.test_source_location.name
-vod_source_name = awsmt_vod_source.test.name
-}
-policy = "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"AllowAnonymous\", \"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\": \"mediatailor:GetManifest\", \"Resource\": \"arn:aws:mediatailor:eu-central-1:985600762523:channel/test\"}]}"
-tier = "STANDARD"
-tags = {"Environment": "dev"}
-}
+			data "awsmt_vod_source" "data_test" {
+				source_location_name = awsmt_source_location.test_source_location.name
+				name = awsmt_vod_source.test.name
+			}
 
-data "awsmt_channel" "test" {
-name = awsmt_channel.test.name
-}
-output "channel_out" {
-value = data.awsmt_channel.test
-}
+			output "vod_source_out" {
+				value = data.awsmt_vod_source.data_test
+			}
+
+			resource "awsmt_source_location" "test_source_location"{
+				name = "test_source_location"
+				http_configuration = {
+					base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
+				}
+				default_segment_delivery_configuration = {
+					base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
+				}
+			}
+
+			data "awsmt_source_location" "test" {
+				name = awsmt_source_location.test_source_location.name
+			}
+
+			output "awsmt_source_location" {
+				value = data.awsmt_source_location.test
+			}
+	
+			resource "awsmt_channel" "test"  {
+			name = "test"
+			channel_state = "STOPPED"
+			outputs = [{
+				manifest_name                = "default"
+				source_group                 = "default"
+				hls_playlist_settings = {
+					ad_markup_type = ["DATERANGE"]
+					manifest_window_seconds = 30
+				}
+			}]
+			playback_mode = "LINEAR"
+			filler_slate = {
+				source_location_name = awsmt_source_location.test_source_location.name
+				vod_source_name = awsmt_vod_source.test.name
+			}
+			policy = "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"AllowAnonymous\", \"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\": \"mediatailor:GetManifest\", \"Resource\": \"arn:aws:mediatailor:eu-central-1:985600762523:channel/test\"}]}"
+			tier = "STANDARD"
+			tags = {"Environment": "dev"}
+			}
+
+			data "awsmt_channel" "test" {
+				name = awsmt_channel.test.name
+			}
+
+			output "channel_out" {
+				value = data.awsmt_channel.test
+			}
 `
 }

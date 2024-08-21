@@ -16,7 +16,7 @@ type channelModel struct {
 	Outputs          []outputsModel       `tfsdk:"outputs"`
 	PlaybackMode     *string              `tfsdk:"playback_mode"`
 	Policy           jsontypes.Normalized `tfsdk:"policy"`
-	Tags             map[string]*string   `tfsdk:"tags"`
+	Tags             map[string]string    `tfsdk:"tags"`
 	Tier             *string              `tfsdk:"tier"`
 }
 

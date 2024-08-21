@@ -52,12 +52,10 @@ func (d *dataSourcePlaybackConfiguration) Schema(_ context.Context, _ datasource
 					"content_segment_url_prefix": computedString,
 				},
 			},
-			"configuration_aliases": schema.ListAttribute{
+			"configuration_aliases": schema.MapAttribute{
 				Computed: true,
 				ElementType: types.MapType{
-					ElemType: types.MapType{
-						ElemType: types.StringType,
-					},
+					ElemType: types.StringType,
 				},
 			},
 			"dash_configuration": schema.SingleNestedAttribute{

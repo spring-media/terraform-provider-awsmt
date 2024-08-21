@@ -7,6 +7,7 @@ import (
 )
 
 func TestAccPlaybackConfigurationDataSourceBasic(t *testing.T) {
+	resourceName := "data.awsmt_playback_configuration.test"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -14,25 +15,27 @@ func TestAccPlaybackConfigurationDataSourceBasic(t *testing.T) {
 			{
 				Config: playbackConfigDS(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "id", "example-playback-configuration-awsmt"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "ad_decision_server_url", "https://exampleurl.com/"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "avail_suppression.fill_policy", "FULL_AVAIL_ONLY"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "avail_suppression.mode", "BEHIND_LIVE_EDGE"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "avail_suppression.value", "00:00:00"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "bumper.end_url", "https://wxample.com/endbumper"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "bumper.start_url", "https://wxample.com/startbumper"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "cdn_configuration.ad_segment_url_prefix", "https://exampleurl.com/"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "cdn_configuration.content_segment_url_prefix", "https://exampleurl.com/"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "dash_configuration.mpd_location", "DISABLED"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "dash_configuration.origin_manifest_type", "SINGLE_PERIOD"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "live_pre_roll_configuration.ad_decision_server_url", "https://exampleurl.com/"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "live_pre_roll_configuration.max_duration_seconds", "2"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "name", "example-playback-configuration-awsmt"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "personalization_threshold_seconds", "2"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "slate_ad_url", "https://exampleurl.com/"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "tags.Environment", "dev"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "video_content_source_url", "https://exampleurl.com/"),
-					resource.TestCheckResourceAttr("data.awsmt_playback_configuration.test", "log_configuration_percent_enabled", "0"),
+					resource.TestCheckResourceAttr(resourceName, "id", "example-playback-configuration-awsmt"),
+					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_url", "https://exampleurl.com/"),
+					resource.TestCheckResourceAttr(resourceName, "avail_suppression.fill_policy", "FULL_AVAIL_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "avail_suppression.mode", "BEHIND_LIVE_EDGE"),
+					resource.TestCheckResourceAttr(resourceName, "avail_suppression.value", "00:00:00"),
+					resource.TestCheckResourceAttr(resourceName, "bumper.end_url", "https://wxample.com/endbumper"),
+					resource.TestCheckResourceAttr(resourceName, "bumper.start_url", "https://wxample.com/startbumper"),
+					resource.TestCheckResourceAttr(resourceName, "cdn_configuration.ad_segment_url_prefix", "https://exampleurl.com/"),
+					resource.TestCheckResourceAttr(resourceName, "cdn_configuration.content_segment_url_prefix", "https://exampleurl.com/"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_aliases.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_aliases.player_params.foo.player_params.bar", "player_params.buzz"),
+					resource.TestCheckResourceAttr(resourceName, "dash_configuration.mpd_location", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "dash_configuration.origin_manifest_type", "SINGLE_PERIOD"),
+					resource.TestCheckResourceAttr(resourceName, "live_pre_roll_configuration.ad_decision_server_url", "https://exampleurl.com/"),
+					resource.TestCheckResourceAttr(resourceName, "live_pre_roll_configuration.max_duration_seconds", "2"),
+					resource.TestCheckResourceAttr(resourceName, "name", "example-playback-configuration-awsmt"),
+					resource.TestCheckResourceAttr(resourceName, "personalization_threshold_seconds", "2"),
+					resource.TestCheckResourceAttr(resourceName, "slate_ad_url", "https://exampleurl.com/"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "dev"),
+					resource.TestCheckResourceAttr(resourceName, "video_content_source_url", "https://exampleurl.com/"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration_percent_enabled", "0"),
 				),
 			},
 		},
@@ -68,6 +71,11 @@ func playbackConfigDS() string {
     							ad_segment_url_prefix = "https://exampleurl.com/"
 								content_segment_url_prefix = "https://exampleurl.com/"
   							}
+							configuration_aliases = {
+								"player_params.foo" = {
+									"player_params.bar" = "player_params.buzz"
+								}
+							}
   							dash_configuration = {
     							mpd_location = "DISABLED",
     							origin_manifest_type = "SINGLE_PERIOD"
