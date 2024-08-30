@@ -83,13 +83,13 @@ func basicSourceLocation(name, baseUrl, k1, v1, k2, v2 string) string {
 		resource "awsmt_source_location" "test_source_location"{
 			name = "%[1]s"
 			http_configuration = {
-				baseUrl = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
+				base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
 			}
 			default_segment_delivery_configuration = {
 				baseUrl = "%[2]s"
 			}
 			segment_delivery_configurations = [{
-				baseUrl = "%[2]s"
+				base_url = "%[2]s"
 				name = "default"
 			}]
 			tags = {
@@ -118,10 +118,10 @@ func basicSourceLocationWithAccessConfig(name, baseUrl, k1, v1, k2, v2 string) s
 				access_type = "S3_SIGV4"
 			}
 			default_segment_delivery_configuration = {
-				baseUrl = "%[2]s"
+				base_url = "%[2]s"
 			}
 			segment_delivery_configurations = [{
-				baseUrl = "%[2]s"
+				base_url = "%[2]s"
 				name = "default"
 			}]
 			tags = {
