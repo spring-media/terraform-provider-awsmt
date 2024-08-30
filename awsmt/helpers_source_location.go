@@ -138,12 +138,12 @@ func getUpdateSourceLocationInput(model sourceLocationModel) mediatailor.UpdateS
 	return params
 }
 
-func writeSourceLocationToPlan(model sourceLocationModel, sourceLocation mediatailor.CreateSourceLocationOutput) sourceLocationModel {
+func writeSourceLocationToPlan(model sourceLocationModel, sourceLocation mediatailor.CreateSourceLocationOutput, isResource bool) sourceLocationModel {
 	// Set state
 
 	model = readSourceLocationComputedValues(model, sourceLocation)
 
-	model = readAccessConfiguration(model, sourceLocation)
+	model = readAccessConfiguration(model, sourceLocation, isResource)
 
 	model = readDefaultSegmentDeliveryConfiguration(model, sourceLocation)
 
@@ -180,18 +180,25 @@ func readSourceLocationComputedValues(model sourceLocationModel, sourceLocation 
 	return model
 }
 
-func readAccessConfiguration(model sourceLocationModel, sourceLocation mediatailor.CreateSourceLocationOutput) sourceLocationModel {
+func readAccessConfiguration(model sourceLocationModel, sourceLocation mediatailor.CreateSourceLocationOutput, isResouce bool) sourceLocationModel {
 	if sourceLocation.AccessConfiguration == nil {
 		return model
 	}
+	if model.AccessConfiguration == nil && isResouce {
+		return model
+	}
+
 	model.AccessConfiguration = &accessConfigurationModel{}
-	if &sourceLocation.AccessConfiguration.AccessType != nil {
+
+	if !(isResouce && model.AccessConfiguration.AccessType == nil) {
 		accessType := string(sourceLocation.AccessConfiguration.AccessType)
 		model.AccessConfiguration.AccessType = &accessType
 	}
+
 	if sourceLocation.AccessConfiguration.SecretsManagerAccessTokenConfiguration != nil {
 		model = readSMATConfiguration(model, sourceLocation)
 	}
+
 	return model
 }
 

@@ -108,7 +108,7 @@ func (r *resourceSourceLocation) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	plan = writeSourceLocationToPlan(plan, *sourceLocation)
+	plan = writeSourceLocationToPlan(plan, *sourceLocation, true)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -133,7 +133,7 @@ func (r *resourceSourceLocation) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	state = writeSourceLocationToPlan(state, mediatailor.CreateSourceLocationOutput(*sourceLocation))
+	state = writeSourceLocationToPlan(state, mediatailor.CreateSourceLocationOutput(*sourceLocation), true)
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -195,7 +195,7 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 			return
 		}
 
-		plan = writeSourceLocationToPlan(plan, *sourceLocation)
+		plan = writeSourceLocationToPlan(plan, *sourceLocation, true)
 	}
 
 	params := getUpdateSourceLocationInput(plan)
@@ -209,7 +209,7 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	plan = writeSourceLocationToPlan(plan, mediatailor.CreateSourceLocationOutput(*sourceLocationUpdated))
+	plan = writeSourceLocationToPlan(plan, mediatailor.CreateSourceLocationOutput(*sourceLocationUpdated), true)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
