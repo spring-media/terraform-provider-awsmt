@@ -86,7 +86,7 @@ func basicSourceLocation(name, baseUrl, k1, v1, k2, v2 string) string {
 				base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
 			}
 			default_segment_delivery_configuration = {
-				baseUrl = "%[2]s"
+				base_url = "%[2]s"
 			}
 			segment_delivery_configurations = [{
 				base_url = "%[2]s"
