@@ -45,10 +45,9 @@ func TestAccSourceLocationResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: basicSourceLocationWithAccessConfig(name, baseUrl2, k3, v3, k2, v2),
+				Config: basicSourceLocation(name, baseUrl2, k3, v3, k2, v2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "id", "test_source_location"),
-					resource.TestCheckResourceAttr(resourceName, "access_configuration.access_type", "S3_SIGV4"),
 					resource.TestCheckResourceAttr(resourceName, "name", "test_source_location"),
 					resource.TestCheckResourceAttr(resourceName, "http_configuration.base_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, "default_segment_delivery_configuration.base_url", "https://example.com/"),

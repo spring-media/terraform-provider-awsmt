@@ -11,18 +11,13 @@ func getCreateSourceLocationInput(model sourceLocationModel) mediatailor.CreateS
 	var params mediatailor.CreateSourceLocationInput
 
 	// Access Configuration
-	if model.AccessConfiguration != nil {
-		params.AccessConfiguration = getAccessConfigurationInput(model.AccessConfiguration)
-	}
+	params.AccessConfiguration = getAccessConfigurationInput(model.AccessConfiguration)
+
 	// Default Segment Delivery Configuration
-	if model.DefaultSegmentDeliveryConfiguration != nil {
-		params.DefaultSegmentDeliveryConfiguration = getDefaultSegmentDeliveryConfigurationInput(model.DefaultSegmentDeliveryConfiguration)
-	}
+	params.DefaultSegmentDeliveryConfiguration = getDefaultSegmentDeliveryConfigurationInput(model.DefaultSegmentDeliveryConfiguration)
 
 	// HTTP Configuration
-	if model.HttpConfiguration != nil {
-		params.HttpConfiguration = getHttpConfigurationInput(model.HttpConfiguration)
-	}
+	params.HttpConfiguration = getHttpConfigurationInput(model.HttpConfiguration)
 
 	// Source Location Name
 	params.SourceLocationName = model.Name
@@ -47,7 +42,7 @@ func getAccessConfigurationInput(accessConfiguration *accessConfigurationModel) 
 
 	temp := &awsTypes.AccessConfiguration{}
 
-	if accessConfiguration.AccessType != nil && *accessConfiguration.AccessType != "" {
+	if accessConfiguration.AccessType != nil {
 		var accessType awsTypes.AccessType
 		switch *accessConfiguration.AccessType {
 		case "SECRETS_MANAGER_ACCESS_TOKEN":
@@ -82,19 +77,25 @@ func getSMATC(smatc secretsManagerAccessTokenConfigurationModel) *awsTypes.Secre
 }
 
 func getDefaultSegmentDeliveryConfigurationInput(defaultSegmentDeliveryConfiguration *defaultSegmentDeliveryConfigurationModel) *awsTypes.DefaultSegmentDeliveryConfiguration {
-	temp := &awsTypes.DefaultSegmentDeliveryConfiguration{}
-	if defaultSegmentDeliveryConfiguration.BaseUrl != nil && *defaultSegmentDeliveryConfiguration.BaseUrl != "" {
-		temp.BaseUrl = defaultSegmentDeliveryConfiguration.BaseUrl
+	if defaultSegmentDeliveryConfiguration.BaseUrl == nil || *defaultSegmentDeliveryConfiguration.BaseUrl == "" {
+		return nil
 	}
+	temp := &awsTypes.DefaultSegmentDeliveryConfiguration{
+		BaseUrl: defaultSegmentDeliveryConfiguration.BaseUrl,
+	}
+
 	return temp
 }
 
 func getHttpConfigurationInput(httpConfiguration *httpConfigurationModel) *awsTypes.HttpConfiguration {
-	temp := &awsTypes.HttpConfiguration{}
-	if httpConfiguration != nil {
-		if httpConfiguration.BaseUrl != nil && *httpConfiguration.BaseUrl != "" {
-			temp.BaseUrl = httpConfiguration.BaseUrl
-		}
+	if httpConfiguration == nil {
+		return nil
+	}
+	if httpConfiguration.BaseUrl == nil || *httpConfiguration.BaseUrl == "" {
+		return nil
+	}
+	temp := &awsTypes.HttpConfiguration{
+		BaseUrl: httpConfiguration.BaseUrl,
 	}
 	return temp
 }
@@ -113,19 +114,11 @@ func getSegmentDeliveryConfigurationsInput(segmentDeliveryConfigurations []segme
 func getUpdateSourceLocationInput(model sourceLocationModel) mediatailor.UpdateSourceLocationInput {
 	var params mediatailor.UpdateSourceLocationInput
 
-	// Access Configuration
-	if model.AccessConfiguration != nil {
-		params.AccessConfiguration = getAccessConfigurationInput(model.AccessConfiguration)
-	}
+	params.AccessConfiguration = getAccessConfigurationInput(model.AccessConfiguration)
 	// Default Segment Delivery Configuration
-	if model.DefaultSegmentDeliveryConfiguration != nil {
-		params.DefaultSegmentDeliveryConfiguration = getDefaultSegmentDeliveryConfigurationInput(model.DefaultSegmentDeliveryConfiguration)
-	}
-
+	params.DefaultSegmentDeliveryConfiguration = getDefaultSegmentDeliveryConfigurationInput(model.DefaultSegmentDeliveryConfiguration)
 	// HTTP Configuration
-	if model.HttpConfiguration != nil {
-		params.HttpConfiguration = getHttpConfigurationInput(model.HttpConfiguration)
-	}
+	params.HttpConfiguration = getHttpConfigurationInput(model.HttpConfiguration)
 
 	// Segment Delivery Configurations
 	if len(model.SegmentDeliveryConfigurations) > 0 && model.SegmentDeliveryConfigurations != nil {
