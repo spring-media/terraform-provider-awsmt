@@ -112,7 +112,7 @@ func basicSourceLocationWithAccessConfig(name, baseUrl, k1, v1, k2, v2 string) s
 		resource "awsmt_source_location" "test_source_location"{
 			name = "%[1]s"
 			http_configuration = {
-				baseUrl = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
+				base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
 			}
 			access_configuration = {
 				access_type = "S3_SIGV4"
