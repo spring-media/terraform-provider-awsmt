@@ -2,7 +2,7 @@ package awsmt
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -22,7 +22,7 @@ func ResourceSourceLocation() resource.Resource {
 }
 
 type resourceSourceLocation struct {
-	client *mediatailor.MediaTailor
+	client *mediatailor.Client
 }
 
 func (r *resourceSourceLocation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -87,7 +87,7 @@ func (r *resourceSourceLocation) Configure(_ context.Context, req resource.Confi
 		return
 	}
 
-	r.client = req.ProviderData.(clients).v1
+	r.client = req.ProviderData.(clients).v2
 }
 
 func (r *resourceSourceLocation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -99,16 +99,16 @@ func (r *resourceSourceLocation) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	params := sourceLocationInput(plan)
+	params := getCreateSourceLocationInput(plan)
 
 	// Create Source Location
-	sourceLocation, err := r.client.CreateSourceLocation(&params)
+	sourceLocation, err := r.client.CreateSourceLocation(ctx, &params)
 	if err != nil {
 		resp.Diagnostics.AddError("Error while creating source location", err.Error())
 		return
 	}
 
-	plan = readSourceLocationToPlan(plan, *sourceLocation)
+	plan = writeSourceLocationToPlan(plan, *sourceLocation)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -127,13 +127,13 @@ func (r *resourceSourceLocation) Read(ctx context.Context, req resource.ReadRequ
 
 	name := state.Name
 
-	sourceLocation, err := r.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: name})
+	sourceLocation, err := r.client.DescribeSourceLocation(ctx, &mediatailor.DescribeSourceLocationInput{SourceLocationName: name})
 	if err != nil {
 		resp.Diagnostics.AddError("Error while describing source location", "Could not describe the source location: "+*name+": "+err.Error())
 		return
 	}
 
-	state = readSourceLocationToPlan(state, mediatailor.CreateSourceLocationOutput(*sourceLocation))
+	state = writeSourceLocationToPlan(state, mediatailor.CreateSourceLocationOutput(*sourceLocation))
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -152,7 +152,7 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 
 	name := plan.Name
 
-	sourceLocation, err := r.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: name})
+	sourceLocation, err := r.client.DescribeSourceLocation(ctx, &mediatailor.DescribeSourceLocationInput{SourceLocationName: name})
 	if err != nil {
 		resp.Diagnostics.AddError("Error while describing source location", "Could not describe the source location: "+*name+": "+err.Error())
 		return
@@ -163,7 +163,7 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 
 	// Check if tags are different
 	if !reflect.DeepEqual(oldTags, newTags) {
-		err = updatesTags(r.client, oldTags, newTags, *sourceLocation.Arn)
+		err = V2UpdatesTags(r.client, oldTags, newTags, *sourceLocation.Arn)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error while updating playback configuration tags"+err.Error(),
@@ -185,8 +185,8 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 		}
 
 		// create source location
-		params := sourceLocationInput(plan)
-		sourceLocation, err := r.client.CreateSourceLocation(&params)
+		params := getCreateSourceLocationInput(plan)
+		sourceLocation, err := r.client.CreateSourceLocation(ctx, &params)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error while creating new source location with new access configuration "+err.Error(),
@@ -195,12 +195,12 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 			return
 		}
 
-		plan = readSourceLocationToPlan(plan, *sourceLocation)
+		plan = writeSourceLocationToPlan(plan, *sourceLocation)
 	}
 
-	params := updateSourceLocationInput(plan)
+	params := getUpdateSourceLocationInput(plan)
 
-	sourceLocationUpdated, err := r.client.UpdateSourceLocation(&params)
+	sourceLocationUpdated, err := r.client.UpdateSourceLocation(ctx, &params)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating source location "+err.Error(),
@@ -209,7 +209,7 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	plan = readSourceLocationToPlan(plan, mediatailor.CreateSourceLocationOutput(*sourceLocationUpdated))
+	plan = writeSourceLocationToPlan(plan, mediatailor.CreateSourceLocationOutput(*sourceLocationUpdated))
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -228,7 +228,7 @@ func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.Delete
 
 	name := state.Name
 
-	vodSourcesList, err := r.client.ListVodSources(&mediatailor.ListVodSourcesInput{SourceLocationName: name})
+	vodSourcesList, err := r.client.ListVodSources(ctx, &mediatailor.ListVodSourcesInput{SourceLocationName: name})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error retrieving vod sources "+err.Error(),
@@ -237,7 +237,7 @@ func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 	for _, vodSource := range vodSourcesList.Items {
-		_, err := r.client.DeleteVodSource(&mediatailor.DeleteVodSourceInput{SourceLocationName: name, VodSourceName: vodSource.VodSourceName})
+		_, err := r.client.DeleteVodSource(ctx, &mediatailor.DeleteVodSourceInput{SourceLocationName: name, VodSourceName: vodSource.VodSourceName})
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error deleting vod sources "+err.Error(),
@@ -247,7 +247,7 @@ func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.Delete
 		}
 	}
 
-	liveSourcesList, err := r.client.ListLiveSources(&mediatailor.ListLiveSourcesInput{SourceLocationName: name})
+	liveSourcesList, err := r.client.ListLiveSources(ctx, &mediatailor.ListLiveSourcesInput{SourceLocationName: name})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error retrieving live sources "+err.Error(),
@@ -256,7 +256,7 @@ func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 	for _, liveSource := range liveSourcesList.Items {
-		if _, err := r.client.DeleteLiveSource(&mediatailor.DeleteLiveSourceInput{LiveSourceName: liveSource.LiveSourceName, SourceLocationName: name}); err != nil {
+		if _, err := r.client.DeleteLiveSource(ctx, &mediatailor.DeleteLiveSourceInput{LiveSourceName: liveSource.LiveSourceName, SourceLocationName: name}); err != nil {
 			resp.Diagnostics.AddError(
 				"Error deleting live sources "+err.Error(),
 				err.Error(),
@@ -265,7 +265,7 @@ func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.Delete
 		}
 	}
 
-	_, err = r.client.DeleteSourceLocation(&mediatailor.DeleteSourceLocationInput{SourceLocationName: name})
+	_, err = r.client.DeleteSourceLocation(ctx, &mediatailor.DeleteSourceLocationInput{SourceLocationName: name})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting resource "+err.Error(),

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	awsTypes "github.com/aws/aws-sdk-go-v2/service/mediatailor/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"reflect"
@@ -230,11 +229,11 @@ func readChannelComputedValues(model channelModel, arn *string, channelName *str
 	model.Name = channelName
 
 	if creationTime != nil {
-		model.CreationTime = types.StringValue((aws.TimeValue(creationTime)).String())
+		model.CreationTime = types.StringValue(creationTime.String())
 	}
 
 	if lastModifiedTime != nil {
-		model.LastModifiedTime = types.StringValue((aws.TimeValue(lastModifiedTime)).String())
+		model.LastModifiedTime = types.StringValue(lastModifiedTime.String())
 	}
 
 	return model

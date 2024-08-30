@@ -12,7 +12,7 @@ type sourceLocationModel struct {
 	LastModifiedTime                    types.String                              `tfsdk:"last_modified_time"`
 	SegmentDeliveryConfigurations       []segmentDeliveryConfigurationsModel      `tfsdk:"segment_delivery_configurations"`
 	Name                                *string                                   `tfsdk:"name"`
-	Tags                                map[string]*string                        `tfsdk:"tags"`
+	Tags                                map[string]string                         `tfsdk:"tags"`
 }
 
 type accessConfigurationModel struct {
