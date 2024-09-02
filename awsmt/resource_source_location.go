@@ -87,7 +87,7 @@ func (r *resourceSourceLocation) Configure(_ context.Context, req resource.Confi
 		return
 	}
 
-	r.client = req.ProviderData.(clients).v2
+	r.client = req.ProviderData.(*mediatailor.Client)
 }
 
 func (r *resourceSourceLocation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -163,7 +163,7 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	err = V2UpdatesTags(r.client, sourceLocation.Tags, plan.Tags, *sourceLocation.Arn)
+	err = UpdatesTags(r.client, sourceLocation.Tags, plan.Tags, *sourceLocation.Arn)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating playback configuration tags"+err.Error(),

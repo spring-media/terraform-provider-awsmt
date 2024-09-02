@@ -146,7 +146,7 @@ func (r *resourcePlaybackConfiguration) Configure(_ context.Context, req resourc
 		return
 	}
 
-	r.client = req.ProviderData.(clients).v2
+	r.client = req.ProviderData.(*mediatailor.Client)
 }
 
 func (r *resourcePlaybackConfiguration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -241,7 +241,7 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 	// the PutPlaybackConfiguration method to add and update tags. We use this approach for every resource in the provider.
 	// Consequences: The Update function logic is now more complicated, but tag removal is supported.
 
-	err = V2UpdatesTags(r.client, playbackConfiguration.Tags, plan.Tags, *playbackConfiguration.PlaybackConfigurationArn)
+	err = UpdatesTags(r.client, playbackConfiguration.Tags, plan.Tags, *playbackConfiguration.PlaybackConfigurationArn)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating playback configuration tags"+err.Error(),

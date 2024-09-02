@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func v2Untag(client *mediatailorV2.Client, oldTags map[string]string, resourceArn string) error {
+func untag(client *mediatailorV2.Client, oldTags map[string]string, resourceArn string) error {
 	var removeTags []string
 	for k := range oldTags {
 		removeTags = append(removeTags, k)
@@ -23,7 +23,7 @@ func v2Untag(client *mediatailorV2.Client, oldTags map[string]string, resourceAr
 	return nil
 }
 
-func v2Tag(client *mediatailorV2.Client, newTags map[string]string, resourceArn string) error {
+func tag(client *mediatailorV2.Client, newTags map[string]string, resourceArn string) error {
 	if len(newTags) == 0 {
 		return nil
 	}
@@ -33,12 +33,12 @@ func v2Tag(client *mediatailorV2.Client, newTags map[string]string, resourceArn 
 	return nil
 }
 
-func V2UpdatesTags(client *mediatailorV2.Client, oldTags map[string]string, newTags map[string]string, resourceArn string) error {
+func UpdatesTags(client *mediatailorV2.Client, oldTags map[string]string, newTags map[string]string, resourceArn string) error {
 	if !tagsEqual(oldTags, newTags) {
-		if err := v2Untag(client, oldTags, resourceArn); err != nil {
+		if err := untag(client, oldTags, resourceArn); err != nil {
 			return err
 		}
-		if err := v2Tag(client, newTags, resourceArn); err != nil {
+		if err := tag(client, newTags, resourceArn); err != nil {
 			return err
 		}
 	}

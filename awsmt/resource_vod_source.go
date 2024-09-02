@@ -57,7 +57,7 @@ func (r *resourceVodSource) Configure(_ context.Context, req resource.ConfigureR
 		return
 	}
 
-	r.client = req.ProviderData.(clients).v2
+	r.client = req.ProviderData.(*mediatailor.Client)
 }
 
 func (r *resourceVodSource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -136,7 +136,7 @@ func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	// Update tags
-	err = V2UpdatesTags(r.client, vodSource.Tags, plan.Tags, *vodSource.Arn)
+	err = UpdatesTags(r.client, vodSource.Tags, plan.Tags, *vodSource.Arn)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating vod source tags"+err.Error(),

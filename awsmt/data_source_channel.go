@@ -86,7 +86,7 @@ func (d *dataSourceChannel) Configure(_ context.Context, req datasource.Configur
 		return
 	}
 
-	d.client = req.ProviderData.(clients).v2
+	d.client = req.ProviderData.(*mediatailor.Client)
 }
 
 func (d *dataSourceChannel) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
