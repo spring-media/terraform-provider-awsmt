@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestAccSourceLocationResource(t *testing.T) {
+func TestAccSourceLocationResourceBasic(t *testing.T) {
 	resourceName := "awsmt_source_location.test_source_location"
 	name := "test_source_location"
 	baseUrl := "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
@@ -48,7 +48,59 @@ func TestAccSourceLocationResource(t *testing.T) {
 				Config: basicSourceLocation(name, baseUrl2, k3, v3, k2, v2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "id", "test_source_location"),
+					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:sourceLocation\/.*$`)),
+					resource.TestMatchResourceAttr(resourceName, "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr(resourceName, "default_segment_delivery_configuration.base_url", baseUrl2),
+					resource.TestMatchResourceAttr(resourceName, "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr(resourceName, "segment_delivery_configurations.0.base_url", baseUrl2),
 					resource.TestCheckResourceAttr(resourceName, "name", "test_source_location"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Testing", "pass"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "prod"),
+				),
+			},
+			// Delete testing automatically occurs in TestCase
+		},
+	})
+}
+
+func TestAccSourceLocationResourceUpdateAccessControl(t *testing.T) {
+	resourceName := "awsmt_source_location.test_source_location"
+	name := "test_source_location"
+	baseUrl := "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
+	baseUrl2 := "https://example.com/"
+	k1 := "Environment"
+	v1 := "dev"
+	k2 := "Testing"
+	v2 := "pass"
+	k3 := "Environment"
+	v3 := "prod"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create and Read testing
+			{
+				Config: basicSourceLocation(name, baseUrl, k1, v1, k2, v2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", "test_source_location"),
+					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:aws:mediatailor:[\w-]+:\d+:sourceLocation\/.*$`)),
+					resource.TestMatchResourceAttr(resourceName, "creation_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr(resourceName, "default_segment_delivery_configuration.base_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, "http_configuration.base_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"),
+					resource.TestMatchResourceAttr(resourceName, "last_modified_time", regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})? \+\d{4} \w+$`)),
+					resource.TestCheckResourceAttr(resourceName, "segment_delivery_configurations.0.base_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, "name", "test_source_location"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Testing", "pass"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "dev"),
+				),
+			},
+			// Update and Read testing
+			{
+				Config: basicSourceLocationWithAccessConfig(name, baseUrl2, k3, v3, k2, v2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", "test_source_location"),
+					resource.TestCheckResourceAttr(resourceName, "name", "test_source_location"),
+					resource.TestCheckResourceAttr(resourceName, "access_configuration.access_type", "S3_SIGV4"),
 					resource.TestCheckResourceAttr(resourceName, "http_configuration.base_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, "default_segment_delivery_configuration.base_url", "https://example.com/"),
 					resource.TestCheckResourceAttr(resourceName, "segment_delivery_configurations.0.base_url", "https://example.com/"),
@@ -59,6 +111,7 @@ func TestAccSourceLocationResource(t *testing.T) {
 		},
 	})
 }
+
 func TestAccSourceLocationDeleteVodResource(t *testing.T) {
 	resourceName := "awsmt_source_location.test_source_location"
 	resource.Test(t, resource.TestCase{

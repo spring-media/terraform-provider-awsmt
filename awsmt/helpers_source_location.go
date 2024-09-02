@@ -2,6 +2,7 @@ package awsmt
 
 import (
 	"context"
+	"fmt"
 	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	awsTypes "github.com/aws/aws-sdk-go-v2/service/mediatailor/types"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -173,17 +174,17 @@ func readSourceLocationComputedValues(model sourceLocationModel, sourceLocation 
 	return model
 }
 
-func readAccessConfiguration(model sourceLocationModel, sourceLocation mediatailor.CreateSourceLocationOutput, isResouce bool) sourceLocationModel {
+func readAccessConfiguration(model sourceLocationModel, sourceLocation mediatailor.CreateSourceLocationOutput, isResource bool) sourceLocationModel {
 	if sourceLocation.AccessConfiguration == nil {
 		return model
 	}
-	if model.AccessConfiguration == nil && isResouce {
+	if model.AccessConfiguration == nil && isResource {
 		return model
 	}
 
 	model.AccessConfiguration = &accessConfigurationModel{}
 
-	if !(isResouce && model.AccessConfiguration.AccessType == nil) {
+	if !(isResource && model.AccessConfiguration == nil) {
 		accessType := string(sourceLocation.AccessConfiguration.AccessType)
 		model.AccessConfiguration.AccessType = &accessType
 	}
@@ -285,4 +286,19 @@ func deleteSourceLocation(client *mediatailor.Client, name *string) error {
 	}
 
 	return nil
+}
+
+func recreateSourceLocation(client *mediatailor.Client, plan sourceLocationModel) (*sourceLocationModel, error) {
+	err := deleteSourceLocation(client, plan.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	params := getCreateSourceLocationInput(plan)
+	sourceLocation, err := client.CreateSourceLocation(context.TODO(), &params)
+	if err != nil {
+		return nil, fmt.Errorf("Error while creating new source location with new access configuration " + err.Error())
+	}
+	model := writeSourceLocationToPlan(plan, *sourceLocation, true)
+	return &model, nil
 }
