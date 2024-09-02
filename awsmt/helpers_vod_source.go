@@ -8,13 +8,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func getCreateVodSourceInput(plan vodSourceModel) *mediatailor.CreateVodSourceInput {
+func getCreateVodSourceInput(model vodSourceModel) *mediatailor.CreateVodSourceInput {
 	var input mediatailor.CreateVodSourceInput
 
-	input.HttpPackageConfigurations, input.VodSourceName, input.SourceLocationName = getSharedVodSourceInput(&plan)
+	input.HttpPackageConfigurations, input.VodSourceName, input.SourceLocationName = getSharedVodSourceInput(&model)
 
-	if plan.Tags != nil && len(plan.Tags) > 0 {
-		input.Tags = plan.Tags
+	if model.Tags != nil && len(model.Tags) > 0 {
+		input.Tags = model.Tags
 	}
 
 	return &input

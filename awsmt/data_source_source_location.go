@@ -2,7 +2,7 @@ package awsmt
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -19,7 +19,7 @@ func DataSourceSourceLocation() datasource.DataSource {
 }
 
 type dataSourceSourceLocation struct {
-	client *mediatailor.MediaTailor
+	client *mediatailor.Client
 }
 
 func (d *dataSourceSourceLocation) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -84,7 +84,7 @@ func (d *dataSourceSourceLocation) Configure(_ context.Context, req datasource.C
 		return
 	}
 
-	d.client = req.ProviderData.(clients).v1
+	d.client = req.ProviderData.(clients).v2
 }
 
 func (d *dataSourceSourceLocation) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -97,13 +97,13 @@ func (d *dataSourceSourceLocation) Read(ctx context.Context, req datasource.Read
 
 	sourceLocationName := data.Name
 
-	sourceLocation, err := d.client.DescribeSourceLocation(&mediatailor.DescribeSourceLocationInput{SourceLocationName: sourceLocationName})
+	sourceLocation, err := d.client.DescribeSourceLocation(ctx, &mediatailor.DescribeSourceLocationInput{SourceLocationName: sourceLocationName})
 	if err != nil {
 		resp.Diagnostics.AddError("Error while describing source location", err.Error())
 		return
 	}
 
-	data = readSourceLocationToPlan(data, mediatailor.CreateSourceLocationOutput(*sourceLocation))
+	data = writeSourceLocationToPlan(data, mediatailor.CreateSourceLocationOutput(*sourceLocation), false)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
