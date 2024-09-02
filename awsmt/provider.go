@@ -2,12 +2,9 @@ package awsmt
 
 import (
 	"context"
-	v2 "github.com/aws/aws-sdk-go-v2/aws"
-	v2config "github.com/aws/aws-sdk-go-v2/config"
-	v2mt "github.com/aws/aws-sdk-go-v2/service/mediatailor"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/mediatailor"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -32,11 +29,6 @@ type awsmtProviderModel struct {
 	Region  types.String `tfsdk:"region"`
 }
 
-type clients struct {
-	v1 *mediatailor.MediaTailor
-	v2 *v2mt.Client
-}
-
 func (p *awsmtProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "awsmt"
 }
@@ -59,8 +51,8 @@ func (p *awsmtProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp
 func (p *awsmtProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	tflog.Info(ctx, "Configuring AWS MediaTailor client")
 
-	var config awsmtProviderModel
-	diags := req.Config.Get(ctx, &config)
+	var providerConfig awsmtProviderModel
+	diags := req.Config.Get(ctx, &providerConfig)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -69,54 +61,36 @@ func (p *awsmtProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	var region = "eu-central-1"
 	var profile = ""
 
-	var v1err error
 	var err error
-	// Old sdk version creation
-	var sess *session.Session
 	// New sdk version creation
-	var cfg v2.Config
+	var cfg aws.Config
 
-	if !config.Region.IsUnknown() || !config.Region.IsNull() {
-		region = config.Region.ValueString()
+	if !providerConfig.Region.IsUnknown() || !providerConfig.Region.IsNull() {
+		region = providerConfig.Region.ValueString()
 	}
 
-	if config.Profile.IsUnknown() || config.Profile.IsNull() || config.Profile.ValueString() == "" {
+	if providerConfig.Profile.IsUnknown() || providerConfig.Profile.IsNull() || providerConfig.Profile.ValueString() == "" {
 		if os.Getenv("AWS_PROFILE") != "" {
 			profile = os.Getenv("AWS_PROFILE")
 		}
 	} else {
-		profile = config.Profile.ValueString()
+		profile = providerConfig.Profile.ValueString()
 	}
 
 	tflog.Debug(ctx, "Creating AWS client session")
 
 	if profile != "" {
-		// Old sdk
-		sess, v1err = session.NewSessionWithOptions(session.Options{
-			SharedConfigState: session.SharedConfigEnable,
-			Config: aws.Config{
-				Region: aws.String(region),
-			},
-			Profile: profile,
-		})
-		// New sdk
-		cfg, err = v2config.LoadDefaultConfig(ctx, v2config.WithSharedConfigProfile(profile), v2config.WithRegion(region))
+		cfg, err = config.LoadDefaultConfig(ctx, config.WithSharedConfigProfile(profile), config.WithRegion(region))
 	} else {
-		// Old sdk
-		sess, v1err = session.NewSession(&aws.Config{Region: aws.String(region)})
-		// New sdk
-		cfg, err = v2config.LoadDefaultConfig(ctx, v2config.WithRegion(region))
+		cfg, err = config.LoadDefaultConfig(ctx, config.WithRegion(region))
 	}
 
-	if err != nil || v1err != nil {
+	if err != nil {
 		resp.Diagnostics.AddError("Failed to Initialize Provider in Region", "unable to initialize provider in the specified region: "+err.Error())
 		return
 	}
 
-	c := clients{
-		v1: mediatailor.New(sess),
-		v2: v2mt.NewFromConfig(cfg),
-	}
+	c := mediatailor.NewFromConfig(cfg)
 
 	resp.DataSourceData = c
 	resp.ResourceData = c
