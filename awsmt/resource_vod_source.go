@@ -136,7 +136,7 @@ func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	// Update tags
-	err = V2UpdatesTags(r.client, vodSource.Tags, plan.Tags, *vodSource.Arn)
+	err = UpdatesTags(r.client, vodSource.Tags, plan.Tags, *vodSource.Arn)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating vod source tags"+err.Error(),

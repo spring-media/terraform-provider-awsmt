@@ -223,7 +223,7 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 		)
 	}
 
-	err = V2UpdatesTags(r.client, channel.Tags, plan.Tags, *channel.Arn)
+	err = UpdatesTags(r.client, channel.Tags, plan.Tags, *channel.Arn)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating channel tags"+err.Error(),

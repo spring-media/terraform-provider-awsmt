@@ -127,7 +127,7 @@ func (r *resourceLiveSource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	// Update tags
-	err = V2UpdatesTags(r.client, liveSource.Tags, plan.Tags, *liveSource.Arn)
+	err = UpdatesTags(r.client, liveSource.Tags, plan.Tags, *liveSource.Arn)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error while updating live source tags"+err.Error(),
