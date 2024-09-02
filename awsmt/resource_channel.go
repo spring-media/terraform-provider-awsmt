@@ -118,7 +118,7 @@ func (r *resourceChannel) Configure(_ context.Context, req resource.ConfigureReq
 		return
 	}
 
-	r.client = req.ProviderData.(clients).v2
+	r.client = req.ProviderData.(*mediatailor.Client)
 }
 
 func (r *resourceChannel) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

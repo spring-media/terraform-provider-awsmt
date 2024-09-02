@@ -57,7 +57,7 @@ func (r *resourceVodSource) Configure(_ context.Context, req resource.ConfigureR
 		return
 	}
 
-	r.client = req.ProviderData.(clients).v2
+	r.client = req.ProviderData.(*mediatailor.Client)
 }
 
 func (r *resourceVodSource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
