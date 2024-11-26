@@ -67,11 +67,11 @@ jobs:
         working-directory: tests/docs
       - run: >-
           snyk test
-          --severity-threshold=high
+          --severity-threshold=medium
           --all-projects
       - run: >-
           snyk code test
-          --severity-threshold=high
+          --severity-threshold=medium
           --all-projects
 
   release:
