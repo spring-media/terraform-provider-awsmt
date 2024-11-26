@@ -11,7 +11,7 @@ func getCreateLiveSourceInput(model liveSourceModel) *mediatailor.CreateLiveSour
 
 	input.HttpPackageConfigurations, input.LiveSourceName, input.SourceLocationName = getSharedLiveSourceInput(&model)
 
-	if model.Tags != nil && len(model.Tags) > 0 {
+	if len(model.Tags) > 0 {
 		input.Tags = model.Tags
 	}
 
@@ -31,7 +31,7 @@ func getSharedLiveSourceInput(model *liveSourceModel) ([]awsTypes.HttpPackageCon
 	var liveSourceName *string
 	var sourceLocationName *string
 
-	if model.HttpPackageConfigurations != nil && len(model.HttpPackageConfigurations) > 0 {
+	if len(model.HttpPackageConfigurations) > 0 {
 		httpPackageConfigurations = getHttpPackageConfigurations(model.HttpPackageConfigurations)
 	}
 

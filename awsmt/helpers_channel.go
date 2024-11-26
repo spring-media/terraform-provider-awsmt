@@ -30,7 +30,7 @@ func getCreateChannelInput(model channelModel) *mediatailor.CreateChannelInput {
 		input.PlaybackMode = mode
 	}
 
-	if model.Tags != nil && len(model.Tags) > 0 {
+	if len(model.Tags) > 0 {
 		input.Tags = model.Tags
 	}
 
@@ -127,7 +127,7 @@ func buildDashPlaylistSettings(settings *dashPlaylistSettingsModel) *awsTypes.Da
 func buildHLSPlaylistSettings(settings *hlsPlaylistSettingsModel) *awsTypes.HlsPlaylistSettings {
 	hlsSettings := &awsTypes.HlsPlaylistSettings{}
 
-	if settings.AdMarkupType != nil && len(settings.AdMarkupType) > 0 {
+	if len(settings.AdMarkupType) > 0 {
 		var adMarkupType []awsTypes.AdMarkupType
 		for _, a := range settings.AdMarkupType {
 			switch *a {
@@ -334,7 +334,7 @@ func readHlsPlaylistConfigurationsToPlan(output *awsTypes.ResponseOutputItem, st
 
 func readHlsPlaylistConfigurationsToPlanDS(output *awsTypes.ResponseOutputItem) *hlsPlaylistSettingsModel {
 	outputs := &hlsPlaylistSettingsModel{}
-	if output.HlsPlaylistSettings.AdMarkupType != nil && len(output.HlsPlaylistSettings.AdMarkupType) > 0 {
+	if len(output.HlsPlaylistSettings.AdMarkupType) > 0 {
 		var adMarkupTypes []*string
 		for _, a := range output.HlsPlaylistSettings.AdMarkupType {
 			adMarkupType := string(a)

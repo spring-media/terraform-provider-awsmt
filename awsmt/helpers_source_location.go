@@ -24,7 +24,7 @@ func getCreateSourceLocationInput(model sourceLocationModel) mediatailor.CreateS
 	params.SourceLocationName = model.Name
 
 	// Segment Delivery Configurations
-	if model.SegmentDeliveryConfigurations != nil && len(model.SegmentDeliveryConfigurations) > 0 {
+	if len(model.SegmentDeliveryConfigurations) > 0 {
 		params.SegmentDeliveryConfigurations = getSegmentDeliveryConfigurationsInput(model.SegmentDeliveryConfigurations)
 	}
 
@@ -228,7 +228,7 @@ func readDefaultSegmentDeliveryConfiguration(plan sourceLocationModel, sourceLoc
 }
 
 func readSegmentDeliveryConfigurations(model sourceLocationModel, sourceLocation mediatailor.CreateSourceLocationOutput) sourceLocationModel {
-	if sourceLocation.SegmentDeliveryConfigurations == nil || len(sourceLocation.SegmentDeliveryConfigurations) == 0 {
+	if len(sourceLocation.SegmentDeliveryConfigurations) == 0 {
 		return model
 	}
 	model.SegmentDeliveryConfigurations = []segmentDeliveryConfigurationsModel{}
@@ -297,7 +297,7 @@ func recreateSourceLocation(client *mediatailor.Client, plan sourceLocationModel
 	params := getCreateSourceLocationInput(plan)
 	sourceLocation, err := client.CreateSourceLocation(context.TODO(), &params)
 	if err != nil {
-		return nil, fmt.Errorf("Error while creating new source location with new access configuration " + err.Error())
+		return nil, fmt.Errorf("error while creating new source location with new access configuration %v", err.Error())
 	}
 	model := writeSourceLocationToPlan(plan, *sourceLocation, true)
 	return &model, nil

@@ -13,7 +13,7 @@ func getCreateVodSourceInput(model vodSourceModel) *mediatailor.CreateVodSourceI
 
 	input.HttpPackageConfigurations, input.VodSourceName, input.SourceLocationName = getSharedVodSourceInput(&model)
 
-	if model.Tags != nil && len(model.Tags) > 0 {
+	if len(model.Tags) > 0 {
 		input.Tags = model.Tags
 	}
 
@@ -33,7 +33,7 @@ func getSharedVodSourceInput(model *vodSourceModel) ([]awsTypes.HttpPackageConfi
 	var vodSourceName *string
 	var sourceLocationName *string
 
-	if model.HttpPackageConfigurations != nil && len(model.HttpPackageConfigurations) > 0 {
+	if len(model.HttpPackageConfigurations) > 0 {
 		httpPackageConfigurations = getHttpPackageConfigurations(model.HttpPackageConfigurations)
 	}
 
@@ -63,7 +63,7 @@ func readVodSourceToPlan(model vodSourceModel, vodSource mediatailor.CreateVodSo
 		model.CreationTime = types.StringValue(vodSource.CreationTime.String())
 	}
 
-	if vodSource.HttpPackageConfigurations != nil && len(vodSource.HttpPackageConfigurations) > 0 {
+	if len(vodSource.HttpPackageConfigurations) > 0 {
 		model.HttpPackageConfigurations = []httpPackageConfigurationsModel{}
 		for _, c := range vodSource.HttpPackageConfigurations {
 			model.HttpPackageConfigurations = append(model.HttpPackageConfigurations, httpPackageConfigurationsModel{
@@ -108,7 +108,7 @@ func readVodSourceToState(model vodSourceModel, vodSource mediatailor.DescribeVo
 		Tags:                      vodSource.Tags,
 	})
 
-	if vodSource.AdBreakOpportunities != nil && len(vodSource.AdBreakOpportunities) > 0 {
+	if len(vodSource.AdBreakOpportunities) > 0 {
 		var offsetMillisElements []attr.Value
 		for _, value := range vodSource.AdBreakOpportunities {
 			offsetMillisElements = append(offsetMillisElements, types.Int64Value(value.OffsetMillis))
