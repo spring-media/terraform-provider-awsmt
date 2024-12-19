@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"strings"
+	"terraform-provider-mediatailor/awsmt/models"
 )
 
 var (
@@ -122,7 +123,7 @@ func (r *resourceChannel) Configure(_ context.Context, req resource.ConfigureReq
 }
 
 func (r *resourceChannel) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan channelModel
+	var plan models.ChannelModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -163,7 +164,7 @@ func (r *resourceChannel) Create(ctx context.Context, req resource.CreateRequest
 }
 
 func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state channelModel
+	var state models.ChannelModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -207,7 +208,7 @@ func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan channelModel
+	var plan models.ChannelModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -275,7 +276,7 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 }
 
 func (r *resourceChannel) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state channelModel
+	var state models.ChannelModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

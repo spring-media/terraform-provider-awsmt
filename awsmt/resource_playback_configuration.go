@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"terraform-provider-mediatailor/awsmt/models"
 )
 
 var (
@@ -150,7 +151,7 @@ func (r *resourcePlaybackConfiguration) Configure(_ context.Context, req resourc
 }
 
 func (r *resourcePlaybackConfiguration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan playbackConfigurationModel
+	var plan models.PlaybackConfigurationModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -186,7 +187,7 @@ func (r *resourcePlaybackConfiguration) Create(ctx context.Context, req resource
 }
 
 func (r *resourcePlaybackConfiguration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state playbackConfigurationModel
+	var state models.PlaybackConfigurationModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -215,7 +216,7 @@ func (r *resourcePlaybackConfiguration) Read(ctx context.Context, req resource.R
 }
 
 func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan playbackConfigurationModel
+	var plan models.PlaybackConfigurationModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -279,7 +280,7 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 }
 
 func (r *resourcePlaybackConfiguration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state playbackConfigurationModel
+	var state models.PlaybackConfigurationModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {

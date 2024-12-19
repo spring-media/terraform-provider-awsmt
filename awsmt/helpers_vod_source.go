@@ -6,9 +6,10 @@ import (
 	awsTypes "github.com/aws/aws-sdk-go-v2/service/mediatailor/types"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"terraform-provider-mediatailor/awsmt/models"
 )
 
-func getCreateVodSourceInput(model vodSourceModel) *mediatailor.CreateVodSourceInput {
+func getCreateVodSourceInput(model models.VodSourceModel) *mediatailor.CreateVodSourceInput {
 	var input mediatailor.CreateVodSourceInput
 
 	input.HttpPackageConfigurations, input.VodSourceName, input.SourceLocationName = getSharedVodSourceInput(&model)
@@ -20,7 +21,7 @@ func getCreateVodSourceInput(model vodSourceModel) *mediatailor.CreateVodSourceI
 	return &input
 }
 
-func getUpdateVodSourceInput(model vodSourceModel) mediatailor.UpdateVodSourceInput {
+func getUpdateVodSourceInput(model models.VodSourceModel) mediatailor.UpdateVodSourceInput {
 	var input mediatailor.UpdateVodSourceInput
 
 	input.HttpPackageConfigurations, input.VodSourceName, input.SourceLocationName = getSharedVodSourceInput(&model)
@@ -28,7 +29,7 @@ func getUpdateVodSourceInput(model vodSourceModel) mediatailor.UpdateVodSourceIn
 	return input
 }
 
-func getSharedVodSourceInput(model *vodSourceModel) ([]awsTypes.HttpPackageConfiguration, *string, *string) {
+func getSharedVodSourceInput(model *models.VodSourceModel) ([]awsTypes.HttpPackageConfiguration, *string, *string) {
 	var httpPackageConfigurations []awsTypes.HttpPackageConfiguration
 	var vodSourceName *string
 	var sourceLocationName *string
@@ -48,7 +49,7 @@ func getSharedVodSourceInput(model *vodSourceModel) ([]awsTypes.HttpPackageConfi
 }
 
 // the readVodSourceToPlan is used to convert the output from the create and update operations to the plan
-func readVodSourceToPlan(model vodSourceModel, vodSource mediatailor.CreateVodSourceOutput) vodSourceModel {
+func readVodSourceToPlan(model models.VodSourceModel, vodSource mediatailor.CreateVodSourceOutput) models.VodSourceModel {
 	vodSourceName := *vodSource.VodSourceName
 	sourceLocationName := *vodSource.SourceLocationName
 	idNames := sourceLocationName + "," + vodSourceName
@@ -64,9 +65,9 @@ func readVodSourceToPlan(model vodSourceModel, vodSource mediatailor.CreateVodSo
 	}
 
 	if len(vodSource.HttpPackageConfigurations) > 0 {
-		model.HttpPackageConfigurations = []httpPackageConfigurationsModel{}
+		model.HttpPackageConfigurations = []models.HttpPackageConfigurationsModel{}
 		for _, c := range vodSource.HttpPackageConfigurations {
-			model.HttpPackageConfigurations = append(model.HttpPackageConfigurations, httpPackageConfigurationsModel{
+			model.HttpPackageConfigurations = append(model.HttpPackageConfigurations, models.HttpPackageConfigurationsModel{
 				Type:        aws.String(string(c.Type)),
 				Path:        c.Path,
 				SourceGroup: c.SourceGroup,
@@ -96,7 +97,7 @@ func readVodSourceToPlan(model vodSourceModel, vodSource mediatailor.CreateVodSo
 }
 
 // the readVodSourceToState is used to convert the output from the describe operation to the state
-func readVodSourceToState(model vodSourceModel, vodSource mediatailor.DescribeVodSourceOutput) vodSourceModel {
+func readVodSourceToState(model models.VodSourceModel, vodSource mediatailor.DescribeVodSourceOutput) models.VodSourceModel {
 
 	model = readVodSourceToPlan(model, mediatailor.CreateVodSourceOutput{
 		Arn:                       vodSource.Arn,

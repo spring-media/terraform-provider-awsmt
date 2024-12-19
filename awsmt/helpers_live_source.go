@@ -4,9 +4,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	awsTypes "github.com/aws/aws-sdk-go-v2/service/mediatailor/types"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"terraform-provider-mediatailor/awsmt/models"
 )
 
-func getCreateLiveSourceInput(model liveSourceModel) *mediatailor.CreateLiveSourceInput {
+func getCreateLiveSourceInput(model models.LiveSourceModel) *mediatailor.CreateLiveSourceInput {
 	var input mediatailor.CreateLiveSourceInput
 
 	input.HttpPackageConfigurations, input.LiveSourceName, input.SourceLocationName = getSharedLiveSourceInput(&model)
@@ -18,7 +19,7 @@ func getCreateLiveSourceInput(model liveSourceModel) *mediatailor.CreateLiveSour
 	return &input
 }
 
-func getUpdateLiveSourceInput(model liveSourceModel) mediatailor.UpdateLiveSourceInput {
+func getUpdateLiveSourceInput(model models.LiveSourceModel) mediatailor.UpdateLiveSourceInput {
 	var input mediatailor.UpdateLiveSourceInput
 
 	input.HttpPackageConfigurations, input.LiveSourceName, input.SourceLocationName = getSharedLiveSourceInput(&model)
@@ -26,7 +27,7 @@ func getUpdateLiveSourceInput(model liveSourceModel) mediatailor.UpdateLiveSourc
 	return input
 }
 
-func getSharedLiveSourceInput(model *liveSourceModel) ([]awsTypes.HttpPackageConfiguration, *string, *string) {
+func getSharedLiveSourceInput(model *models.LiveSourceModel) ([]awsTypes.HttpPackageConfiguration, *string, *string) {
 	var httpPackageConfigurations []awsTypes.HttpPackageConfiguration
 	var liveSourceName *string
 	var sourceLocationName *string
@@ -46,7 +47,7 @@ func getSharedLiveSourceInput(model *liveSourceModel) ([]awsTypes.HttpPackageCon
 }
 
 // readLiveSource is used for both plan and state since the output from create/update and describe is compatible
-func readLiveSource(model liveSourceModel, liveSource mediatailor.CreateLiveSourceOutput) liveSourceModel {
+func readLiveSource(model models.LiveSourceModel, liveSource mediatailor.CreateLiveSourceOutput) models.LiveSourceModel {
 	liveSourceName := *liveSource.LiveSourceName
 	sourceLocationName := *liveSource.SourceLocationName
 	idNames := sourceLocationName + "," + liveSourceName

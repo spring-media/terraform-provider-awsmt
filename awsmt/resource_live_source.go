@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"terraform-provider-mediatailor/awsmt/models"
 )
 
 var (
@@ -50,7 +51,7 @@ func (r *resourceLiveSource) Configure(_ context.Context, req resource.Configure
 }
 
 func (r *resourceLiveSource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan liveSourceModel
+	var plan models.LiveSourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -72,7 +73,7 @@ func (r *resourceLiveSource) Create(ctx context.Context, req resource.CreateRequ
 }
 
 func (r *resourceLiveSource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state liveSourceModel
+	var state models.LiveSourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -108,7 +109,7 @@ func (r *resourceLiveSource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *resourceLiveSource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan liveSourceModel
+	var plan models.LiveSourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -153,7 +154,7 @@ func (r *resourceLiveSource) Update(ctx context.Context, req resource.UpdateRequ
 }
 
 func (r *resourceLiveSource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state liveSourceModel
+	var state models.LiveSourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {

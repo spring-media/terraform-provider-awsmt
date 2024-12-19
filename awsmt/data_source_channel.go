@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"strings"
+	"terraform-provider-mediatailor/awsmt/models"
 )
 
 var (
@@ -90,7 +91,7 @@ func (d *dataSourceChannel) Configure(_ context.Context, req datasource.Configur
 }
 
 func (d *dataSourceChannel) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data channelModel
+	var data models.ChannelModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return

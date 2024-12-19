@@ -6,15 +6,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	awsTypes "github.com/aws/aws-sdk-go-v2/service/mediatailor/types"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"terraform-provider-mediatailor/awsmt/models"
 )
 
 type putPlaybackConfigurationInputBuilder struct {
-	model playbackConfigurationModel
+	model models.PlaybackConfigurationModel
 	input *mediatailor.PutPlaybackConfigurationInput
 }
 
 type putPlaybackConfigurationModelbuilder struct {
-	model      *playbackConfigurationModel
+	model      *models.PlaybackConfigurationModel
 	output     mediatailor.PutPlaybackConfigurationOutput
 	isResource bool
 }
@@ -178,7 +179,7 @@ func (i *putPlaybackConfigurationInputBuilder) addRequiredFieldsToInput() {
 
 // Model Builder functions
 
-func (m *putPlaybackConfigurationModelbuilder) getModel() playbackConfigurationModel {
+func (m *putPlaybackConfigurationModelbuilder) getModel() models.PlaybackConfigurationModel {
 
 	m.addAvailSuppressionToModel()
 	m.addBumperToModel()
@@ -199,7 +200,7 @@ func (m *putPlaybackConfigurationModelbuilder) addAvailSuppressionToModel() {
 	if m.model.AvailSuppression == nil && m.isResource {
 		return
 	}
-	m.model.AvailSuppression = &availSuppressionModel{}
+	m.model.AvailSuppression = &models.AvailSuppressionModel{}
 
 	m.model.AvailSuppression.Mode = aws.String(string(m.output.AvailSuppression.Mode))
 	m.model.AvailSuppression.FillPolicy = aws.String(string(m.output.AvailSuppression.FillPolicy))
@@ -212,7 +213,7 @@ func (m *putPlaybackConfigurationModelbuilder) addBumperToModel() {
 	if m.output.Bumper == nil || (m.output.Bumper.EndUrl == nil || m.output.Bumper.StartUrl == nil) {
 		return
 	}
-	m.model.Bumper = &bumperModel{}
+	m.model.Bumper = &models.BumperModel{}
 	if m.output.Bumper.EndUrl != nil {
 		m.model.Bumper.EndUrl = m.output.Bumper.EndUrl
 	}
@@ -228,7 +229,7 @@ func (m *putPlaybackConfigurationModelbuilder) addCdnConfigurationToModel() {
 	if m.model.CdnConfiguration == nil && m.isResource {
 		return
 	}
-	m.model.CdnConfiguration = &cdnConfigurationModel{}
+	m.model.CdnConfiguration = &models.CdnConfigurationModel{}
 	if m.output.CdnConfiguration.AdSegmentUrlPrefix != nil {
 		m.model.CdnConfiguration.AdSegmentUrlPrefix = m.output.CdnConfiguration.AdSegmentUrlPrefix
 	}
@@ -244,7 +245,7 @@ func (m *putPlaybackConfigurationModelbuilder) addDashConfigurationToModel() {
 	if m.model.DashConfiguration == nil && m.isResource {
 		return
 	}
-	m.model.DashConfiguration = &dashConfigurationModel{}
+	m.model.DashConfiguration = &models.DashConfigurationModel{}
 	m.model.DashConfiguration.ManifestEndpointPrefix = types.StringValue(*m.output.DashConfiguration.MpdLocation)
 	if m.output.DashConfiguration.MpdLocation != nil {
 		m.model.DashConfiguration.MpdLocation = m.output.DashConfiguration.MpdLocation
@@ -256,7 +257,7 @@ func (m *putPlaybackConfigurationModelbuilder) addLivePreRollConfigurationToMode
 	if m.output.LivePreRollConfiguration == nil || (m.output.LivePreRollConfiguration.AdDecisionServerUrl == nil || m.output.LivePreRollConfiguration.MaxDurationSeconds == nil) {
 		return
 	}
-	m.model.LivePreRollConfiguration = &livePreRollConfigurationModel{}
+	m.model.LivePreRollConfiguration = &models.LivePreRollConfigurationModel{}
 	if m.output.LivePreRollConfiguration.AdDecisionServerUrl != nil {
 		m.model.LivePreRollConfiguration.AdDecisionServerUrl = m.output.LivePreRollConfiguration.AdDecisionServerUrl
 	}
@@ -272,8 +273,8 @@ func (m *putPlaybackConfigurationModelbuilder) addManifestProcessingRulesToModel
 	if m.model.ManifestProcessingRules == nil && m.isResource {
 		return
 	}
-	m.model.ManifestProcessingRules = &manifestProcessingRulesModel{
-		AdMarkerPassthrough: &adMarkerPassthroughModel{
+	m.model.ManifestProcessingRules = &models.ManifestProcessingRulesModel{
+		AdMarkerPassthrough: &models.AdMarkerPassthroughModel{
 			Enabled: m.output.ManifestProcessingRules.AdMarkerPassthrough.Enabled,
 		},
 	}
@@ -327,7 +328,7 @@ func (m *putPlaybackConfigurationModelbuilder) addOptionalFieldsToModel() {
 }
 
 // Log percentage configuration helper
-func setLogPercentage(client *mediatailor.Client, model playbackConfigurationModel) (*mediatailor.PutPlaybackConfigurationOutput, error) {
+func setLogPercentage(client *mediatailor.Client, model models.PlaybackConfigurationModel) (*mediatailor.PutPlaybackConfigurationOutput, error) {
 	_, err := client.ConfigureLogsForPlaybackConfiguration(context.TODO(), &mediatailor.ConfigureLogsForPlaybackConfigurationInput{
 		PlaybackConfigurationName: model.Name,
 		PercentEnabled:            int32(model.LogConfigurationPercentEnabled.ValueInt64()),

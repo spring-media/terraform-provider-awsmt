@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"reflect"
+	"terraform-provider-mediatailor/awsmt/models"
 )
 
 var (
@@ -91,7 +91,7 @@ func (r *resourceSourceLocation) Configure(_ context.Context, req resource.Confi
 }
 
 func (r *resourceSourceLocation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan sourceLocationModel
+	var plan models.SourceLocationModel
 
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
@@ -118,7 +118,7 @@ func (r *resourceSourceLocation) Create(ctx context.Context, req resource.Create
 }
 
 func (r *resourceSourceLocation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state sourceLocationModel
+	var state models.SourceLocationModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -143,7 +143,7 @@ func (r *resourceSourceLocation) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *resourceSourceLocation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var currentState, plan sourceLocationModel
+	var currentState, plan models.SourceLocationModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &currentState)...)
 	if resp.Diagnostics.HasError() {
@@ -170,8 +170,8 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 			err.Error(),
 		)
 	}
-
-	if !reflect.DeepEqual(currentState.AccessConfiguration, plan.AccessConfiguration) {
+	panic("here already")
+	if !currentState.AccessConfiguration.Equal(plan.AccessConfiguration) {
 		updatedSourceLocation, err := recreateSourceLocation(r.client, plan)
 		if err != nil {
 			resp.Diagnostics.AddError("Error while recreating source location "+err.Error(), err.Error())
@@ -199,7 +199,7 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 }
 
 func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state sourceLocationModel
+	var state models.SourceLocationModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

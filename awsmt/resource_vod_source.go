@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"terraform-provider-mediatailor/awsmt/models"
 )
 
 var (
@@ -61,7 +62,7 @@ func (r *resourceVodSource) Configure(_ context.Context, req resource.ConfigureR
 }
 
 func (r *resourceVodSource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan vodSourceModel
+	var plan models.VodSourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -83,7 +84,7 @@ func (r *resourceVodSource) Create(ctx context.Context, req resource.CreateReque
 }
 
 func (r *resourceVodSource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state vodSourceModel
+	var state models.VodSourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -117,7 +118,7 @@ func (r *resourceVodSource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan vodSourceModel
+	var plan models.VodSourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -162,7 +163,7 @@ func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateReque
 }
 
 func (r *resourceVodSource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state vodSourceModel
+	var state models.VodSourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {

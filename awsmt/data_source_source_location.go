@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"terraform-provider-mediatailor/awsmt/models"
 )
 
 var (
@@ -88,7 +89,7 @@ func (d *dataSourceSourceLocation) Configure(_ context.Context, req datasource.C
 }
 
 func (d *dataSourceSourceLocation) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data sourceLocationModel
+	var data models.SourceLocationModel
 	diags := req.Config.Get(ctx, &data)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

@@ -9,12 +9,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"reflect"
 	"strings"
+	"terraform-provider-mediatailor/awsmt/models"
 	"time"
 )
 
 // functions to create MediaTailor inputs
 
-func getCreateChannelInput(model channelModel) *mediatailor.CreateChannelInput {
+func getCreateChannelInput(model models.ChannelModel) *mediatailor.CreateChannelInput {
 	var input mediatailor.CreateChannelInput
 
 	input.ChannelName, input.FillerSlate, input.Outputs = getSharedChannelInput(&model)
@@ -48,7 +49,7 @@ func getCreateChannelInput(model channelModel) *mediatailor.CreateChannelInput {
 	return &input
 }
 
-func getUpdateChannelInput(model channelModel) *mediatailor.UpdateChannelInput {
+func getUpdateChannelInput(model models.ChannelModel) *mediatailor.UpdateChannelInput {
 	var input mediatailor.UpdateChannelInput
 
 	input.ChannelName, input.FillerSlate, input.Outputs = getSharedChannelInput(&model)
@@ -56,11 +57,11 @@ func getUpdateChannelInput(model channelModel) *mediatailor.UpdateChannelInput {
 	return &input
 }
 
-func getSharedChannelInput(model *channelModel) (name *string, source *awsTypes.SlateSource, outputItem []awsTypes.RequestOutputItem) {
+func getSharedChannelInput(model *models.ChannelModel) (name *string, source *awsTypes.SlateSource, outputItem []awsTypes.RequestOutputItem) {
 	return model.Name, buildSlateSource(model), buildRequestOutputs(model)
 }
 
-func buildSlateSource(model *channelModel) *awsTypes.SlateSource {
+func buildSlateSource(model *models.ChannelModel) *awsTypes.SlateSource {
 	if model.FillerSlate == nil {
 		return nil
 	}
@@ -74,7 +75,7 @@ func buildSlateSource(model *channelModel) *awsTypes.SlateSource {
 	return temp
 }
 
-func buildRequestOutputs(model *channelModel) []awsTypes.RequestOutputItem {
+func buildRequestOutputs(model *models.ChannelModel) []awsTypes.RequestOutputItem {
 	var temp []awsTypes.RequestOutputItem
 
 	for _, o := range model.Outputs {
@@ -102,7 +103,7 @@ func buildRequestOutputs(model *channelModel) []awsTypes.RequestOutputItem {
 	return temp
 }
 
-func buildDashPlaylistSettings(settings *dashPlaylistSettingsModel) *awsTypes.DashPlaylistSettings {
+func buildDashPlaylistSettings(settings *models.DashPlaylistSettingsModel) *awsTypes.DashPlaylistSettings {
 	dashSettings := &awsTypes.DashPlaylistSettings{}
 	if settings.ManifestWindowSeconds != nil {
 		manifestWindowSeconds := int32(*settings.ManifestWindowSeconds)
@@ -124,7 +125,7 @@ func buildDashPlaylistSettings(settings *dashPlaylistSettingsModel) *awsTypes.Da
 	return dashSettings
 }
 
-func buildHLSPlaylistSettings(settings *hlsPlaylistSettingsModel) *awsTypes.HlsPlaylistSettings {
+func buildHLSPlaylistSettings(settings *models.HlsPlaylistSettingsModel) *awsTypes.HlsPlaylistSettings {
 	hlsSettings := &awsTypes.HlsPlaylistSettings{}
 
 	if len(settings.AdMarkupType) > 0 {
@@ -174,7 +175,7 @@ func stopChannel(state awsTypes.ChannelState, channelName *string, client *media
 	return nil
 }
 
-func handlePolicyUpdate(context context.Context, client *mediatailor.Client, plan channelModel) error {
+func handlePolicyUpdate(context context.Context, client *mediatailor.Client, plan models.ChannelModel) error {
 	var normalizedOldPolicy jsontypes.Normalized
 
 	oldPolicy, err := client.GetChannelPolicy(context, &mediatailor.GetChannelPolicyInput{ChannelName: plan.Name})
@@ -195,7 +196,7 @@ func handlePolicyUpdate(context context.Context, client *mediatailor.Client, pla
 	return nil
 }
 
-func updatePolicy(model *channelModel, channelName *string, oldPolicy jsontypes.Normalized, newPolicy jsontypes.Normalized, client *mediatailor.Client) (channelModel, error) {
+func updatePolicy(model *models.ChannelModel, channelName *string, oldPolicy jsontypes.Normalized, newPolicy jsontypes.Normalized, client *mediatailor.Client) (models.ChannelModel, error) {
 	if !reflect.DeepEqual(oldPolicy, newPolicy) {
 		if !newPolicy.IsNull() {
 			model.Policy = newPolicy
@@ -219,7 +220,7 @@ func updatePolicy(model *channelModel, channelName *string, oldPolicy jsontypes.
 
 // Functions used to read MediaTailor resources to plan and state
 
-func readChannelComputedValues(model channelModel, arn *string, channelName *string, creationTime *time.Time, lastModifiedTime *time.Time) channelModel {
+func readChannelComputedValues(model models.ChannelModel, arn *string, channelName *string, creationTime *time.Time, lastModifiedTime *time.Time) models.ChannelModel {
 	model.ID = types.StringValue(*channelName)
 
 	if arn != nil {
@@ -239,9 +240,9 @@ func readChannelComputedValues(model channelModel, arn *string, channelName *str
 	return model
 }
 
-func readFillerSlate(plan channelModel, fillerSlate *awsTypes.SlateSource) channelModel {
+func readFillerSlate(plan models.ChannelModel, fillerSlate *awsTypes.SlateSource) models.ChannelModel {
 	if fillerSlate != nil {
-		plan.FillerSlate = &fillerSlateModel{}
+		plan.FillerSlate = &models.FillerSlateModel{}
 		if fillerSlate.SourceLocationName != nil {
 			plan.FillerSlate.SourceLocationName = fillerSlate.SourceLocationName
 		}
@@ -252,15 +253,15 @@ func readFillerSlate(plan channelModel, fillerSlate *awsTypes.SlateSource) chann
 	return plan
 }
 
-func readOutputs(plan channelModel, responseOutputItems []awsTypes.ResponseOutputItem) channelModel {
+func readOutputs(plan models.ChannelModel, responseOutputItems []awsTypes.ResponseOutputItem) models.ChannelModel {
 
 	if responseOutputItems == nil {
 		return plan
 	}
 
-	var tempOutputs []outputsModel
+	var tempOutputs []models.OutputsModel
 	for i, output := range responseOutputItems {
-		outputs := outputsModel{}
+		outputs := models.OutputsModel{}
 		if output.DashPlaylistSettings != nil {
 			outputs.DashPlaylistSettings = readDashPlaylistConfigurationsToPlan(&output)
 		}
@@ -281,7 +282,7 @@ func readOutputs(plan channelModel, responseOutputItems []awsTypes.ResponseOutpu
 }
 
 func readRMPS(manifestName *string, playbackUrl *string, sourceGroup *string) (*string, types.String, *string) {
-	outputs := outputsModel{}
+	outputs := models.OutputsModel{}
 	if manifestName != nil {
 		outputs.ManifestName = manifestName
 	}
@@ -294,8 +295,8 @@ func readRMPS(manifestName *string, playbackUrl *string, sourceGroup *string) (*
 	return outputs.ManifestName, outputs.PlaybackUrl, outputs.SourceGroup
 }
 
-func readDashPlaylistConfigurationsToPlan(output *awsTypes.ResponseOutputItem) *dashPlaylistSettingsModel {
-	outputs := &dashPlaylistSettingsModel{}
+func readDashPlaylistConfigurationsToPlan(output *awsTypes.ResponseOutputItem) *models.DashPlaylistSettingsModel {
+	outputs := &models.DashPlaylistSettingsModel{}
 	if output.DashPlaylistSettings.ManifestWindowSeconds != nil {
 		manifestWindowSeconds := int64(*output.DashPlaylistSettings.ManifestWindowSeconds)
 		outputs.ManifestWindowSeconds = &manifestWindowSeconds
@@ -315,8 +316,8 @@ func readDashPlaylistConfigurationsToPlan(output *awsTypes.ResponseOutputItem) *
 	return outputs
 }
 
-func readHlsPlaylistConfigurationsToPlan(output *awsTypes.ResponseOutputItem, stateOutput outputsModel) *hlsPlaylistSettingsModel {
-	outputs := &hlsPlaylistSettingsModel{}
+func readHlsPlaylistConfigurationsToPlan(output *awsTypes.ResponseOutputItem, stateOutput models.OutputsModel) *models.HlsPlaylistSettingsModel {
+	outputs := &models.HlsPlaylistSettingsModel{}
 	if stateOutput.HlsPlaylistSettings.AdMarkupType != nil && output.HlsPlaylistSettings.AdMarkupType != nil && len(output.HlsPlaylistSettings.AdMarkupType) > 0 {
 		var adMarkupTypes []*string
 		for _, a := range output.HlsPlaylistSettings.AdMarkupType {
@@ -332,8 +333,8 @@ func readHlsPlaylistConfigurationsToPlan(output *awsTypes.ResponseOutputItem, st
 	return outputs
 }
 
-func readHlsPlaylistConfigurationsToPlanDS(output *awsTypes.ResponseOutputItem) *hlsPlaylistSettingsModel {
-	outputs := &hlsPlaylistSettingsModel{}
+func readHlsPlaylistConfigurationsToPlanDS(output *awsTypes.ResponseOutputItem) *models.HlsPlaylistSettingsModel {
+	outputs := &models.HlsPlaylistSettingsModel{}
 	if len(output.HlsPlaylistSettings.AdMarkupType) > 0 {
 		var adMarkupTypes []*string
 		for _, a := range output.HlsPlaylistSettings.AdMarkupType {
@@ -349,7 +350,7 @@ func readHlsPlaylistConfigurationsToPlanDS(output *awsTypes.ResponseOutputItem) 
 	return outputs
 }
 
-func readOptionalValues(plan channelModel, playbackMode *string, tags map[string]string, tier *string) channelModel {
+func readOptionalValues(plan models.ChannelModel, playbackMode *string, tags map[string]string, tier *string) models.ChannelModel {
 	if playbackMode != nil {
 		plan.PlaybackMode = playbackMode
 	}
@@ -364,7 +365,7 @@ func readOptionalValues(plan channelModel, playbackMode *string, tags map[string
 	return plan
 }
 
-func writeChannelToPlan(model channelModel, channel mediatailor.CreateChannelOutput) channelModel {
+func writeChannelToPlan(model models.ChannelModel, channel mediatailor.CreateChannelOutput) models.ChannelModel {
 
 	model = readChannelComputedValues(model, channel.Arn, channel.ChannelName, channel.CreationTime, channel.LastModifiedTime)
 
@@ -377,7 +378,7 @@ func writeChannelToPlan(model channelModel, channel mediatailor.CreateChannelOut
 	return model
 }
 
-func writeChannelToState(model channelModel, channel mediatailor.DescribeChannelOutput) channelModel {
+func writeChannelToState(model models.ChannelModel, channel mediatailor.DescribeChannelOutput) models.ChannelModel {
 
 	model = readChannelComputedValues(model, channel.Arn, channel.ChannelName, channel.CreationTime, channel.LastModifiedTime)
 

@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"terraform-provider-mediatailor/awsmt/models"
 )
 
 var (
@@ -48,7 +49,7 @@ func (d *dataSourceLiveSource) Configure(_ context.Context, req datasource.Confi
 }
 
 func (d *dataSourceLiveSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data liveSourceModel
+	var data models.LiveSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
