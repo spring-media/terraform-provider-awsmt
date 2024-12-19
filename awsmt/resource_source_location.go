@@ -170,7 +170,6 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 			err.Error(),
 		)
 	}
-	panic("here already")
 	if !currentState.AccessConfiguration.Equal(plan.AccessConfiguration) {
 		updatedSourceLocation, err := recreateSourceLocation(r.client, plan)
 		if err != nil {
