@@ -12,10 +12,14 @@ func getCreateSourceLocationInput(model sourceLocationModel) mediatailor.CreateS
 	var params mediatailor.CreateSourceLocationInput
 
 	// Access Configuration
-	params.AccessConfiguration = getAccessConfigurationInput(model.AccessConfiguration)
+	if model.AccessConfiguration != nil {
+		params.AccessConfiguration = getAccessConfigurationInput(model.AccessConfiguration)
+	}
 
 	// Default Segment Delivery Configuration
-	params.DefaultSegmentDeliveryConfiguration = getDefaultSegmentDeliveryConfigurationInput(model.DefaultSegmentDeliveryConfiguration)
+	if model.DefaultSegmentDeliveryConfiguration != nil {
+		params.DefaultSegmentDeliveryConfiguration = getDefaultSegmentDeliveryConfigurationInput(model.DefaultSegmentDeliveryConfiguration)
+	}
 
 	// HTTP Configuration
 	params.HttpConfiguration = getHttpConfigurationInput(model.HttpConfiguration)

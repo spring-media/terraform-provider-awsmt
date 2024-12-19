@@ -7,6 +7,24 @@ import (
 	"testing"
 )
 
+func TestAccSourceLocationResourceMinimal(t *testing.T) {
+	resourceName := "awsmt_source_location.test_source_location"
+	name := "minimalSourceLocation"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: minimalSourceLocation(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckResourceAttr(resourceName, "default_segment_delivery_configuration.base_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSourceLocationResourceBasic(t *testing.T) {
 	resourceName := "awsmt_source_location.test_source_location"
 	name := "test_source_location"
@@ -128,6 +146,24 @@ func TestAccSourceLocationDeleteVodResource(t *testing.T) {
 			},
 		},
 	})
+}
+
+func minimalSourceLocation(name string) string {
+	return fmt.Sprintf(`
+		resource "awsmt_source_location" "test_source_location"{
+			name = "%[1]s"
+			http_configuration = {
+				base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
+			}
+		}
+		data "awsmt_source_location" "read" {
+			name = awsmt_source_location.test_source_location.name
+		}
+		output "awsmt_source_location" {
+			value = data.awsmt_source_location.read
+		}
+		`, name)
+
 }
 
 func basicSourceLocation(name, baseUrl, k1, v1, k2, v2 string) string {
