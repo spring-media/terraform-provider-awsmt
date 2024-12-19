@@ -18,7 +18,7 @@ func TestAccSourceLocationResourceMinimal(t *testing.T) {
 				Config: minimalSourceLocation(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "id", name),
-					resource.TestCheckResourceAttr(resourceName, "default_segment_delivery_configuration.base_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, "http_configuration.base_url", "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"),
 				),
 			},
 		},
