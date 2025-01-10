@@ -51,7 +51,7 @@ func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, re
 				},
 			},
 			"creation_time":      computedString,
-			"enable_as_run_logs": optionalBool,
+			"enable_as_run_logs": optionalComputedBool,
 			"filler_slate": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
