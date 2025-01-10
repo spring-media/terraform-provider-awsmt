@@ -159,6 +159,29 @@ func TestAccChannelResourceRunning(t *testing.T) {
 	})
 }
 
+func TestAccChannelResourceLoggingConfiguration(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: logConfigChannel(true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_channel.test", "enable_as_run_logs", "true"),
+					resource.TestCheckResourceAttr("data.awsmt_channel.test", "enable_as_run_logs", "true"),
+				),
+			},
+			{
+				Config: logConfigChannel(false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_channel.test", "enable_as_run_logs", "false"),
+					resource.TestCheckResourceAttr("data.awsmt_channel.test", "enable_as_run_logs", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccChannelValuesNotFlickering(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -304,6 +327,34 @@ func hlsChannel(mw_s string) string {
 					value = data.awsmt_channel.test
 				}
 				`, mw_s)
+}
+
+func logConfigChannel(enable bool) string {
+	return fmt.Sprintf(`
+				resource "awsmt_channel" "test"  {
+  					name = "test"
+  					channel_state = "RUNNING"
+					enable_as_run_logs = %[1]v
+  					outputs = [{
+    					manifest_name                = "default"
+						source_group                 = "default"
+    					hls_playlist_settings = {
+							ad_markup_type = ["DATERANGE"]
+							manifest_window_seconds = "60"
+						}
+  					}]
+  					playback_mode = "LOOP"
+  					tier = "BASIC"
+					tags = {"Environment": "dev"}
+					}
+
+				data "awsmt_channel" "test" {
+  					name = awsmt_channel.test.name
+				}
+				output "channel_out" {
+					value = data.awsmt_channel.test
+				}
+				`, enable)
 }
 
 func standardTierChannel() string {
