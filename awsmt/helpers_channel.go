@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"reflect"
+	"slices"
 	"strings"
 	"terraform-provider-mediatailor/awsmt/models"
 	"time"
@@ -281,6 +282,19 @@ func readOutputs(plan models.ChannelModel, responseOutputItems []awsTypes.Respon
 	return plan
 }
 
+func readLogConfiguration(plan models.ChannelModel, logConfiguration *awsTypes.LogConfigurationForChannel) models.ChannelModel {
+	if logConfiguration == nil {
+		return plan
+	}
+
+	if slices.Contains(logConfiguration.LogTypes, awsTypes.LogTypeAsRun) {
+		plan.EnableAsRunLogs = types.BoolValue(true)
+	} else {
+		plan.EnableAsRunLogs = types.BoolValue(false)
+	}
+	return plan
+}
+
 func readRMPS(manifestName *string, playbackUrl *string, sourceGroup *string) (*string, types.String, *string) {
 	outputs := models.OutputsModel{}
 	if manifestName != nil {
@@ -387,6 +401,8 @@ func writeChannelToState(model models.ChannelModel, channel mediatailor.Describe
 	model = readOutputs(model, channel.Outputs)
 
 	model = readOptionalValues(model, channel.PlaybackMode, channel.Tags, channel.Tier)
+
+	model = readLogConfiguration(model, channel.LogConfiguration)
 
 	return model
 }
