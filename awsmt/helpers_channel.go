@@ -16,6 +16,18 @@ import (
 
 // functions to create MediaTailor inputs
 
+func getConfigureLogsForChannelInput(model models.ChannelModel) *mediatailor.ConfigureLogsForChannelInput {
+	var input mediatailor.ConfigureLogsForChannelInput
+
+	if model.EnableAsRunLogs == types.BoolValue(false) {
+		input.LogTypes = []awsTypes.LogType{}
+	} else {
+		input.LogTypes = []awsTypes.LogType{awsTypes.LogTypeAsRun}
+	}
+
+	return &input
+}
+
 func getCreateChannelInput(model models.ChannelModel) *mediatailor.CreateChannelInput {
 	var input mediatailor.CreateChannelInput
 

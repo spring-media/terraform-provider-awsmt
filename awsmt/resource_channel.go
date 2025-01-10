@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"strings"
 	"terraform-provider-mediatailor/awsmt/models"
 )
@@ -155,6 +156,14 @@ func (r *resourceChannel) Create(ctx context.Context, req resource.CreateRequest
 		}
 	}
 
+	if plan.EnableAsRunLogs != types.BoolValue(false) {
+		logConfigInput := getConfigureLogsForChannelInput(plan)
+		if _, err := r.client.ConfigureLogsForChannel(ctx, logConfigInput); err != nil {
+			resp.Diagnostics.AddError("Error while setting channel logs "+*channel.ChannelName, err.Error())
+			return
+		}
+	}
+
 	newPlan := writeChannelToPlan(plan, *channel)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newPlan)...)
@@ -178,6 +187,7 @@ func (r *resourceChannel) Read(ctx context.Context, req resource.ReadRequest, re
 			"Error while describing channel "+err.Error(),
 			err.Error(),
 		)
+		return
 	}
 
 	policy, err := r.client.GetChannelPolicy(ctx, &mediatailor.GetChannelPolicyInput{ChannelName: state.Name})
