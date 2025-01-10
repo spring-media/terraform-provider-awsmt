@@ -277,6 +277,14 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 		}
 	}
 
+	if shouldUpdateChannelLogging(channel.LogConfiguration.LogTypes, plan) {
+		logConfigInput := getConfigureLogsForChannelInput(plan)
+		if _, err := r.client.ConfigureLogsForChannel(ctx, logConfigInput); err != nil {
+			resp.Diagnostics.AddError("Error while setting channel logs "+*channel.ChannelName, err.Error())
+			return
+		}
+	}
+
 	plan.ChannelState = newState
 	plan = writeChannelToPlan(plan, mediatailor.CreateChannelOutput(*updatedChannel))
 

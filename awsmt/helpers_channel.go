@@ -18,7 +18,7 @@ import (
 
 func getConfigureLogsForChannelInput(model models.ChannelModel) *mediatailor.ConfigureLogsForChannelInput {
 	var input mediatailor.ConfigureLogsForChannelInput
-
+	input.ChannelName = model.Name
 	if model.EnableAsRunLogs == types.BoolValue(false) {
 		input.LogTypes = []awsTypes.LogType{}
 	} else {
@@ -186,6 +186,12 @@ func stopChannel(state awsTypes.ChannelState, channelName *string, client *media
 		}
 	}
 	return nil
+}
+
+func shouldUpdateChannelLogging(currentLogs []awsTypes.LogType, plan models.ChannelModel) bool {
+	asRunLogsShouldBeEnabled := plan.EnableAsRunLogs.ValueBool()
+	asRunLogsCurrentlyEnabled := slices.Contains(currentLogs, awsTypes.LogTypeAsRun)
+	return asRunLogsShouldBeEnabled != asRunLogsCurrentlyEnabled
 }
 
 func handlePolicyUpdate(context context.Context, client *mediatailor.Client, plan models.ChannelModel) error {
