@@ -50,7 +50,8 @@ func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, re
 					stringvalidator.OneOf("RUNNING", "STOPPED"),
 				},
 			},
-			"creation_time": computedString,
+			"creation_time":      computedString,
+			"enable_as_run_logs": optionalBool,
 			"filler_slate": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{

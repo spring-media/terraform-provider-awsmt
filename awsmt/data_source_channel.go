@@ -30,11 +30,12 @@ func (d *dataSourceChannel) Metadata(_ context.Context, req datasource.MetadataR
 func (d *dataSourceChannel) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id":            computedString,
-			"arn":           computedString,
-			"name":          requiredString,
-			"channel_state": computedString,
-			"creation_time": computedString,
+			"id":                 computedString,
+			"arn":                computedString,
+			"name":               requiredString,
+			"channel_state":      computedString,
+			"creation_time":      computedString,
+			"enable_as_run_logs": computedBool,
 			"filler_slate": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
