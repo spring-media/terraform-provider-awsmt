@@ -42,6 +42,10 @@ var computedBool = schema.BoolAttribute{
 	Computed: true,
 }
 
+var optionalBool = schema.BoolAttribute{
+	Optional: true,
+}
+
 var optionalString = schema.StringAttribute{
 	Optional: true,
 }
