@@ -1,10 +1,9 @@
 package awsmt
 
 import (
-	"context"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -44,24 +43,10 @@ var computedBool = schema.BoolAttribute{
 	Computed: true,
 }
 
-type boolDefaultFalse struct{}
-
-func (d boolDefaultFalse) Description(context.Context) string {
-	return "Default value of false"
-}
-
-func (d boolDefaultFalse) MarkdownDescription(context.Context) string {
-	return "Default value of false"
-}
-
-func (d boolDefaultFalse) DefaultBool(_ context.Context, _ defaults.BoolRequest, resp *defaults.BoolResponse) {
-	resp.PlanValue = types.BoolValue(false)
-}
-
 var optionalComputedBool = schema.BoolAttribute{
 	Optional: true,
 	Computed: true,
-	Default:  boolDefaultFalse{},
+	Default:  booldefault.StaticBool(false),
 }
 
 var optionalString = schema.StringAttribute{
