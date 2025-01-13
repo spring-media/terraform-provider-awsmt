@@ -3,6 +3,7 @@ package awsmt
 import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -40,6 +41,12 @@ var computedInt64List = schema.ListAttribute{
 
 var computedBool = schema.BoolAttribute{
 	Computed: true,
+}
+
+var optionalComputedBool = schema.BoolAttribute{
+	Optional: true,
+	Computed: true,
+	Default:  booldefault.StaticBool(false),
 }
 
 var optionalString = schema.StringAttribute{

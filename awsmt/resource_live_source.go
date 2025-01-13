@@ -143,6 +143,7 @@ func (r *resourceLiveSource) Update(ctx context.Context, req resource.UpdateRequ
 			"Error while updating live source "+err.Error(),
 			err.Error(),
 		)
+		return
 	}
 
 	plan = readLiveSource(plan, mediatailor.CreateLiveSourceOutput(*updatedLiveSource))
@@ -172,6 +173,7 @@ func (r *resourceLiveSource) Delete(ctx context.Context, req resource.DeleteRequ
 			"Error while deleting live source "+err.Error(),
 			err.Error(),
 		)
+		return
 	}
 }
 

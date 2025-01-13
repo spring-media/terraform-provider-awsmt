@@ -8,12 +8,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"reflect"
+	"slices"
 	"strings"
 	"terraform-provider-mediatailor/awsmt/models"
 	"time"
 )
 
 // functions to create MediaTailor inputs
+
+func getConfigureLogsForChannelInput(model models.ChannelModel) *mediatailor.ConfigureLogsForChannelInput {
+	var input mediatailor.ConfigureLogsForChannelInput
+	input.ChannelName = model.Name
+	if model.EnableAsRunLogs == types.BoolValue(false) {
+		input.LogTypes = []awsTypes.LogType{}
+	} else {
+		input.LogTypes = []awsTypes.LogType{awsTypes.LogTypeAsRun}
+	}
+
+	return &input
+}
 
 func getCreateChannelInput(model models.ChannelModel) *mediatailor.CreateChannelInput {
 	var input mediatailor.CreateChannelInput
@@ -175,6 +188,12 @@ func stopChannel(state awsTypes.ChannelState, channelName *string, client *media
 	return nil
 }
 
+func shouldUpdateChannelLogging(currentLogs []awsTypes.LogType, plan models.ChannelModel) bool {
+	asRunLogsShouldBeEnabled := plan.EnableAsRunLogs.ValueBool()
+	asRunLogsCurrentlyEnabled := slices.Contains(currentLogs, awsTypes.LogTypeAsRun)
+	return asRunLogsShouldBeEnabled != asRunLogsCurrentlyEnabled
+}
+
 func handlePolicyUpdate(context context.Context, client *mediatailor.Client, plan models.ChannelModel) error {
 	var normalizedOldPolicy jsontypes.Normalized
 
@@ -278,6 +297,19 @@ func readOutputs(plan models.ChannelModel, responseOutputItems []awsTypes.Respon
 	}
 	plan.Outputs = tempOutputs
 
+	return plan
+}
+
+func readLogConfiguration(plan models.ChannelModel, logConfiguration *awsTypes.LogConfigurationForChannel) models.ChannelModel {
+	if logConfiguration == nil {
+		return plan
+	}
+
+	if slices.Contains(logConfiguration.LogTypes, awsTypes.LogTypeAsRun) {
+		plan.EnableAsRunLogs = types.BoolValue(true)
+	} else {
+		plan.EnableAsRunLogs = types.BoolValue(false)
+	}
 	return plan
 }
 
@@ -387,6 +419,8 @@ func writeChannelToState(model models.ChannelModel, channel mediatailor.Describe
 	model = readOutputs(model, channel.Outputs)
 
 	model = readOptionalValues(model, channel.PlaybackMode, channel.Tags, channel.Tier)
+
+	model = readLogConfiguration(model, channel.LogConfiguration)
 
 	return model
 }

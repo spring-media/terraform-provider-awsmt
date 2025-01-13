@@ -26,6 +26,7 @@ func TestAccChannelDataSourceBasic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.awsmt_channel.test", "outputs.0.manifest_name", "default"),
 					resource.TestCheckResourceAttr("data.awsmt_channel.test", "outputs.0.source_group", "default"),
 					resource.TestCheckResourceAttr("data.awsmt_channel.test", "outputs.0.hls_playlist_settings.manifest_window_seconds", "30"),
+					resource.TestCheckResourceAttr("data.awsmt_channel.test", "enable_as_run_logs", "false"),
 				),
 			},
 		},
@@ -54,6 +55,7 @@ func TestAccChannelDataSourceFillerSlateLinear(t *testing.T) {
 					resource.TestCheckResourceAttr("data.awsmt_channel.test", "outputs.0.manifest_name", "default"),
 					resource.TestCheckResourceAttr("data.awsmt_channel.test", "outputs.0.source_group", "default"),
 					resource.TestCheckResourceAttr("data.awsmt_channel.test", "outputs.0.hls_playlist_settings.manifest_window_seconds", "30"),
+					resource.TestCheckResourceAttr("data.awsmt_channel.test", "enable_as_run_logs", "false"),
 				),
 			},
 		},
@@ -90,7 +92,7 @@ func basicChannelDSHLS() string {
   					policy = "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"AllowAnonymous\", \"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\": \"mediatailor:GetManifest\", \"Resource\": \"arn:aws:mediatailor:eu-central-1:985600762523:channel/test\"}]}"
   					tier = "BASIC"
 					tags = {"Environment": "dev"}
-					}
+				}
 
 				data "awsmt_channel" "test" {
   					name = awsmt_channel.test.name
@@ -155,7 +157,7 @@ func basicChannelDSHLSWithSlate() string {
   					policy = "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"AllowAnonymous\", \"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\": \"mediatailor:GetManifest\", \"Resource\": \"arn:aws:mediatailor:eu-central-1:985600762523:channel/test\"}]}"
   					tier = "BASIC"
 					tags = {"Environment": "dev"}
-					}
+				}
 
 				data "awsmt_channel" "test" {
   					name = awsmt_channel.test.name
@@ -183,7 +185,7 @@ func channelErrorDS() string {
   					policy = "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"AllowAnonymous\", \"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\": \"mediatailor:GetManifest\", \"Resource\": \"arn:aws:mediatailor:eu-central-1:985600762523:channel/test\"}]}"
   					tier = "BASIC"
 					tags = {"Environment": "dev"}
-					}
+				}
 
 				data "awsmt_channel" "test" {
   					name = "testingError"

@@ -129,7 +129,7 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 					},
 				},
 			},
-			"name":                                   requiredString,
+			"name":                                   requiredStringWithRequiresReplace,
 			"personalization_threshold_seconds":      optionalInt64,
 			"playback_configuration_arn":             computedStringWithStateForUnknown,
 			"playback_endpoint_prefix":               computedStringWithStateForUnknown,
@@ -248,6 +248,7 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 			"Error while updating playback configuration tags"+err.Error(),
 			err.Error(),
 		)
+		return
 	}
 
 	p := putPlaybackConfigurationInputBuilder{input: &mediatailor.PutPlaybackConfigurationInput{}, model: plan}

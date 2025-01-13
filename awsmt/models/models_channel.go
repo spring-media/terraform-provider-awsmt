@@ -6,11 +6,17 @@ import (
 )
 
 type ChannelModel struct {
-	ID               types.String         `tfsdk:"id"`
-	Arn              types.String         `tfsdk:"arn"`
-	Name             *string              `tfsdk:"name"`
-	ChannelState     *string              `tfsdk:"channel_state"`
-	CreationTime     types.String         `tfsdk:"creation_time"`
+	ID           types.String `tfsdk:"id"`
+	Arn          types.String `tfsdk:"arn"`
+	Name         *string      `tfsdk:"name"`
+	ChannelState *string      `tfsdk:"channel_state"`
+	CreationTime types.String `tfsdk:"creation_time"`
+	// @ADR
+	// Context: Managing the enablement and disablement of logs requires a configuration structure in the SDK.
+	// Decision: As the only log type available for channels is AS_RUN, we simplified the configuration by
+	// converting this option into a boolean for the provider.
+	// Consequences: The process for enabling and disabling logs differs slightly from the SDK's approach.
+	EnableAsRunLogs  types.Bool           `tfsdk:"enable_as_run_logs"`
 	FillerSlate      *FillerSlateModel    `tfsdk:"filler_slate"`
 	LastModifiedTime types.String         `tfsdk:"last_modified_time"`
 	Outputs          []OutputsModel       `tfsdk:"outputs"`

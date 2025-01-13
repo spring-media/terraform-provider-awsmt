@@ -102,6 +102,29 @@ func TestAccChannelResourceErrors(t *testing.T) {
 	})
 }
 
+func TestAccChannelRename(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: minimalChannel("foo"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_channel.test", "name", "foo"),
+					resource.TestCheckResourceAttr("data.awsmt_channel.test", "name", "foo"),
+				),
+			},
+			{
+				Config: minimalChannel("bar"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_channel.test", "name", "bar"),
+					resource.TestCheckResourceAttr("data.awsmt_channel.test", "name", "bar"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccChannelResourceNoState(t *testing.T) {
 	noStateChannel := `
 resource "awsmt_channel" "test"  {
@@ -153,6 +176,29 @@ func TestAccChannelResourceRunning(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("awsmt_channel.test", "channel_state", "RUNNING"),
 					resource.TestCheckResourceAttr("data.awsmt_channel.test", "outputs.0.hls_playlist_settings.manifest_window_seconds", "40"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccChannelResourceLoggingConfiguration(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: logConfigChannel(true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_channel.test", "enable_as_run_logs", "true"),
+					resource.TestCheckResourceAttr("data.awsmt_channel.test", "enable_as_run_logs", "true"),
+				),
+			},
+			{
+				Config: logConfigChannel(false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("awsmt_channel.test", "enable_as_run_logs", "false"),
+					resource.TestCheckResourceAttr("data.awsmt_channel.test", "enable_as_run_logs", "false"),
 				),
 			},
 		},
@@ -222,6 +268,34 @@ func basicChannel(name, state, manifestWindowSeconds, minBufferTimeSeconds, minU
 					value = data.awsmt_channel.test
 				}
 				`, name, state, manifestWindowSeconds, minBufferTimeSeconds, minUpdatePeriodSeconds, presentationDelaySeconds, k1, v1, k2, v2,
+	)
+}
+
+func minimalChannel(name string) string {
+	return fmt.Sprintf(
+		`
+				resource "awsmt_channel" "test"  {
+  					name = "%[1]s"
+					playback_mode = "LOOP"
+  					outputs = [{
+    					manifest_name                = "default"
+						source_group                 = "default"
+    					dash_playlist_settings = {
+							manifest_window_seconds = "30"
+							min_buffer_time_seconds = "5"
+							min_update_period_seconds = "10"
+							suggested_presentation_delay_seconds = "10"
+						}
+  					}]
+				}
+
+				data "awsmt_channel" "test" {
+  					name = awsmt_channel.test.name
+				}
+				output "channel_out" {
+					value = data.awsmt_channel.test
+				}
+				`, name,
 	)
 }
 
@@ -304,6 +378,34 @@ func hlsChannel(mw_s string) string {
 					value = data.awsmt_channel.test
 				}
 				`, mw_s)
+}
+
+func logConfigChannel(enable bool) string {
+	return fmt.Sprintf(`
+				resource "awsmt_channel" "test"  {
+  					name = "test"
+  					channel_state = "RUNNING"
+					enable_as_run_logs = %[1]v
+  					outputs = [{
+    					manifest_name                = "default"
+						source_group                 = "default"
+    					hls_playlist_settings = {
+							ad_markup_type = ["DATERANGE"]
+							manifest_window_seconds = "60"
+						}
+  					}]
+  					playback_mode = "LOOP"
+  					tier = "BASIC"
+					tags = {"Environment": "dev"}
+					}
+
+				data "awsmt_channel" "test" {
+  					name = awsmt_channel.test.name
+				}
+				output "channel_out" {
+					value = data.awsmt_channel.test
+				}
+				`, enable)
 }
 
 func standardTierChannel() string {
