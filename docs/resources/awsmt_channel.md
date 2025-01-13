@@ -25,6 +25,7 @@ The following arguments are supported:
 
 - `name` - (Required) The name of the channel.
 - `channel_state` - (Optional) The state of the channel. Can be either `RUNNING` or `STOPPED`.
+- `enable_as_run_logs` - (Optional) Whether to enable channel assembly logs.
 - `filler_slate` – (Optional) The slate used to fill gaps between programs in the schedule. You must configure filler slate if your channel uses the LINEAR PlaybackMode.
   - `source_location_name` - (Optional) The name of the source location where the slate VOD source is stored.
   - `vod_source_name` - (Optional) The slate VOD source name. The VOD source must already exist in a source location before it can be used for slate.

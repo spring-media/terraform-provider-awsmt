@@ -23,6 +23,7 @@ In addition to all arguments above, the following attributes are exported:
 - `arn` - The ARN of the channel.
 - `channel_state` - Returns whether the channel is running or not.
 - `creation_time` - The timestamp of when the channel was created.
+- `enable_as_run_logs` - Whether channel assembly logs are enabled.
 - `filler_slate` – The slate used to fill gaps between programs in the schedule. You must configure filler slate if your channel uses the LINEAR PlaybackMode.
   - `source_location_name` - The name of the source location where the slate VOD source is stored.
   - `vod_source_name` - The slate VOD source name. The VOD source must already exist in a source location before it can be used for slate.
