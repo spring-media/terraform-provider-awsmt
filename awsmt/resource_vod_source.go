@@ -143,6 +143,7 @@ func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateReque
 			"Error while updating vod source tags"+err.Error(),
 			err.Error(),
 		)
+		return
 	}
 
 	updateInput := getUpdateVodSourceInput(plan)
@@ -152,6 +153,7 @@ func (r *resourceVodSource) Update(ctx context.Context, req resource.UpdateReque
 			"Error while updating vod source "+err.Error(),
 			err.Error(),
 		)
+		return
 	}
 
 	plan = readVodSourceToPlan(plan, mediatailor.CreateVodSourceOutput(*updatedVodSource))
@@ -181,6 +183,7 @@ func (r *resourceVodSource) Delete(ctx context.Context, req resource.DeleteReque
 			"Error while deleting vod source "+err.Error(),
 			err.Error(),
 		)
+		return
 	}
 }
 

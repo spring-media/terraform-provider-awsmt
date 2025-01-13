@@ -37,7 +37,7 @@ func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, re
 		Attributes: map[string]schema.Attribute{
 			"id":   computedString,
 			"arn":  computedString,
-			"name": requiredString,
+			"name": requiredStringWithRequiresReplace,
 			// @ADR
 			// Context: We cannot test the deletion of a running channel if we cannot set the channel_state property
 			// through the provider
@@ -233,6 +233,7 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 			"Error while describing channel "+err.Error(),
 			err.Error(),
 		)
+		return
 	}
 
 	err = UpdatesTags(r.client, channel.Tags, plan.Tags, *channel.Arn)
@@ -241,6 +242,7 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 			"Error while updating channel tags"+err.Error(),
 			err.Error(),
 		)
+		return
 	}
 
 	previousState := channel.ChannelState
@@ -249,9 +251,10 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 	err = stopChannel(previousState, channelName, r.client)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error while stopping running channel "+*channelName+" "+err.Error(),
+			"Error while stopping to run channel "+*channelName+" "+err.Error(),
 			err.Error(),
 		)
+		return
 	}
 
 	if err := handlePolicyUpdate(ctx, r.client, plan); err != nil {
@@ -259,6 +262,7 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 			"Error while updating channel policy "+err.Error(),
 			err.Error(),
 		)
+		return
 	}
 
 	updatedChannel, err := r.client.UpdateChannel(ctx, getUpdateChannelInput(plan))
@@ -267,6 +271,7 @@ func (r *resourceChannel) Update(ctx context.Context, req resource.UpdateRequest
 			"Error while updating channel "+*channel.ChannelName+" "+err.Error(),
 			err.Error(),
 		)
+		return
 	}
 
 	if shouldStartChannel(previousState, newState) {

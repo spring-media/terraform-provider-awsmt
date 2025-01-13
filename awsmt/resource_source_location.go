@@ -76,7 +76,7 @@ func (r *resourceSourceLocation) Schema(_ context.Context, _ resource.SchemaRequ
 					},
 				},
 			},
-			"name": requiredString,
+			"name": requiredStringWithRequiresReplace,
 			"tags": optionalMap,
 		},
 	}
@@ -169,6 +169,7 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 			"Error while updating playback configuration tags"+err.Error(),
 			err.Error(),
 		)
+		return
 	}
 	if !currentState.AccessConfiguration.Equal(plan.AccessConfiguration) {
 		updatedSourceLocation, err := recreateSourceLocation(r.client, plan)
