@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"strings"
@@ -108,9 +109,11 @@ func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"tags": optionalMap,
 			"tier": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				Validators: []validator.String{
 					stringvalidator.OneOf([]string{"BASIC", "STANDARD"}...),
 				},
+				Default: stringdefault.StaticString("BASIC"),
 			},
 		},
 	}
