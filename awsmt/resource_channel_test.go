@@ -221,15 +221,21 @@ func TestAccChannelValuesNotFlickering(t *testing.T) {
 	})
 }
 
-func TestAccChannelResourceSTANDARD(t *testing.T) {
+func TestAccChannelTierChange(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: standardTierChannel(),
+				Config: standardTierChannel("STANDARD"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.awsmt_channel.test", "tier", "STANDARD"),
+				),
+			},
+			{
+				Config: standardTierChannel("BASIC"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.awsmt_channel.test", "tier", "BASIC"),
 				),
 			},
 		},
@@ -408,8 +414,8 @@ func logConfigChannel(enable bool) string {
 				`, enable)
 }
 
-func standardTierChannel() string {
-	return `resource "awsmt_vod_source" "test" {
+func standardTierChannel(t string) string {
+	return fmt.Sprintf(`resource "awsmt_vod_source" "test" {
 				http_package_configurations = [{
 					path = "/"
 					source_group = "default"
@@ -464,7 +470,7 @@ func standardTierChannel() string {
 				vod_source_name = awsmt_vod_source.test.name
 			}
 			policy = "{\"Version\": \"2012-10-17\", \"Statement\": [{\"Sid\": \"AllowAnonymous\", \"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\": \"mediatailor:GetManifest\", \"Resource\": \"arn:aws:mediatailor:eu-central-1:985600762523:channel/test\"}]}"
-			tier = "STANDARD"
+			tier = "%s"
 			tags = {"Environment": "dev"}
 			}
 
@@ -475,5 +481,5 @@ func standardTierChannel() string {
 			output "channel_out" {
 				value = data.awsmt_channel.test
 			}
-`
+`, t)
 }
