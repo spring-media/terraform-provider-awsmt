@@ -40,7 +40,6 @@ jobs:
             *Scan status*
 
             - Snyk: ${{needs.snyk.result }}
-            - Sonar Cloud: ${{needs.sonarcloud.result }}
 
             *Workflow run link:* ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           actions: |

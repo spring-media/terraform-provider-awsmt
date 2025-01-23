@@ -3,8 +3,6 @@
 A Terraform provider for AWS MediaTailor
 
 [![GitHub Actions](https://github.com/spring-media/ott-tfprovider-awsmt/workflows/CI/badge.svg?branch=main)](https://github.com/spring-media/ott-tfprovider-awsmt/actions?workflow=CI)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=spring-media_ott-tfprovider-awsmt&metric=alert_status&token=06d658832169745b96bb3266679443282e48ace4)](https://sonarcloud.io/summary/new_code?id=spring-media_ott-tfprovider-awsmt)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=spring-media_ott-tfprovider-awsmt&metric=coverage&token=06d658832169745b96bb3266679443282e48ace4)](https://sonarcloud.io/summary/new_code?id=spring-media_ott-tfprovider-awsmt)
 
 ## Documentation
 

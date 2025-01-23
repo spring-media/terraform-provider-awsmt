@@ -8,7 +8,6 @@ metadata:
   annotations:
     github.com/project-slug: spring-media/terraform-provider-awsmt
     backstage.io/techdocs-ref: dir:.
-    sonarqube.org/project-key: spring-media_ott-tfprovider-awsmt
     backstage.io/code-coverage: enabled
     snyk.io/org-name: ott-0fm
     snyk.io/project-ids: 3f072d8b-139c-4e65-b72b-df5e7205cb04,f2dd5050-9764-4643-b921-0d5e58bead27

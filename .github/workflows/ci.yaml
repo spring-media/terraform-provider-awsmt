@@ -6,7 +6,6 @@ on:
       - "**"
 env:
   GO_VERSION: 1.22
-  SKIP_SONAR: true
 
 permissions:
   id-token: write
@@ -49,11 +48,6 @@ jobs:
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ secrets.AWS_REGION }}
       - run: make test
-      - uses: SonarSource/sonarcloud-github-action@master
-        if: ${{ !env.SKIP_SONAR }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   snyk:
     name: Snyk Scan
