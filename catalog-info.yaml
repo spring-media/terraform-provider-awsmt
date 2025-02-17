@@ -25,7 +25,7 @@ metadata:
     - url: https://docs.aws.amazon.com/mediatailor/latest/apireference/what-is.html
       title: AWS MediaTailor API
 spec:
-  owner: ott-core-team
+  owner: ott-live-team
   type: service
   lifecycle: production
   system: ott-infrastructure
