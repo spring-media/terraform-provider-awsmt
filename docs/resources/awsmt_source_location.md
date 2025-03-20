@@ -60,7 +60,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Source Locations can be imported using their name as identifier. For example:
+Source Locations can be imported using either their name or their ARN as identifier. For example:
 
 ```
   $ terraform import awsmt_source_location.example example-source-location
