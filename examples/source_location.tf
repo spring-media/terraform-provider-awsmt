@@ -15,6 +15,3 @@ data "awsmt_source_location" "read" {
 output "awsmt_source_location" {
   value = data.awsmt_source_location.read
 }
-
-
-
