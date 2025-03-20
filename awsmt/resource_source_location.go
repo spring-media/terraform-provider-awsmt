@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"strings"
 	"terraform-provider-mediatailor/awsmt/models"
 )
 
@@ -108,7 +109,7 @@ func (r *resourceSourceLocation) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	plan = writeSourceLocationToPlan(plan, *sourceLocation, true)
+	plan = writeSourceLocationToPlan(plan, *sourceLocation)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -133,7 +134,7 @@ func (r *resourceSourceLocation) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	state = writeSourceLocationToPlan(state, mediatailor.CreateSourceLocationOutput(*sourceLocation), true)
+	state = writeSourceLocationToPlan(state, mediatailor.CreateSourceLocationOutput(*sourceLocation))
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -189,7 +190,7 @@ func (r *resourceSourceLocation) Update(ctx context.Context, req resource.Update
 			)
 			return
 		}
-		plan = writeSourceLocationToPlan(plan, mediatailor.CreateSourceLocationOutput(*sourceLocationUpdated), true)
+		plan = writeSourceLocationToPlan(plan, mediatailor.CreateSourceLocationOutput(*sourceLocationUpdated))
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
@@ -218,5 +219,29 @@ func (r *resourceSourceLocation) Delete(ctx context.Context, req resource.Delete
 }
 
 func (r *resourceSourceLocation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
+	// Split the import ID to support various import formats
+	idParts := strings.Split(req.ID, "/")
+
+	if len(idParts) == 1 {
+		resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
+		return
+	}
+
+	// Support ARN import format
+	if strings.HasPrefix(req.ID, "arn:aws:mediatailor:") {
+		arnParts := strings.Split(req.ID, ":")
+		if len(arnParts) >= 6 {
+			resourcePath := arnParts[5]
+			resourceParts := strings.Split(resourcePath, "/")
+			if len(resourceParts) >= 2 && resourceParts[0] == "sourceLocation" {
+				resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), resourceParts[1])...)
+				return
+			}
+		}
+	}
+
+	resp.Diagnostics.AddError(
+		"Invalid import ID",
+		"Expected import ID to be either the source location name or the full ARN",
+	)
 }

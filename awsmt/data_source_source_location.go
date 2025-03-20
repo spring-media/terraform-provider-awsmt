@@ -104,7 +104,7 @@ func (d *dataSourceSourceLocation) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	data = writeSourceLocationToPlan(data, mediatailor.CreateSourceLocationOutput(*sourceLocation), false)
+	data = writeSourceLocationToPlan(data, mediatailor.CreateSourceLocationOutput(*sourceLocation))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

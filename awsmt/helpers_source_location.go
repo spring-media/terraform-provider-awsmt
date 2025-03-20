@@ -137,12 +137,12 @@ func getUpdateSourceLocationInput(model models.SourceLocationModel) mediatailor.
 	return params
 }
 
-func writeSourceLocationToPlan(model models.SourceLocationModel, sourceLocation mediatailor.CreateSourceLocationOutput, isResource bool) models.SourceLocationModel {
+func writeSourceLocationToPlan(model models.SourceLocationModel, sourceLocation mediatailor.CreateSourceLocationOutput) models.SourceLocationModel {
 	// Set state
 
 	model = readSourceLocationComputedValues(model, sourceLocation)
 
-	model = readAccessConfiguration(model, sourceLocation, isResource)
+	model = readAccessConfiguration(model, sourceLocation)
 
 	model = readDefaultSegmentDeliveryConfiguration(model, sourceLocation)
 
@@ -179,17 +179,14 @@ func readSourceLocationComputedValues(model models.SourceLocationModel, sourceLo
 	return model
 }
 
-func readAccessConfiguration(model models.SourceLocationModel, sourceLocation mediatailor.CreateSourceLocationOutput, isResource bool) models.SourceLocationModel {
+func readAccessConfiguration(model models.SourceLocationModel, sourceLocation mediatailor.CreateSourceLocationOutput) models.SourceLocationModel {
 	if sourceLocation.AccessConfiguration == nil {
-		return model
-	}
-	if model.AccessConfiguration == nil && isResource {
 		return model
 	}
 
 	model.AccessConfiguration = &models.AccessConfigurationModel{}
 
-	if !(isResource && model.AccessConfiguration == nil) {
+	if string(sourceLocation.AccessConfiguration.AccessType) != "" {
 		accessType := string(sourceLocation.AccessConfiguration.AccessType)
 		model.AccessConfiguration.AccessType = &accessType
 	}
@@ -304,6 +301,6 @@ func recreateSourceLocation(client *mediatailor.Client, plan models.SourceLocati
 	if err != nil {
 		return nil, fmt.Errorf("error while creating new source location with new access configuration %v", err.Error())
 	}
-	model := writeSourceLocationToPlan(plan, *sourceLocation, true)
+	model := writeSourceLocationToPlan(plan, *sourceLocation)
 	return &model, nil
 }
