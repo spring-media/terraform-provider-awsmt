@@ -112,6 +112,12 @@ func TestAccSourceLocationResourceUpdateAccessControl(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "dev"),
 				),
 			},
+			// Import resource by arn
+			{
+				ResourceName:  resourceName,
+				ImportState:   true,
+				ImportStateId: "arn:aws:mediatailor:eu-central-1:985600762523:sourceLocation/" + name,
+			},
 			// Update and Read testing
 			{
 				Config: basicSourceLocationWithAccessConfig(name, baseUrl2, k3, v3, k2, v2),
@@ -126,6 +132,37 @@ func TestAccSourceLocationResourceUpdateAccessControl(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "prod")),
 			},
 			// Delete testing automatically occurs in TestCase
+		},
+	})
+}
+
+func TestAccSourceLocationAccessConfiguration_SMATC(t *testing.T) {
+	secretStringKey := "access-token"
+	headerName := "ACCESS-TOKEN"
+	secretArn := "arn:aws:secretsmanager:eu-central-1:985600762523:secret:terraform-provider-aws-acceptance-testing-Hr2kg1"
+
+	resourceName := "awsmt_source_location.test_source_location_smatc"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: sourceLocationWithSMATC(secretArn, secretStringKey, headerName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "access_configuration.access_type", "SECRETS_MANAGER_ACCESS_TOKEN"),
+					resource.TestCheckResourceAttr(resourceName, "access_configuration.smatc.header_name", headerName),
+					resource.TestCheckResourceAttr(resourceName, "access_configuration.smatc.secret_arn", secretArn),
+					resource.TestCheckResourceAttr(resourceName, "access_configuration.smatc.secret_string_key", secretStringKey),
+				),
+			},
+			// Import resource
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+			},
 		},
 	})
 }
@@ -259,4 +296,30 @@ func basicSourceLocationWithVodSource() string {
 			name = "vod_source_example"
 		}
 `
+}
+
+func sourceLocationWithSMATC(secretArn, secretStringKey, headerName string) string {
+	return fmt.Sprintf(`
+		resource "awsmt_source_location" "test_source_location_smatc"{
+			name = "sl-smatc"
+			http_configuration = {
+				base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com"
+			}
+			access_configuration = {
+				access_type = "SECRETS_MANAGER_ACCESS_TOKEN"
+				smatc = {
+			  		header_name        = "%[1]s"
+			  		secret_arn         = "%[2]s"
+			  		secret_string_key  = "%[3]s"
+				}
+		  	}
+		}
+		data "awsmt_source_location" "read" {
+			name = awsmt_source_location.test_source_location_smatc.name
+		}
+		output "awsmt_source_location" {
+			value = data.awsmt_source_location.read
+		}
+
+`, headerName, secretArn, secretStringKey)
 }
