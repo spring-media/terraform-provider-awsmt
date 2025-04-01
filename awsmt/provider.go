@@ -3,6 +3,7 @@ package awsmt
 import (
 	"context"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -12,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"os"
+	"time"
 )
 
 var (
@@ -25,8 +27,9 @@ func New() provider.Provider {
 type awsmtProvider struct{}
 
 type awsmtProviderModel struct {
-	Profile types.String `tfsdk:"profile"`
-	Region  types.String `tfsdk:"region"`
+	Profile          types.String `tfsdk:"profile"`
+	Region           types.String `tfsdk:"region"`
+	MaxRetryAttempts types.Int64  `tfsdk:"max_retry_attempts"`
 }
 
 func (p *awsmtProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
@@ -44,6 +47,10 @@ func (p *awsmtProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp
 				Optional:    true,
 				Description: "AWS region. defaults to 'eu-central-1'.",
 			},
+			"max_retry_attempts": schema.Int64Attribute{
+				Optional:    true,
+				Description: "The maximum number of times the provider will retry a failed aws operation. Defaults to 10",
+			},
 		},
 	}
 }
@@ -60,6 +67,7 @@ func (p *awsmtProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 	var region = "eu-central-1"
 	var profile = ""
+	var maxAttempts = 10
 
 	var err error
 	// New sdk version creation
@@ -68,7 +76,6 @@ func (p *awsmtProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	if !providerConfig.Region.IsUnknown() || !providerConfig.Region.IsNull() {
 		region = providerConfig.Region.ValueString()
 	}
-
 	if providerConfig.Profile.IsUnknown() || providerConfig.Profile.IsNull() || providerConfig.Profile.ValueString() == "" {
 		if os.Getenv("AWS_PROFILE") != "" {
 			profile = os.Getenv("AWS_PROFILE")
@@ -76,15 +83,11 @@ func (p *awsmtProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	} else {
 		profile = providerConfig.Profile.ValueString()
 	}
-
-	tflog.Debug(ctx, "Creating AWS client session")
-
-	if profile != "" {
-		cfg, err = config.LoadDefaultConfig(ctx, config.WithSharedConfigProfile(profile), config.WithRegion(region))
-	} else {
-		cfg, err = config.LoadDefaultConfig(ctx, config.WithRegion(region))
+	if !providerConfig.MaxRetryAttempts.IsUnknown() || !providerConfig.MaxRetryAttempts.IsNull() {
+		maxAttempts = int(providerConfig.MaxRetryAttempts.ValueInt64())
 	}
-
+	tflog.Debug(ctx, "Creating AWS client session")
+	cfg, err = p.getClientConfig(ctx, region, profile, maxAttempts)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to Initialize Provider in Region", "unable to initialize provider in the specified region: "+err.Error())
 		return
@@ -96,6 +99,28 @@ func (p *awsmtProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	resp.ResourceData = c
 
 	tflog.Info(ctx, "AWS MediaTailor client configured", map[string]any{"success": true})
+}
+
+func (p *awsmtProvider) getClientConfig(ctx context.Context, region, profile string, maxAttempts int) (aws.Config, error) {
+	backoff := customBackoff{
+		minDelay: 500 * time.Millisecond,
+	}
+	retryer := retry.NewStandard(func(o *retry.StandardOptions) {
+		o.Backoff = backoff
+		o.MaxAttempts = maxAttempts
+		o.MaxBackoff = 10 * time.Second
+	})
+
+	var optFns []func(*config.LoadOptions) error
+	optFns = append(optFns, config.WithRegion(region))
+	optFns = append(optFns, config.WithRetryer(func() aws.Retryer {
+		return retryer
+	}))
+	if profile != "" {
+		optFns = append(optFns, config.WithSharedConfigProfile(profile))
+	}
+
+	return config.LoadDefaultConfig(ctx, optFns...)
 }
 
 func (p *awsmtProvider) DataSources(_ context.Context) []func() datasource.DataSource {
@@ -117,4 +142,17 @@ func (p *awsmtProvider) Resources(_ context.Context) []func() resource.Resource 
 		ResourceLiveSource,
 		ResourceVodSource,
 	}
+}
+
+type customBackoff struct {
+	minDelay time.Duration
+}
+
+func (b customBackoff) BackoffDelay(attempt int, err error) (time.Duration, error) {
+	jb := retry.NewExponentialJitterBackoff(10 * time.Second)
+	standardDelay, stdErr := jb.BackoffDelay(attempt, err)
+	if stdErr != nil {
+		return 0, stdErr
+	}
+	return max(standardDelay, b.minDelay), nil
 }
