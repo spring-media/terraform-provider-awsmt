@@ -50,4 +50,4 @@ The AWSMT Provider supports the following argument:
   You can find the profile(s) name in `~/.aws/config` (Mac & Linux) or `%USERPROFILE%\.aws\config` (Windows).
 
 - `max_retry_attempts` - (Optional) Aws client maximum retries.
-  Number, defaults to 10. 
+  Number, defaults to 10.
