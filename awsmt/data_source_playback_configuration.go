@@ -76,6 +76,10 @@ func (d *dataSourcePlaybackConfiguration) Schema(_ context.Context, _ datasource
 				},
 			},
 			"log_configuration_percent_enabled": computedInt64,
+			"log_configuration_enabled_logging_strategies": schema.ListAttribute{
+				Computed: true,
+				ElementType: types.StringType,
+			},
 			"manifest_processing_rules": schema.SingleNestedAttribute{
 				Computed: true,
 

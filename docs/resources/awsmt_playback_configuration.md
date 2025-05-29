@@ -58,6 +58,7 @@ The following arguments are supported:
   - `ad_decision_server_url` - The URL for the ad decision server (ADS) for pre-roll ads.
   - `max_duration_seconds` - The maximum allowed duration for the pre-roll ad avail.
 - `log_configuration_percent_enabled` - The percentage of session logs that MediaTailor sends to your Cloudwatch Logs account.
+- `log_configuration_enabled_logging_strategies` - The method used for collecting logs from AWS Elemental MediaTailor. Allowed values are "LEGACY_CLOUDWATCH" or "VENDED_LOGS", or both.
 - `manifest_processing_rules` – The configuration for manifest processing rules
   - `ad_marker_passthrough` – For HLS, when set to true, MediaTailor passes through EXT-X-CUE-IN, EXT-X-CUE-OUT, and EXT-X-SPLICEPOINT-SCTE35 ad markers from the origin manifest to the MediaTailor personalized manifest.
     - `enabled` - Enables ad marker passthrough for your configuration.

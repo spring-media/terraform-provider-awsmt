@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -105,6 +106,14 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 					int64planmodifier.UseStateForUnknown(),
 				},
 			},
+			"log_configuration_enabled_logging_strategies": schema.ListAttribute{
+				Optional: true,
+				Computed:  true,
+				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"live_pre_roll_configuration": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
@@ -169,21 +178,26 @@ func (r *resourcePlaybackConfiguration) Create(ctx context.Context, req resource
 		return
 	}
 
-	playbackConfiguration, err := setLogPercentage(r.client, plan)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error while setting the log percentage "+err.Error(),
-			err.Error(),
-		)
-		return
-	}
+    // Configure both log percentage and logging strategies
+    finalPlaybackConfiguration, err := configureLogging(r.client, plan)
+    if err != nil {
+        resp.Diagnostics.AddError(
+            "Error while configuring logging "+err.Error(),
+            err.Error(),
+        )
+        return
+    }
 
-	m := putPlaybackConfigurationModelbuilder{model: &plan, output: *playbackConfiguration, isResource: true}
+    m := putPlaybackConfigurationModelbuilder{
+        model:      &plan,
+        output:     mediatailor.PutPlaybackConfigurationOutput(*finalPlaybackConfiguration),
+        isResource: true,
+    }
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, m.getModel())...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+    resp.Diagnostics.Append(resp.State.Set(ctx, m.getModel())...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 }
 
 func (r *resourcePlaybackConfiguration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -245,7 +259,7 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 	err = UpdatesTags(r.client, playbackConfiguration.Tags, plan.Tags, *playbackConfiguration.PlaybackConfigurationArn)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error while updating playback configuration tags"+err.Error(),
+			"Error while updating playback configuration tags "+err.Error(),
 			err.Error(),
 		)
 		return
@@ -263,21 +277,26 @@ func (r *resourcePlaybackConfiguration) Update(ctx context.Context, req resource
 		return
 	}
 
-	playbackConfigurationUpdate, err := setLogPercentage(r.client, plan)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error while setting the log percentage "+err.Error(),
-			err.Error(),
-		)
-		return
-	}
+    // Configure both log percentage and logging strategies
+    finalPlaybackConfiguration, err := configureLogging(r.client, plan)
+    if err != nil {
+        resp.Diagnostics.AddError(
+            "Error while configuring logging "+err.Error(),
+            err.Error(),
+        )
+        return
+    }
 
-	m := putPlaybackConfigurationModelbuilder{model: &plan, output: *playbackConfigurationUpdate, isResource: true}
+    m := putPlaybackConfigurationModelbuilder{
+        model:      &plan,
+        output:     mediatailor.PutPlaybackConfigurationOutput(*finalPlaybackConfiguration),
+        isResource: true,
+    }
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, m.getModel())...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+    resp.Diagnostics.Append(resp.State.Set(ctx, m.getModel())...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 }
 
 func (r *resourcePlaybackConfiguration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

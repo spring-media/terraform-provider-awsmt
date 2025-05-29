@@ -14,19 +14,20 @@ type PlaybackConfigurationModel struct {
 	// Context: The Provider Framework does not allow computed blocks
 	// Decision: We decided to flatten the Log Configuration and the HLS Configuration blocks into the resource.
 	// Consequences: The schema of the object differs from that of the SDK.
-	HlsConfigurationManifestEndpointPrefix types.String                   `tfsdk:"hls_configuration_manifest_endpoint_prefix"`
-	LogConfigurationPercentEnabled         types.Int64                    `tfsdk:"log_configuration_percent_enabled"`
-	LivePreRollConfiguration               *LivePreRollConfigurationModel `tfsdk:"live_pre_roll_configuration"`
-	ManifestProcessingRules                *ManifestProcessingRulesModel  `tfsdk:"manifest_processing_rules"`
-	Name                                   *string                        `tfsdk:"name"`
-	PersonalizationThresholdSeconds        *int32                         `tfsdk:"personalization_threshold_seconds"`
-	PlaybackConfigurationArn               types.String                   `tfsdk:"playback_configuration_arn"`
-	PlaybackEndpointPrefix                 types.String                   `tfsdk:"playback_endpoint_prefix"`
-	SessionInitializationEndpointPrefix    types.String                   `tfsdk:"session_initialization_endpoint_prefix"`
-	SlateAdUrl                             *string                        `tfsdk:"slate_ad_url"`
-	Tags                                   map[string]string              `tfsdk:"tags"`
-	TranscodeProfileName                   *string                        `tfsdk:"transcode_profile_name"`
-	VideoContentSourceUrl                  *string                        `tfsdk:"video_content_source_url"`
+	HlsConfigurationManifestEndpointPrefix      types.String                    `tfsdk:"hls_configuration_manifest_endpoint_prefix"`
+	LogConfigurationPercentEnabled              types.Int64                     `tfsdk:"log_configuration_percent_enabled"`
+	LogConfigurationEnabledLoggingStrategies    types.List                      `tfsdk:"log_configuration_enabled_logging_strategies"`
+	LivePreRollConfiguration                    *LivePreRollConfigurationModel  `tfsdk:"live_pre_roll_configuration"`
+	ManifestProcessingRules                     *ManifestProcessingRulesModel   `tfsdk:"manifest_processing_rules"`
+	Name                                        *string                         `tfsdk:"name"`
+	PersonalizationThresholdSeconds             *int32                          `tfsdk:"personalization_threshold_seconds"`
+	PlaybackConfigurationArn                    types.String                    `tfsdk:"playback_configuration_arn"`
+	PlaybackEndpointPrefix                      types.String                    `tfsdk:"playback_endpoint_prefix"`
+	SessionInitializationEndpointPrefix         types.String                    `tfsdk:"session_initialization_endpoint_prefix"`
+	SlateAdUrl                                  *string                         `tfsdk:"slate_ad_url"`
+	Tags                                        map[string]string               `tfsdk:"tags"`
+	TranscodeProfileName                        *string                         `tfsdk:"transcode_profile_name"`
+	VideoContentSourceUrl                       *string                         `tfsdk:"video_content_source_url"`
 }
 
 type AvailSuppressionModel struct {

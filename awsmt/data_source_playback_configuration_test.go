@@ -36,7 +36,9 @@ func TestAccPlaybackConfigurationDataSourceBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "dev"),
 					resource.TestCheckResourceAttr(resourceName, "video_content_source_url", "https://exampleurl.com/"),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration_percent_enabled", "0"),
-				),
+                    resource.TestCheckResourceAttrSet(resourceName, "log_configuration_enabled_logging_strategies.#"),
+                    resource.TestCheckResourceAttr(resourceName, "log_configuration_enabled_logging_strategies.0", "LEGACY_CLOUDWATCH"),
+                ),
 			},
 		},
 	})
@@ -94,6 +96,8 @@ func playbackConfigDS() string {
 							slate_ad_url = "https://exampleurl.com/"
   							tags = {"Environment": "dev"}
  	 						video_content_source_url = "https://exampleurl.com/"
+ 	 						log_configuration_percent_enabled = 0
+                            log_configuration_enabled_logging_strategies = ["LEGACY_CLOUDWATCH"]
 						}
 
 						data "awsmt_playback_configuration" "test"{
@@ -140,6 +144,8 @@ func playbackConfigDSError() string {
 							slate_ad_url = "https://exampleurl.com/"
   							tags = {"Environment": "dev"}
  	 						video_content_source_url = "https://exampleurl.com/"
+ 	 						log_configuration_percent_enabled = 0
+                            log_configuration_enabled_logging_strategies = ["LEGACY_CLOUDWATCH"]
 						}
 
 						data "awsmt_playback_configuration" "test"{
