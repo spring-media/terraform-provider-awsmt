@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	awsTypes "github.com/aws/aws-sdk-go-v2/service/mediatailor/types"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"terraform-provider-mediatailor/awsmt/models"
 )
 
@@ -304,6 +305,18 @@ func (m *putPlaybackConfigurationModelbuilder) addOptionalFieldsToModel() {
 		} else if !m.isResource {
 			m.model.LogConfigurationPercentEnabled = types.Int64Value(int64(m.output.LogConfiguration.PercentEnabled))
 		}
+
+		if len(m.output.LogConfiguration.EnabledLoggingStrategies) > 0 {
+			strategies := make([]attr.Value, 0, len(m.output.LogConfiguration.EnabledLoggingStrategies))
+			for _, strategy := range m.output.LogConfiguration.EnabledLoggingStrategies {
+				strategies = append(strategies, types.StringValue(string(strategy)))
+			}
+			listValue, _ := types.ListValue(types.StringType, strategies)
+			m.model.LogConfigurationEnabledLoggingStrategies = listValue
+		} else {
+			emptyList, _ := types.ListValue(types.StringType, []attr.Value{})
+			m.model.LogConfigurationEnabledLoggingStrategies = emptyList
+		}
 	}
 
 	if m.output.PersonalizationThresholdSeconds != nil {
@@ -327,21 +340,28 @@ func (m *putPlaybackConfigurationModelbuilder) addOptionalFieldsToModel() {
 	}
 }
 
-// Log percentage configuration helper
-func setLogPercentage(client *mediatailor.Client, model models.PlaybackConfigurationModel) (*mediatailor.PutPlaybackConfigurationOutput, error) {
-	_, err := client.ConfigureLogsForPlaybackConfiguration(context.TODO(), &mediatailor.ConfigureLogsForPlaybackConfigurationInput{
-		PlaybackConfigurationName: model.Name,
-		PercentEnabled:            int32(model.LogConfigurationPercentEnabled.ValueInt64()),
-	})
+// Log percentage & strategies configuration helper
+func configureLogging(client *mediatailor.Client, model models.PlaybackConfigurationModel) (*mediatailor.GetPlaybackConfigurationOutput, error) {
+    input := &mediatailor.ConfigureLogsForPlaybackConfigurationInput{
+        PlaybackConfigurationName: model.Name,
+        PercentEnabled:            int32(model.LogConfigurationPercentEnabled.ValueInt64()),
+    }
 
-	if err != nil {
-		return nil, err
-	}
+    // Add logging strategies if they exist
+    if !model.LogConfigurationEnabledLoggingStrategies.IsNull() && len(model.LogConfigurationEnabledLoggingStrategies.Elements()) > 0 {
+        var enabledStrategies []awsTypes.LoggingStrategy
+        for _, element := range model.LogConfigurationEnabledLoggingStrategies.Elements() {
+            if stringVal, ok := element.(types.String); ok && !stringVal.IsNull() {
+                enabledStrategies = append(enabledStrategies, awsTypes.LoggingStrategy(stringVal.ValueString()))
+            }
+        }
+        input.EnabledLoggingStrategies = enabledStrategies
+    }
 
-	playbackConfiguration, err := client.GetPlaybackConfiguration(context.TODO(), &mediatailor.GetPlaybackConfigurationInput{Name: model.Name})
-	if err != nil {
-		return nil, err
-	}
-	output := mediatailor.PutPlaybackConfigurationOutput(*playbackConfiguration)
-	return &output, nil
+    _, err := client.ConfigureLogsForPlaybackConfiguration(context.TODO(), input)
+    if err != nil {
+        return nil, err
+    }
+
+    return client.GetPlaybackConfiguration(context.TODO(), &mediatailor.GetPlaybackConfigurationInput{Name: model.Name})
 }

@@ -95,8 +95,8 @@ func TestAccPlaybackConfigurationLogPercentage(t *testing.T) {
 	name := "test-acc-playback-configuration-log-percentage"
 	adUrl := "https://www.foo.de/"
 	videoSourceUrl := "https://www.bar.at"
-	p1 := "5"
-	p2 := "8"
+	p1 := 5
+	p2 := 8
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -106,7 +106,7 @@ func TestAccPlaybackConfigurationLogPercentage(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "id", name),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "log_configuration_percent_enabled", p1),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration_percent_enabled", fmt.Sprintf("%d", p1)),
 				),
 			},
 			{
@@ -114,7 +114,41 @@ func TestAccPlaybackConfigurationLogPercentage(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "id", name),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "log_configuration_percent_enabled", p2),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration_percent_enabled", fmt.Sprintf("%d", p2)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPlaybackConfigurationLoggingStrategies(t *testing.T) {
+	resourceName := "awsmt_playback_configuration.r3"
+	name := "test-acc-playback-configuration-enabled-logging-strategies"
+	adUrl := "https://www.foo.de/"
+	videoSourceUrl := "https://www.bar.at"
+	p1 := `["LEGACY_CLOUDWATCH"]`
+	p2 := `["LEGACY_CLOUDWATCH", "VENDED_LOGS"]`
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: loggingStrategiesPlaybackConfiguration(name, adUrl, videoSourceUrl, p1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration_enabled_logging_strategies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration_enabled_logging_strategies.0", "LEGACY_CLOUDWATCH"),
+				),
+			},
+			{
+				Config: loggingStrategiesPlaybackConfiguration(name, adUrl, videoSourceUrl, p2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration_enabled_logging_strategies.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration_enabled_logging_strategies.0", "LEGACY_CLOUDWATCH"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration_enabled_logging_strategies.1", "VENDED_LOGS"),
 				),
 			},
 		},
@@ -259,15 +293,27 @@ func configurationAliasesPlaybackConfiguration(name, adUrl, videoSourceUrl, conf
 	)
 }
 
-func logPercentagePlaybackConfiguration(name, adUrl, videoSourceUrl, logPercentage string) string {
+func logPercentagePlaybackConfiguration(name, adUrl, videoSourceUrl string, logPercentage int) string {
 	return fmt.Sprintf(`
 		resource "awsmt_playback_configuration" "r3" {
 			ad_decision_server_url = "%[2]s"
 			name = "%[1]s"
 			video_content_source_url = "%[3]s"
-			log_configuration_percent_enabled = "%[4]s"
+			log_configuration_percent_enabled = %[4]d
 		}
 		`, name, adUrl, videoSourceUrl, logPercentage,
+	)
+}
+
+func loggingStrategiesPlaybackConfiguration(name, adUrl, videoSourceUrl, loggingStrategies string) string {
+	return fmt.Sprintf(`
+		resource "awsmt_playback_configuration" "r3" {
+			ad_decision_server_url = "%[2]s"
+			name = "%[1]s"
+			video_content_source_url = "%[3]s"
+			log_configuration_enabled_logging_strategies = %[4]s
+		}
+		`, name, adUrl, videoSourceUrl, loggingStrategies,
 	)
 }
 
