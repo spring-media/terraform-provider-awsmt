@@ -16,7 +16,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@master
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v6
       - uses: snyk/actions/setup@master
       - run: pip install -r requirements.txt
         working-directory: tests/docs
