@@ -26,16 +26,67 @@ type putPlaybackConfigurationModelbuilder struct {
 
 func (i *putPlaybackConfigurationInputBuilder) getInput() *mediatailor.PutPlaybackConfigurationInput {
 
+	i.addAdConditioningConfigurationToInput()
+	i.addAdDecisionServerConfigurationToInput()
 	i.addAvailSuppressionToInput()
 	i.addBumperToInput()
 	i.addCdnConfigurationToInput()
 	i.addDashConfigurationToInput()
+	i.addFunctionMappingToInput()
+	i.addInsertionModeToInput()
 	i.addLivePreRollConfigurationToInput()
 	i.addManifestProcessingRulesToInput()
 	i.addOptionalFieldsToInput()
 	i.addRequiredFieldsToInput()
 
 	return i.input
+}
+
+func (i *putPlaybackConfigurationInputBuilder) addAdConditioningConfigurationToInput() {
+	if i.model.AdConditioningConfiguration == nil {
+		return
+	}
+	temp := &awsTypes.AdConditioningConfiguration{}
+	if i.model.AdConditioningConfiguration.StreamingMediaFileConditioning != nil {
+		temp.StreamingMediaFileConditioning = awsTypes.StreamingMediaFileConditioning(*i.model.AdConditioningConfiguration.StreamingMediaFileConditioning)
+	}
+	i.input.AdConditioningConfiguration = temp
+}
+
+func (i *putPlaybackConfigurationInputBuilder) addAdDecisionServerConfigurationToInput() {
+	if i.model.AdDecisionServerConfiguration == nil {
+		return
+	}
+	temp := &awsTypes.AdDecisionServerConfiguration{}
+	if i.model.AdDecisionServerConfiguration.HttpRequest != nil {
+		httpReq := &awsTypes.HttpRequest{}
+		if i.model.AdDecisionServerConfiguration.HttpRequest.Body != nil {
+			httpReq.Body = i.model.AdDecisionServerConfiguration.HttpRequest.Body
+		}
+		if i.model.AdDecisionServerConfiguration.HttpRequest.CompressRequest != nil {
+			httpReq.CompressRequest = awsTypes.CompressionMethod(*i.model.AdDecisionServerConfiguration.HttpRequest.CompressRequest)
+		}
+		if i.model.AdDecisionServerConfiguration.HttpRequest.Headers != nil {
+			httpReq.Headers = i.model.AdDecisionServerConfiguration.HttpRequest.Headers
+		}
+		if i.model.AdDecisionServerConfiguration.HttpRequest.Method != nil {
+			httpReq.Method = awsTypes.Method(*i.model.AdDecisionServerConfiguration.HttpRequest.Method)
+		}
+		temp.HttpRequest = httpReq
+	}
+	i.input.AdDecisionServerConfiguration = temp
+}
+
+func (i *putPlaybackConfigurationInputBuilder) addFunctionMappingToInput() {
+	if i.model.FunctionMapping != nil {
+		i.input.FunctionMapping = i.model.FunctionMapping
+	}
+}
+
+func (i *putPlaybackConfigurationInputBuilder) addInsertionModeToInput() {
+	if i.model.InsertionMode != nil {
+		i.input.InsertionMode = awsTypes.InsertionMode(*i.model.InsertionMode)
+	}
 }
 
 func (i *putPlaybackConfigurationInputBuilder) addAvailSuppressionToInput() {
@@ -183,16 +234,81 @@ func (i *putPlaybackConfigurationInputBuilder) addRequiredFieldsToInput() {
 
 func (m *putPlaybackConfigurationModelbuilder) getModel() models.PlaybackConfigurationModel {
 
+	m.addAdConditioningConfigurationToModel()
+	m.addAdDecisionServerConfigurationToModel()
 	m.addAvailSuppressionToModel()
 	m.addBumperToModel()
 	m.addCdnConfigurationToModel()
 	m.addDashConfigurationToModel()
+	m.addFunctionMappingToModel()
+	m.addInsertionModeToModel()
 	m.addOptionalFieldsToModel()
 	m.addLivePreRollConfigurationToModel()
 	m.addManifestProcessingRulesToModel()
 	m.addRequiredFieldsToModel()
 
 	return *m.model
+}
+
+func (m *putPlaybackConfigurationModelbuilder) addAdConditioningConfigurationToModel() {
+	if m.output.AdConditioningConfiguration == nil {
+		return
+	}
+	if m.model.AdConditioningConfiguration == nil && m.isResource {
+		return
+	}
+	m.model.AdConditioningConfiguration = &models.AdConditioningConfigurationModel{}
+	conditioning := string(m.output.AdConditioningConfiguration.StreamingMediaFileConditioning)
+	m.model.AdConditioningConfiguration.StreamingMediaFileConditioning = &conditioning
+}
+
+func (m *putPlaybackConfigurationModelbuilder) addAdDecisionServerConfigurationToModel() {
+	if m.output.AdDecisionServerConfiguration == nil {
+		return
+	}
+	if m.model.AdDecisionServerConfiguration == nil && m.isResource {
+		return
+	}
+	m.model.AdDecisionServerConfiguration = &models.AdDecisionServerConfigurationModel{}
+	if m.output.AdDecisionServerConfiguration.HttpRequest != nil {
+		httpReq := &models.HttpRequestModel{}
+		if m.output.AdDecisionServerConfiguration.HttpRequest.Body != nil {
+			httpReq.Body = m.output.AdDecisionServerConfiguration.HttpRequest.Body
+		}
+		compress := string(m.output.AdDecisionServerConfiguration.HttpRequest.CompressRequest)
+		if compress != "" {
+			httpReq.CompressRequest = &compress
+		}
+		if m.output.AdDecisionServerConfiguration.HttpRequest.Headers != nil {
+			httpReq.Headers = m.output.AdDecisionServerConfiguration.HttpRequest.Headers
+		}
+		method := string(m.output.AdDecisionServerConfiguration.HttpRequest.Method)
+		if method != "" {
+			httpReq.Method = &method
+		}
+		m.model.AdDecisionServerConfiguration.HttpRequest = httpReq
+	}
+}
+
+func (m *putPlaybackConfigurationModelbuilder) addFunctionMappingToModel() {
+	if m.output.FunctionMapping == nil {
+		return
+	}
+	if m.model.FunctionMapping == nil && m.isResource {
+		return
+	}
+	m.model.FunctionMapping = m.output.FunctionMapping
+}
+
+func (m *putPlaybackConfigurationModelbuilder) addInsertionModeToModel() {
+	if m.output.InsertionMode == "" {
+		return
+	}
+	if m.model.InsertionMode == nil && m.isResource {
+		return
+	}
+	mode := string(m.output.InsertionMode)
+	m.model.InsertionMode = &mode
 }
 
 func (m *putPlaybackConfigurationModelbuilder) addAvailSuppressionToModel() {
@@ -320,6 +436,32 @@ func (m *putPlaybackConfigurationModelbuilder) addOptionalFieldsToModel() {
 			emptyList, _ := types.ListValue(types.StringType, []attr.Value{})
 			m.model.LogConfigurationEnabledLoggingStrategies = emptyList
 		}
+
+		if m.output.LogConfiguration.AdsInteractionLog != nil {
+			if m.model.LogConfigurationAdsInteractionLog != nil || !m.isResource {
+				ail := &models.AdsInteractionLogModel{}
+				for _, e := range m.output.LogConfiguration.AdsInteractionLog.ExcludeEventTypes {
+					ail.ExcludeEventTypes = append(ail.ExcludeEventTypes, string(e))
+				}
+				for _, e := range m.output.LogConfiguration.AdsInteractionLog.PublishOptInEventTypes {
+					ail.PublishOptInEventTypes = append(ail.PublishOptInEventTypes, string(e))
+				}
+				m.model.LogConfigurationAdsInteractionLog = ail
+			}
+		}
+
+		if m.output.LogConfiguration.ManifestServiceInteractionLog != nil {
+			if m.model.LogConfigurationManifestServiceInteractionLog != nil || !m.isResource {
+				msil := &models.ManifestServiceInteractionLogModel{}
+				for _, e := range m.output.LogConfiguration.ManifestServiceInteractionLog.ExcludeEventTypes {
+					msil.ExcludeEventTypes = append(msil.ExcludeEventTypes, string(e))
+				}
+				for _, e := range m.output.LogConfiguration.ManifestServiceInteractionLog.PublishOptInEventTypes {
+					msil.PublishOptInEventTypes = append(msil.PublishOptInEventTypes, string(e))
+				}
+				m.model.LogConfigurationManifestServiceInteractionLog = msil
+			}
+		}
 	}
 
 	if m.output.PersonalizationThresholdSeconds != nil {
@@ -360,6 +502,30 @@ func configureLogging(client *mediatailor.Client, model models.PlaybackConfigura
 		}
 		input.EnabledLoggingStrategies = enabledStrategies
 	}
+
+    // Add ADS interaction log configuration
+    if model.LogConfigurationAdsInteractionLog != nil {
+        ail := &awsTypes.AdsInteractionLog{}
+        for _, e := range model.LogConfigurationAdsInteractionLog.ExcludeEventTypes {
+            ail.ExcludeEventTypes = append(ail.ExcludeEventTypes, awsTypes.AdsInteractionExcludeEventType(e))
+        }
+        for _, e := range model.LogConfigurationAdsInteractionLog.PublishOptInEventTypes {
+            ail.PublishOptInEventTypes = append(ail.PublishOptInEventTypes, awsTypes.AdsInteractionPublishOptInEventType(e))
+        }
+        input.AdsInteractionLog = ail
+    }
+
+    // Add manifest service interaction log configuration
+    if model.LogConfigurationManifestServiceInteractionLog != nil {
+        msil := &awsTypes.ManifestServiceInteractionLog{}
+        for _, e := range model.LogConfigurationManifestServiceInteractionLog.ExcludeEventTypes {
+            msil.ExcludeEventTypes = append(msil.ExcludeEventTypes, awsTypes.ManifestServiceExcludeEventType(e))
+        }
+        for _, e := range model.LogConfigurationManifestServiceInteractionLog.PublishOptInEventTypes {
+            msil.PublishOptInEventTypes = append(msil.PublishOptInEventTypes, awsTypes.ManifestServicePublishOptInEventType(e))
+        }
+        input.ManifestServiceInteractionLog = msil
+    }
 
 	_, err := client.ConfigureLogsForPlaybackConfiguration(context.TODO(), input)
 	if err != nil {

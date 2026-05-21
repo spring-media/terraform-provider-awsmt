@@ -33,6 +33,10 @@ func getCreateChannelInput(model models.ChannelModel) *mediatailor.CreateChannel
 
 	input.ChannelName, input.FillerSlate, input.Outputs = getSharedChannelInput(&model)
 
+	if len(model.Audiences) > 0 {
+		input.Audiences = model.Audiences
+	}
+
 	if model.PlaybackMode != nil {
 		var mode awsTypes.PlaybackMode
 		switch *model.PlaybackMode {
@@ -59,6 +63,13 @@ func getCreateChannelInput(model models.ChannelModel) *mediatailor.CreateChannel
 		input.Tier = tier
 	}
 
+	if model.TimeShiftConfiguration != nil {
+		maxDelay := int32(*model.TimeShiftConfiguration.MaxTimeDelaySeconds)
+		input.TimeShiftConfiguration = &awsTypes.TimeShiftConfiguration{
+			MaxTimeDelaySeconds: &maxDelay,
+		}
+	}
+
 	return &input
 }
 
@@ -66,6 +77,17 @@ func getUpdateChannelInput(model models.ChannelModel) *mediatailor.UpdateChannel
 	var input mediatailor.UpdateChannelInput
 
 	input.ChannelName, input.FillerSlate, input.Outputs = getSharedChannelInput(&model)
+
+	if len(model.Audiences) > 0 {
+		input.Audiences = model.Audiences
+	}
+
+	if model.TimeShiftConfiguration != nil {
+		maxDelay := int32(*model.TimeShiftConfiguration.MaxTimeDelaySeconds)
+		input.TimeShiftConfiguration = &awsTypes.TimeShiftConfiguration{
+			MaxTimeDelaySeconds: &maxDelay,
+		}
+	}
 
 	return &input
 }
@@ -407,6 +429,15 @@ func writeChannelToPlan(model models.ChannelModel, channel mediatailor.CreateCha
 
 	model = readOptionalValues(model, channel.PlaybackMode, channel.Tags, channel.Tier)
 
+	if len(channel.Audiences) > 0 {
+		model.Audiences = channel.Audiences
+	}
+
+	if channel.TimeShiftConfiguration != nil && channel.TimeShiftConfiguration.MaxTimeDelaySeconds != nil {
+		maxDelay := int64(*channel.TimeShiftConfiguration.MaxTimeDelaySeconds)
+		model.TimeShiftConfiguration = &models.TimeShiftConfigurationModel{MaxTimeDelaySeconds: &maxDelay}
+	}
+
 	return model
 }
 
@@ -421,6 +452,15 @@ func writeChannelToState(model models.ChannelModel, channel mediatailor.Describe
 	model = readOptionalValues(model, channel.PlaybackMode, channel.Tags, channel.Tier)
 
 	model = readLogConfiguration(model, channel.LogConfiguration)
+
+	if len(channel.Audiences) > 0 {
+		model.Audiences = channel.Audiences
+	}
+
+	if channel.TimeShiftConfiguration != nil && channel.TimeShiftConfiguration.MaxTimeDelaySeconds != nil {
+		maxDelay := int64(*channel.TimeShiftConfiguration.MaxTimeDelaySeconds)
+		model.TimeShiftConfiguration = &models.TimeShiftConfigurationModel{MaxTimeDelaySeconds: &maxDelay}
+	}
 
 	return model
 }
