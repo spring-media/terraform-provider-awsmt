@@ -10,3 +10,13 @@ updates:
     labels:
       - "golang"
       - "dependencies"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "02:12"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 0
+    labels:
+      - "github-actions"
+      - "dependencies"
