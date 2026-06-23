@@ -68,6 +68,7 @@ jobs:
           snyk test
           --severity-threshold=medium
           --all-projects
+          --fail-on=upgradable
       - run: >-
           snyk code test
           --severity-threshold=medium
