@@ -5,7 +5,7 @@ on:
     branches:
       - "**"
 env:
-  GO_VERSION: 1.24
+  GO_VERSION: 1.25.8
 
 permissions:
   id-token: write
@@ -68,6 +68,7 @@ jobs:
           snyk test
           --severity-threshold=medium
           --all-projects
+          --fail-on=upgradable
       - run: >-
           snyk code test
           --severity-threshold=medium
