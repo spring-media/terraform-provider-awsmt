@@ -53,3 +53,17 @@ test: clean $(BUILD_DIR)/coverage.html $(BUILD_DIR)/coverage_func.txt $(BUILD_DI
 sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	go test $(SWEEP_DIR) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
+
+lint:
+	golangci-lint run
+.PHONY: lint
+
+GO_MINOR_VERSION=$(file < .go-minor-version)
+update-go: $(GO_VERSION_FILES) | Makefile
+	go get go@$(GO_MINOR_VERSION)
+.PHONY: update-go
+
+update-deps: update-go
+	go get -t -u ./...
+	go mod tidy
+.PHONY: update-deps
