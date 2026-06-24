@@ -1,0 +1,53 @@
+name: Update go dependencies
+on:
+  schedule:
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  update-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          token: "${{ secrets.PAT_SEMANTIC_RELEASE }}"
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: .go-minor-version
+      - run: |
+          set -ex
+          make update-deps
+      - id: diff
+        run: |
+          git diff --exit-code
+        continue-on-error: true
+      - name: configure aws credentials
+        if: ${{ steps.diff.outcome != 'success' }}
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.ROLE_TO_ASSUME }}
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-region: ${{ secrets.AWS_REGION }}
+      - id: test
+        if: ${{ steps.diff.outcome != 'success' }}
+        run: |
+          make test
+      - id: push
+        if: ${{ steps.diff.outcome != 'success' }}
+        run: |
+          set -exou pipefail 
+          git add go.mod go.sum .github/workflows/*.yaml
+          git commit -m 'fix: update dependencies (automated)'
+          git log -p HEAD^1..
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_AUTHOR_NAME: ${{ github.actor }}
+          GIT_AUTHOR_EMAIL: ${{ github.actor }}@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
