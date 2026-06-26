@@ -112,7 +112,9 @@ func readPrefetchScheduleOutput(model models.PrefetchScheduleModel, output *medi
 		model.ScheduleType = &st
 	}
 	model.StreamId = output.StreamId
-	model.Tags = output.Tags
+	if len(output.Tags) > 0 {
+		model.Tags = output.Tags
+	}
 	return model
 }
 
@@ -128,6 +130,8 @@ func readGetPrefetchScheduleOutput(model models.PrefetchScheduleModel, output *m
 		model.ScheduleType = &st
 	}
 	model.StreamId = output.StreamId
-	model.Tags = output.Tags
+	if len(output.Tags) > 0 {
+		model.Tags = output.Tags
+	}
 	return model
 }
