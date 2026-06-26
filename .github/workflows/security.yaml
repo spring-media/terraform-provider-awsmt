@@ -18,10 +18,14 @@ jobs:
       - uses: actions/checkout@master
       - uses: actions/setup-python@v6
       - uses: snyk/actions/setup@master
-      - run: pip install -r requirements.txt
+      - run: >-
+          set -eou pipefail &&
+          make setup
         working-directory: tests/docs
-      - run: |
-          snyk test --all-projects --severity-threshold=medium
+      - run: >-
+          set -eou pipefail &&
+          . tests/docs/venv/bin/activate &&
+          snyk test --all-projects --severity-threshold=medium --fail-on=upgradable &&
           snyk code test --all-projects --severity-threshold=medium
 
   teams-notification:

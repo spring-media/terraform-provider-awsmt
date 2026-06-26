@@ -1,3 +1,7 @@
 setuptools==78.1.1
 mkdocs
 mkdocs-techdocs-core
+
+# security related pins
+jinja2>=3.1.6
+requests>=2.33.0
