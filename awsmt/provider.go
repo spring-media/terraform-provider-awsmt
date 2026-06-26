@@ -126,6 +126,7 @@ func (p *awsmtProvider) getClientConfig(ctx context.Context, region, profile str
 func (p *awsmtProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		DataSourceChannel,
+		DataSourceFunction,
 		DataSourceSourceLocation,
 		DataSourcePlaybackConfiguration,
 		DataSourceLiveSource,
@@ -137,6 +138,8 @@ func (p *awsmtProvider) DataSources(_ context.Context) []func() datasource.DataS
 func (p *awsmtProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		ResourceChannel,
+		ResourceFunction,
+		ResourcePrefetchSchedule,
 		ResourceSourceLocation,
 		ResourcePlaybackConfiguration,
 		ResourceLiveSource,

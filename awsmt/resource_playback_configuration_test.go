@@ -358,3 +358,173 @@ func completePlaybackConfiguration(name, adUrl, bumperE, bumperS, cdnUrl, maxD, 
 		`, name, adUrl, bumperE, bumperS, cdnUrl, maxD, pS, k1, v1, k2, v2,
 	)
 }
+
+func TestAccPlaybackConfigurationInsertionMode(t *testing.T) {
+	resourceName := "awsmt_playback_configuration.r5"
+	name := "test-acc-playback-configuration-insertion-mode"
+	adUrl := "https://www.foo.de/"
+	videoSourceUrl := "https://www.bar.at"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: insertionModePlaybackConfiguration(name, adUrl, videoSourceUrl, "STITCHED_ONLY"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckResourceAttr(resourceName, "insertion_mode", "STITCHED_ONLY"),
+				),
+			},
+			{
+				Config: insertionModePlaybackConfiguration(name, adUrl, videoSourceUrl, "PLAYER_SELECT"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckResourceAttr(resourceName, "insertion_mode", "PLAYER_SELECT"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPlaybackConfigurationAdConditioningConfiguration(t *testing.T) {
+	resourceName := "awsmt_playback_configuration.r5"
+	name := "test-acc-playback-configuration-ad-conditioning"
+	adUrl := "https://www.foo.de/"
+	videoSourceUrl := "https://www.bar.at"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: adConditioningPlaybackConfiguration(name, adUrl, videoSourceUrl, "TRANSCODE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckResourceAttr(resourceName, "ad_conditioning_configuration.streaming_media_file_conditioning", "TRANSCODE"),
+				),
+			},
+			{
+				Config: adConditioningPlaybackConfiguration(name, adUrl, videoSourceUrl, "NONE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckResourceAttr(resourceName, "ad_conditioning_configuration.streaming_media_file_conditioning", "NONE"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPlaybackConfigurationAdDecisionServerConfiguration(t *testing.T) {
+	resourceName := "awsmt_playback_configuration.r5"
+	name := "test-acc-playback-configuration-ads-config"
+	adUrl := "https://www.foo.de/"
+	videoSourceUrl := "https://www.bar.at"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: adDecisionServerConfigPlaybackConfiguration(name, adUrl, videoSourceUrl, "POST", "GZIP"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_configuration.http_request.method", "POST"),
+					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_configuration.http_request.compress_request", "GZIP"),
+				),
+			},
+			{
+				Config: adDecisionServerConfigPlaybackConfiguration(name, adUrl, videoSourceUrl, "GET", "NONE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_configuration.http_request.method", "GET"),
+					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_configuration.http_request.compress_request", "NONE"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPlaybackConfigurationFunctionMapping(t *testing.T) {
+	resourceName := "awsmt_playback_configuration.r5"
+	name := "test-acc-playback-configuration-function-mapping"
+	adUrl := "https://www.foo.de/"
+	videoSourceUrl := "https://www.bar.at"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: functionMappingPlaybackConfiguration(name, adUrl, videoSourceUrl),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckResourceAttr(resourceName, "function_mapping.PRE_ADS_REQUEST", "test_acc_fn_for_mapping"),
+				),
+			},
+		},
+	})
+}
+
+func insertionModePlaybackConfiguration(name, adUrl, videoSourceUrl, insertionMode string) string {
+	return fmt.Sprintf(`
+		resource "awsmt_playback_configuration" "r5" {
+			ad_decision_server_url = "%[2]s"
+			name = "%[1]s"
+			video_content_source_url = "%[3]s"
+			insertion_mode = "%[4]s"
+		}
+		`, name, adUrl, videoSourceUrl, insertionMode,
+	)
+}
+
+func adConditioningPlaybackConfiguration(name, adUrl, videoSourceUrl, conditioning string) string {
+	return fmt.Sprintf(`
+		resource "awsmt_playback_configuration" "r5" {
+			ad_decision_server_url = "%[2]s"
+			name = "%[1]s"
+			video_content_source_url = "%[3]s"
+			ad_conditioning_configuration = {
+				streaming_media_file_conditioning = "%[4]s"
+			}
+		}
+		`, name, adUrl, videoSourceUrl, conditioning,
+	)
+}
+
+func adDecisionServerConfigPlaybackConfiguration(name, adUrl, videoSourceUrl, method, compress string) string {
+	return fmt.Sprintf(`
+		resource "awsmt_playback_configuration" "r5" {
+			ad_decision_server_url = "%[2]s"
+			name = "%[1]s"
+			video_content_source_url = "%[3]s"
+			ad_decision_server_configuration = {
+				http_request = {
+					method = "%[4]s"
+					compress_request = "%[5]s"
+				}
+			}
+		}
+		`, name, adUrl, videoSourceUrl, method, compress,
+	)
+}
+
+func functionMappingPlaybackConfiguration(name, adUrl, videoSourceUrl string) string {
+	return fmt.Sprintf(`
+		resource "awsmt_function" "for_mapping" {
+			function_id   = "test_acc_fn_for_mapping"
+			function_type = "CUSTOM_OUTPUT"
+			custom_output_configuration = {
+				runtime = "JSONATA"
+				output = {
+					"player_params.test" = "value"
+				}
+			}
+		}
+		resource "awsmt_playback_configuration" "r5" {
+			ad_decision_server_url = "%[2]s"
+			name = "%[1]s"
+			video_content_source_url = "%[3]s"
+			function_mapping = {
+				"PRE_ADS_REQUEST" = awsmt_function.for_mapping.function_id
+			}
+		}
+		`, name, adUrl, videoSourceUrl,
+	)
+}
