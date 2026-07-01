@@ -38,7 +38,42 @@ func (r *resourcePlaybackConfiguration) Metadata(_ context.Context, req resource
 func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id":                     computedStringWithStateForUnknown,
+			"id": computedStringWithStateForUnknown,
+			"ad_conditioning_configuration": schema.SingleNestedAttribute{
+				Optional: true,
+				Attributes: map[string]schema.Attribute{
+					"streaming_media_file_conditioning": schema.StringAttribute{
+						Required: true,
+						Validators: []validator.String{
+							stringvalidator.OneOf("TRANSCODE", "NONE"),
+						},
+					},
+				},
+			},
+			"ad_decision_server_configuration": schema.SingleNestedAttribute{
+				Optional: true,
+				Attributes: map[string]schema.Attribute{
+					"http_request": schema.SingleNestedAttribute{
+						Optional: true,
+						Attributes: map[string]schema.Attribute{
+							"body": optionalString,
+							"compress_request": schema.StringAttribute{
+								Optional: true,
+								Validators: []validator.String{
+									stringvalidator.OneOf("NONE", "GZIP"),
+								},
+							},
+							"headers": optionalMap,
+							"method": schema.StringAttribute{
+								Optional: true,
+								Validators: []validator.String{
+									stringvalidator.OneOf("GET", "POST"),
+								},
+							},
+						},
+					},
+				},
+			},
 			"ad_decision_server_url": requiredString,
 			"avail_suppression": schema.SingleNestedAttribute{
 				Optional: true,
@@ -97,6 +132,13 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 				},
 			},
 			"hls_configuration_manifest_endpoint_prefix": computedStringWithStateForUnknown,
+			"function_mapping": optionalMap,
+			"insertion_mode": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("STITCHED_ONLY", "PLAYER_SELECT"),
+				},
+			},
 			"log_configuration_percent_enabled": schema.Int64Attribute{
 				Optional: true,
 				Validators: []validator.Int64{
@@ -112,6 +154,32 @@ func (r *resourcePlaybackConfiguration) Schema(_ context.Context, _ resource.Sch
 				ElementType: types.StringType,
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"log_configuration_ads_interaction_log": schema.SingleNestedAttribute{
+				Optional: true,
+				Attributes: map[string]schema.Attribute{
+					"exclude_event_types": schema.ListAttribute{
+						Optional:    true,
+						ElementType: types.StringType,
+					},
+					"publish_opt_in_event_types": schema.ListAttribute{
+						Optional:    true,
+						ElementType: types.StringType,
+					},
+				},
+			},
+			"log_configuration_manifest_service_interaction_log": schema.SingleNestedAttribute{
+				Optional: true,
+				Attributes: map[string]schema.Attribute{
+					"exclude_event_types": schema.ListAttribute{
+						Optional:    true,
+						ElementType: types.StringType,
+					},
+					"publish_opt_in_event_types": schema.ListAttribute{
+						Optional:    true,
+						ElementType: types.StringType,
+					},
 				},
 			},
 			"live_pre_roll_configuration": schema.SingleNestedAttribute{
