@@ -5,7 +5,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"terraform-provider-mediatailor/awsmt/models"
 )
 
@@ -95,18 +94,16 @@ func (d *dataSourceFunction) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	data.ID = types.StringValue(*output.FunctionId)
-	if output.Arn != nil {
-		data.Arn = types.StringValue(*output.Arn)
-	}
-	ft := string(output.FunctionType)
-	data.FunctionType = &ft
-	data.Description = output.Description
-	data.Tags = output.Tags
-
-	mapCustomOutputToModel(&data, output.CustomOutputConfiguration)
-	mapHttpRequestConfigToModel(&data, output.HttpRequestConfiguration)
-	mapSequentialExecutorToModel(&data, output.SequentialExecutorConfiguration)
+	data = readFunctionToModel(data, mediatailor.PutFunctionOutput{
+		Arn:                             output.Arn,
+		FunctionId:                      output.FunctionId,
+		FunctionType:                    output.FunctionType,
+		Description:                     output.Description,
+		CustomOutputConfiguration:       output.CustomOutputConfiguration,
+		HttpRequestConfiguration:        output.HttpRequestConfiguration,
+		SequentialExecutorConfiguration: output.SequentialExecutorConfiguration,
+		Tags:                            output.Tags,
+	})
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }

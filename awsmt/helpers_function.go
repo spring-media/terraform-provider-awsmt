@@ -3,8 +3,29 @@ package awsmt
 import (
 	"github.com/aws/aws-sdk-go-v2/service/mediatailor"
 	awsTypes "github.com/aws/aws-sdk-go-v2/service/mediatailor/types"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"terraform-provider-mediatailor/awsmt/models"
 )
+
+func readFunctionToModel(model models.FunctionModel, output mediatailor.PutFunctionOutput) models.FunctionModel {
+	model.ID = types.StringValue(*output.FunctionId)
+	if output.Arn != nil {
+		model.Arn = types.StringValue(*output.Arn)
+	}
+	model.FunctionId = output.FunctionId
+	ft := string(output.FunctionType)
+	model.FunctionType = &ft
+	model.Description = output.Description
+	if len(output.Tags) > 0 {
+		model.Tags = output.Tags
+	}
+
+	mapCustomOutputToModel(&model, output.CustomOutputConfiguration)
+	mapHttpRequestConfigToModel(&model, output.HttpRequestConfiguration)
+	mapSequentialExecutorToModel(&model, output.SequentialExecutorConfiguration)
+
+	return model
+}
 
 func buildPutFunctionInput(model models.FunctionModel) *mediatailor.PutFunctionInput {
 	input := &mediatailor.PutFunctionInput{

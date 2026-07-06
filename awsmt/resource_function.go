@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"terraform-provider-mediatailor/awsmt/models"
 )
 
@@ -211,44 +210,19 @@ func (r *resourceFunction) ImportState(ctx context.Context, req resource.ImportS
 	resource.ImportStatePassthroughID(ctx, path.Root("function_id"), req, resp)
 }
 
-// readFunctionOutput maps PutFunctionOutput to the model
 func readFunctionOutput(model models.FunctionModel, output *mediatailor.PutFunctionOutput) models.FunctionModel {
-	model.ID = types.StringValue(*output.FunctionId)
-	if output.Arn != nil {
-		model.Arn = types.StringValue(*output.Arn)
-	}
-	model.FunctionId = output.FunctionId
-	ft := string(output.FunctionType)
-	model.FunctionType = &ft
-	model.Description = output.Description
-	if len(output.Tags) > 0 {
-		model.Tags = output.Tags
-	}
-
-	mapCustomOutputToModel(&model, output.CustomOutputConfiguration)
-	mapHttpRequestConfigToModel(&model, output.HttpRequestConfiguration)
-	mapSequentialExecutorToModel(&model, output.SequentialExecutorConfiguration)
-
-	return model
+	return readFunctionToModel(model, *output)
 }
 
-// readGetFunctionOutput maps GetFunctionOutput to the model
 func readGetFunctionOutput(model models.FunctionModel, output *mediatailor.GetFunctionOutput) models.FunctionModel {
-	model.ID = types.StringValue(*output.FunctionId)
-	if output.Arn != nil {
-		model.Arn = types.StringValue(*output.Arn)
-	}
-	model.FunctionId = output.FunctionId
-	ft := string(output.FunctionType)
-	model.FunctionType = &ft
-	model.Description = output.Description
-	if len(output.Tags) > 0 {
-		model.Tags = output.Tags
-	}
-
-	mapCustomOutputToModel(&model, output.CustomOutputConfiguration)
-	mapHttpRequestConfigToModel(&model, output.HttpRequestConfiguration)
-	mapSequentialExecutorToModel(&model, output.SequentialExecutorConfiguration)
-
-	return model
+	return readFunctionToModel(model, mediatailor.PutFunctionOutput{
+		Arn:                             output.Arn,
+		FunctionId:                      output.FunctionId,
+		FunctionType:                    output.FunctionType,
+		Description:                     output.Description,
+		CustomOutputConfiguration:       output.CustomOutputConfiguration,
+		HttpRequestConfiguration:        output.HttpRequestConfiguration,
+		SequentialExecutorConfiguration: output.SequentialExecutorConfiguration,
+		Tags:                            output.Tags,
+	})
 }
