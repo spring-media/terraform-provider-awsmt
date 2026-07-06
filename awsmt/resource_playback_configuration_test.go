@@ -431,11 +431,34 @@ func TestAccPlaybackConfigurationAdDecisionServerConfiguration(t *testing.T) {
 				),
 			},
 			{
+				Config: adDecisionServerConfigMethodOnly(name, adUrl, videoSourceUrl, "POST"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_configuration.http_request.method", "POST"),
+					resource.TestCheckNoResourceAttr(resourceName, "ad_decision_server_configuration.http_request.compress_request"),
+				),
+			},
+			{
+				Config: adDecisionServerConfigCompressOnly(name, adUrl, videoSourceUrl, "GZIP"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckNoResourceAttr(resourceName, "ad_decision_server_configuration.http_request.method"),
+					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_configuration.http_request.compress_request", "GZIP"),
+				),
+			},
+			{
 				Config: adDecisionServerConfigPlaybackConfiguration(name, adUrl, videoSourceUrl, "GET", "NONE"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "id", name),
 					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_configuration.http_request.method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "ad_decision_server_configuration.http_request.compress_request", "NONE"),
+				),
+			},
+			{
+				Config: noAdDecisionServerConfigPlaybackConfiguration(name, adUrl, videoSourceUrl),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "id", name),
+					resource.TestCheckNoResourceAttr(resourceName, "ad_decision_server_configuration"),
 				),
 			},
 		},
@@ -502,6 +525,49 @@ func adDecisionServerConfigPlaybackConfiguration(name, adUrl, videoSourceUrl, me
 			}
 		}
 		`, name, adUrl, videoSourceUrl, method, compress,
+	)
+}
+
+func adDecisionServerConfigMethodOnly(name, adUrl, videoSourceUrl, method string) string {
+	return fmt.Sprintf(`
+		resource "awsmt_playback_configuration" "r5" {
+			ad_decision_server_url = "%[2]s"
+			name = "%[1]s"
+			video_content_source_url = "%[3]s"
+			ad_decision_server_configuration = {
+				http_request = {
+					method = "%[4]s"
+				}
+			}
+		}
+		`, name, adUrl, videoSourceUrl, method,
+	)
+}
+
+func adDecisionServerConfigCompressOnly(name, adUrl, videoSourceUrl, compress string) string {
+	return fmt.Sprintf(`
+		resource "awsmt_playback_configuration" "r5" {
+			ad_decision_server_url = "%[2]s"
+			name = "%[1]s"
+			video_content_source_url = "%[3]s"
+			ad_decision_server_configuration = {
+				http_request = {
+					compress_request = "%[4]s"
+				}
+			}
+		}
+		`, name, adUrl, videoSourceUrl, compress,
+	)
+}
+
+func noAdDecisionServerConfigPlaybackConfiguration(name, adUrl, videoSourceUrl string) string {
+	return fmt.Sprintf(`
+		resource "awsmt_playback_configuration" "r5" {
+			ad_decision_server_url = "%[2]s"
+			name = "%[1]s"
+			video_content_source_url = "%[3]s"
+		}
+		`, name, adUrl, videoSourceUrl,
 	)
 }
 
