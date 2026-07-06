@@ -433,7 +433,7 @@ func writeChannelToPlan(model models.ChannelModel, channel mediatailor.CreateCha
 		model.Audiences = channel.Audiences
 	}
 
-	if channel.TimeShiftConfiguration != nil && channel.TimeShiftConfiguration.MaxTimeDelaySeconds != nil {
+	if channel.TimeShiftConfiguration != nil && channel.TimeShiftConfiguration.MaxTimeDelaySeconds != nil && *channel.TimeShiftConfiguration.MaxTimeDelaySeconds > 0 {
 		maxDelay := int64(*channel.TimeShiftConfiguration.MaxTimeDelaySeconds)
 		model.TimeShiftConfiguration = &models.TimeShiftConfigurationModel{MaxTimeDelaySeconds: &maxDelay}
 	}
@@ -457,7 +457,7 @@ func writeChannelToState(model models.ChannelModel, channel mediatailor.Describe
 		model.Audiences = channel.Audiences
 	}
 
-	if channel.TimeShiftConfiguration != nil && channel.TimeShiftConfiguration.MaxTimeDelaySeconds != nil {
+	if channel.TimeShiftConfiguration != nil && channel.TimeShiftConfiguration.MaxTimeDelaySeconds != nil && *channel.TimeShiftConfiguration.MaxTimeDelaySeconds > 0 {
 		maxDelay := int64(*channel.TimeShiftConfiguration.MaxTimeDelaySeconds)
 		model.TimeShiftConfiguration = &models.TimeShiftConfigurationModel{MaxTimeDelaySeconds: &maxDelay}
 	}

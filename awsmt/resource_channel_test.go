@@ -512,6 +512,15 @@ func TestAccChannelAudiencesAndTimeShift(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "time_shift_configuration.max_time_delay_seconds", "600"),
 				),
 			},
+			{
+				Config: channelWithAudiencesNoTimeShift([]string{"audience3"}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "audiences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "audiences.0", "audience3"),
+					resource.TestCheckNoResourceAttr(resourceName, "time_shift_configuration"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "time_shift_configuration"),
+				),
+			},
 		},
 	})
 }
@@ -569,4 +578,56 @@ data "awsmt_channel" "test" {
   name = awsmt_channel.test.name
 }
 `, audiencesList, maxTimeDelay)
+}
+
+func channelWithAudiencesNoTimeShift(audiences []string) string {
+	audiencesList := ""
+	for _, a := range audiences {
+		audiencesList += fmt.Sprintf("\"%s\", ", a)
+	}
+	return fmt.Sprintf(`
+resource "awsmt_source_location" "test_source_location" {
+  name = "test_source_location"
+  http_configuration = {
+    base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
+  }
+  default_segment_delivery_configuration = {
+    base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
+  }
+}
+
+resource "awsmt_vod_source" "test" {
+  http_package_configurations = [{
+    path         = "/"
+    source_group = "default"
+    type         = "HLS"
+  }]
+  source_location_name = awsmt_source_location.test_source_location.name
+  name                 = "vod_source_example"
+}
+
+resource "awsmt_channel" "test" {
+  name          = "test"
+  channel_state = "STOPPED"
+  audiences     = [%[1]s]
+  outputs = [{
+    manifest_name = "default"
+    source_group  = "default"
+    hls_playlist_settings = {
+      ad_markup_type          = ["DATERANGE"]
+      manifest_window_seconds = 30
+    }
+  }]
+  playback_mode = "LINEAR"
+  tier          = "STANDARD"
+  filler_slate = {
+    source_location_name = awsmt_source_location.test_source_location.name
+    vod_source_name      = awsmt_vod_source.test.name
+  }
+}
+
+data "awsmt_channel" "test" {
+  name = awsmt_channel.test.name
+}
+`, audiencesList)
 }
