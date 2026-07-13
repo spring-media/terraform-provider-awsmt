@@ -31,11 +31,7 @@ func getConfigureLogsForChannelInput(model models.ChannelModel) *mediatailor.Con
 func getCreateChannelInput(model models.ChannelModel) *mediatailor.CreateChannelInput {
 	var input mediatailor.CreateChannelInput
 
-	input.ChannelName, input.FillerSlate, input.Outputs = getSharedChannelInput(&model)
-
-	if len(model.Audiences) > 0 {
-		input.Audiences = model.Audiences
-	}
+	input.ChannelName, input.FillerSlate, input.Outputs, input.Audiences = getSharedChannelInput(&model)
 
 	if model.PlaybackMode != nil {
 		var mode awsTypes.PlaybackMode
@@ -76,11 +72,7 @@ func getCreateChannelInput(model models.ChannelModel) *mediatailor.CreateChannel
 func getUpdateChannelInput(model models.ChannelModel) *mediatailor.UpdateChannelInput {
 	var input mediatailor.UpdateChannelInput
 
-	input.ChannelName, input.FillerSlate, input.Outputs = getSharedChannelInput(&model)
-
-	if len(model.Audiences) > 0 {
-		input.Audiences = model.Audiences
-	}
+	input.ChannelName, input.FillerSlate, input.Outputs, input.Audiences = getSharedChannelInput(&model)
 
 	if model.TimeShiftConfiguration != nil {
 		maxDelay := int32(*model.TimeShiftConfiguration.MaxTimeDelaySeconds)
@@ -92,8 +84,11 @@ func getUpdateChannelInput(model models.ChannelModel) *mediatailor.UpdateChannel
 	return &input
 }
 
-func getSharedChannelInput(model *models.ChannelModel) (name *string, source *awsTypes.SlateSource, outputItem []awsTypes.RequestOutputItem) {
-	return model.Name, buildSlateSource(model), buildRequestOutputs(model)
+func getSharedChannelInput(model *models.ChannelModel) (name *string, source *awsTypes.SlateSource, outputItem []awsTypes.RequestOutputItem, audiences []string) {
+	if len(model.Audiences) > 0 {
+		audiences = model.Audiences
+	}
+	return model.Name, buildSlateSource(model), buildRequestOutputs(model), audiences
 }
 
 func buildSlateSource(model *models.ChannelModel) *awsTypes.SlateSource {
@@ -429,7 +424,10 @@ func writeChannelToPlan(model models.ChannelModel, channel mediatailor.CreateCha
 
 	model = readOptionalValues(model, channel.PlaybackMode, channel.Tags, channel.Tier)
 
-	if len(channel.Audiences) > 0 {
+	// Only update audiences from API response if the plan had audiences configured
+	// or the API returned a non-empty list. This prevents a null → [] inconsistency
+	// when audiences is not set in config (plan is nil, API returns empty slice).
+	if len(model.Audiences) > 0 || len(channel.Audiences) > 0 {
 		model.Audiences = channel.Audiences
 	}
 
@@ -453,7 +451,10 @@ func writeChannelToState(model models.ChannelModel, channel mediatailor.Describe
 
 	model = readLogConfiguration(model, channel.LogConfiguration)
 
-	if len(channel.Audiences) > 0 {
+	// Only update audiences from API response if the plan had audiences configured
+	// or the API returned a non-empty list. This prevents a null → [] inconsistency
+	// when audiences is not set in config (plan is nil, API returns empty slice).
+	if len(model.Audiences) > 0 || len(channel.Audiences) > 0 {
 		model.Audiences = channel.Audiences
 	}
 
