@@ -483,3 +483,151 @@ func standardTierChannel(t string) string {
 			}
 `, t)
 }
+
+func TestAccChannelAudiencesAndTimeShift(t *testing.T) {
+	resourceName := "awsmt_channel.test"
+	dataSourceName := "data.awsmt_channel.test"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: channelWithAudiencesAndTimeShift([]string{"audience1", "audience2"}, 300),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "audiences.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "audiences.0", "audience1"),
+					resource.TestCheckResourceAttr(resourceName, "audiences.1", "audience2"),
+					resource.TestCheckResourceAttr(resourceName, "time_shift_configuration.max_time_delay_seconds", "300"),
+					resource.TestCheckResourceAttr(dataSourceName, "audiences.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "time_shift_configuration.max_time_delay_seconds", "300"),
+				),
+			},
+			{
+				Config: channelWithAudiencesAndTimeShift([]string{"audience3"}, 600),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "audiences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "audiences.0", "audience3"),
+					resource.TestCheckResourceAttr(resourceName, "time_shift_configuration.max_time_delay_seconds", "600"),
+					resource.TestCheckResourceAttr(dataSourceName, "audiences.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "time_shift_configuration.max_time_delay_seconds", "600"),
+				),
+			},
+			{
+				Config: channelWithAudiencesNoTimeShift([]string{"audience3"}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "audiences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "audiences.0", "audience3"),
+					resource.TestCheckNoResourceAttr(resourceName, "time_shift_configuration"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "time_shift_configuration"),
+				),
+			},
+		},
+	})
+}
+
+func channelWithAudiencesAndTimeShift(audiences []string, maxTimeDelay int) string {
+	audiencesList := ""
+	for _, a := range audiences {
+		audiencesList += fmt.Sprintf("\"%s\", ", a)
+	}
+	return fmt.Sprintf(`
+resource "awsmt_source_location" "test_source_location" {
+  name = "test_source_location"
+  http_configuration = {
+    base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
+  }
+  default_segment_delivery_configuration = {
+    base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
+  }
+}
+
+resource "awsmt_vod_source" "test" {
+  http_package_configurations = [{
+    path         = "/"
+    source_group = "default"
+    type         = "HLS"
+  }]
+  source_location_name = awsmt_source_location.test_source_location.name
+  name                 = "vod_source_example"
+}
+
+resource "awsmt_channel" "test" {
+  name          = "test"
+  channel_state = "STOPPED"
+  audiences     = [%[1]s]
+  outputs = [{
+    manifest_name = "default"
+    source_group  = "default"
+    hls_playlist_settings = {
+      ad_markup_type          = ["DATERANGE"]
+      manifest_window_seconds = 30
+    }
+  }]
+  playback_mode = "LINEAR"
+  tier          = "STANDARD"
+  filler_slate = {
+    source_location_name = awsmt_source_location.test_source_location.name
+    vod_source_name      = awsmt_vod_source.test.name
+  }
+  time_shift_configuration = {
+    max_time_delay_seconds = %[2]d
+  }
+}
+
+data "awsmt_channel" "test" {
+  name = awsmt_channel.test.name
+}
+`, audiencesList, maxTimeDelay)
+}
+
+func channelWithAudiencesNoTimeShift(audiences []string) string {
+	audiencesList := ""
+	for _, a := range audiences {
+		audiencesList += fmt.Sprintf("\"%s\", ", a)
+	}
+	return fmt.Sprintf(`
+resource "awsmt_source_location" "test_source_location" {
+  name = "test_source_location"
+  http_configuration = {
+    base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/"
+  }
+  default_segment_delivery_configuration = {
+    base_url = "https://ott-mediatailor-test.s3.eu-central-1.amazonaws.com/test-img.jpeg"
+  }
+}
+
+resource "awsmt_vod_source" "test" {
+  http_package_configurations = [{
+    path         = "/"
+    source_group = "default"
+    type         = "HLS"
+  }]
+  source_location_name = awsmt_source_location.test_source_location.name
+  name                 = "vod_source_example"
+}
+
+resource "awsmt_channel" "test" {
+  name          = "test"
+  channel_state = "STOPPED"
+  audiences     = [%[1]s]
+  outputs = [{
+    manifest_name = "default"
+    source_group  = "default"
+    hls_playlist_settings = {
+      ad_markup_type          = ["DATERANGE"]
+      manifest_window_seconds = 30
+    }
+  }]
+  playback_mode = "LINEAR"
+  tier          = "STANDARD"
+  filler_slate = {
+    source_location_name = awsmt_source_location.test_source_location.name
+    vod_source_name      = awsmt_vod_source.test.name
+  }
+}
+
+data "awsmt_channel" "test" {
+  name = awsmt_channel.test.name
+}
+`, audiencesList)
+}
