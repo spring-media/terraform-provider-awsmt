@@ -1,11 +1,6 @@
-setuptools==83.0.0
+setuptools
 mkdocs
 mkdocs-techdocs-core
 
-# security related pins
-jinja2>=3.1.6
-requests>=2.33.0
-click>=8.3.3
-idna>=3.15
-pymdown-extensions>=11.0
-urllib3>=2.7.0
+# snyk vulns
+pymdown-extensions>=11.0.1
