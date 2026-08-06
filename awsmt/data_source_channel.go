@@ -32,6 +32,7 @@ func (d *dataSourceChannel) Schema(_ context.Context, _ datasource.SchemaRequest
 		Attributes: map[string]schema.Attribute{
 			"id":                 computedString,
 			"arn":                computedString,
+			"audiences":          computedStringList,
 			"name":               requiredString,
 			"channel_state":      computedString,
 			"creation_time":      computedString,
@@ -79,6 +80,12 @@ func (d *dataSourceChannel) Schema(_ context.Context, _ datasource.SchemaRequest
 			},
 			"tags": computedMap,
 			"tier": computedString,
+			"time_shift_configuration": schema.SingleNestedAttribute{
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"max_time_delay_seconds": computedInt64,
+				},
+			},
 		},
 	}
 }
