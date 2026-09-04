@@ -8,6 +8,7 @@ import (
 type ChannelModel struct {
 	ID           types.String `tfsdk:"id"`
 	Arn          types.String `tfsdk:"arn"`
+	Audiences    []string     `tfsdk:"audiences"`
 	Name         *string      `tfsdk:"name"`
 	ChannelState *string      `tfsdk:"channel_state"`
 	CreationTime types.String `tfsdk:"creation_time"`
@@ -16,14 +17,19 @@ type ChannelModel struct {
 	// Decision: As the only log type available for channels is AS_RUN, we simplified the configuration by
 	// converting this option into a boolean for the provider.
 	// Consequences: The process for enabling and disabling logs differs slightly from the SDK's approach.
-	EnableAsRunLogs  types.Bool           `tfsdk:"enable_as_run_logs"`
-	FillerSlate      *FillerSlateModel    `tfsdk:"filler_slate"`
-	LastModifiedTime types.String         `tfsdk:"last_modified_time"`
-	Outputs          []OutputsModel       `tfsdk:"outputs"`
-	PlaybackMode     *string              `tfsdk:"playback_mode"`
-	Policy           jsontypes.Normalized `tfsdk:"policy"`
-	Tags             map[string]string    `tfsdk:"tags"`
-	Tier             *string              `tfsdk:"tier"`
+	EnableAsRunLogs        types.Bool                  `tfsdk:"enable_as_run_logs"`
+	FillerSlate            *FillerSlateModel           `tfsdk:"filler_slate"`
+	LastModifiedTime       types.String                `tfsdk:"last_modified_time"`
+	Outputs                []OutputsModel              `tfsdk:"outputs"`
+	PlaybackMode           *string                     `tfsdk:"playback_mode"`
+	Policy                 jsontypes.Normalized        `tfsdk:"policy"`
+	Tags                   map[string]string           `tfsdk:"tags"`
+	Tier                   *string                     `tfsdk:"tier"`
+	TimeShiftConfiguration *TimeShiftConfigurationModel `tfsdk:"time_shift_configuration"`
+}
+
+type TimeShiftConfigurationModel struct {
+	MaxTimeDelaySeconds *int64 `tfsdk:"max_time_delay_seconds"`
 }
 
 type FillerSlateModel struct {

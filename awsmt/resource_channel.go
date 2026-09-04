@@ -40,6 +40,10 @@ func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, re
 		Attributes: map[string]schema.Attribute{
 			"id":   computedString,
 			"arn":  computedString,
+			"audiences": schema.ListAttribute{
+				Optional:    true,
+				ElementType: types.StringType,
+			},
 			"name": requiredStringWithRequiresReplace,
 			// @ADR
 			// Context: We cannot test the deletion of a running channel if we cannot set the channel_state property
@@ -118,6 +122,14 @@ func (r *resourceChannel) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Default: stringdefault.StaticString("BASIC"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"time_shift_configuration": schema.SingleNestedAttribute{
+				Optional: true,
+				Attributes: map[string]schema.Attribute{
+					"max_time_delay_seconds": schema.Int64Attribute{
+						Required: true,
+					},
 				},
 			},
 		},
