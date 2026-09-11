@@ -29,7 +29,27 @@ func (d *dataSourcePlaybackConfiguration) Metadata(_ context.Context, req dataso
 func (d *dataSourcePlaybackConfiguration) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id":                     computedString,
+			"id": computedString,
+			"ad_conditioning_configuration": schema.SingleNestedAttribute{
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"streaming_media_file_conditioning": computedString,
+				},
+			},
+			"ad_decision_server_configuration": schema.SingleNestedAttribute{
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"http_request": schema.SingleNestedAttribute{
+						Computed: true,
+						Attributes: map[string]schema.Attribute{
+							"body":             computedString,
+							"compress_request": computedString,
+							"headers":          computedMap,
+							"method":           computedString,
+						},
+					},
+				},
+			},
 			"ad_decision_server_url": computedString,
 			"avail_suppression": schema.SingleNestedAttribute{
 				Computed: true,
@@ -68,6 +88,8 @@ func (d *dataSourcePlaybackConfiguration) Schema(_ context.Context, _ datasource
 				},
 			},
 			"hls_configuration_manifest_endpoint_prefix": computedString,
+			"function_mapping": computedMap,
+			"insertion_mode":   computedString,
 			"live_pre_roll_configuration": schema.SingleNestedAttribute{
 				Computed: true,
 				Attributes: map[string]schema.Attribute{
@@ -79,6 +101,20 @@ func (d *dataSourcePlaybackConfiguration) Schema(_ context.Context, _ datasource
 			"log_configuration_enabled_logging_strategies": schema.ListAttribute{
 				Computed: true,
 				ElementType: types.StringType,
+			},
+			"log_configuration_ads_interaction_log": schema.SingleNestedAttribute{
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"exclude_event_types": computedStringList,
+					"publish_opt_in_event_types": computedStringList,
+				},
+			},
+			"log_configuration_manifest_service_interaction_log": schema.SingleNestedAttribute{
+				Computed: true,
+				Attributes: map[string]schema.Attribute{
+					"exclude_event_types": computedStringList,
+					"publish_opt_in_event_types": computedStringList,
+				},
 			},
 			"manifest_processing_rules": schema.SingleNestedAttribute{
 				Computed: true,
